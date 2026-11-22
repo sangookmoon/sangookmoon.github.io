@@ -245,7 +245,7 @@
       <div class="frow off" data-only10="1"><div class="flab">업데이트</div><div class="fexp"><span class="w">w</span> ← <span class="w">w</span> − <span class="k">학습률</span> × <span class="k">(J 의 w 쪽 기울기)</span><div class="fsub"><span class="w">b</span> ← <span class="w">b</span> − <span class="k">학습률</span> × <span class="k">(J 의 b 쪽 기울기)</span></div></div><div class="fnote">두 숫자를 같은 스텝에서 함께 업데이트한다</div></div>
       <div class="calcwrap"><table class="calc" id="calc"></table></div>
     </div>
-    <div class="panel o6 hide" id="absPanel"><div class="q" style="margin-top:0"><b class="t">질문</b> 오차를 제곱하지 않고 <b>절댓값</b>을 쓰면 어떨까? J = (1/m) Σ |ŷᵢ − yᵢ| 는 w 의 1차식 조각들이다. 그래도 그릇이 될까? 바닥을 찾아 비슷하게 예측할 수 있을까?<br>→ 점을 찍고 곡선으로 이은 뒤 아래 단추를 눌러 손실 그래프를 보자.</div><div class="btns"><button id="absBtn">절댓값으로 바꾸기</button></div></div>
+    <div class="panel o6 hide" id="absPanel"><div class="q" style="margin-top:0"><b class="t">질문</b> 손실 함수는 꼭 오차를 <b>제곱</b>해야 할까? 다른 방법은 없을까? 예를 들어 제곱 대신 <b>절댓값</b>을 쓰면 J = (1/m) Σ |ŷᵢ − yᵢ| 는 w 의 1차식 조각들이 된다. 그래도 그릇이 될까? 바닥을 찾아 비슷하게 예측할 수 있을까?<br>→ 점을 찍고 곡선으로 이은 뒤 아래 단추를 눌러 손실 그래프를 보자.</div><div class="btns"><button id="absBtn">절댓값으로 바꾸기</button></div></div>
   </div>
   <!-- 오른쪽 : 그래프 (화면에 고정) -->
   <div class="col gcol" id="gcol">
