@@ -28,7 +28,8 @@ h2{font-size:19px;margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid 
 h3{font-size:16px;margin:20px 0 6px}
 p{margin:8px 0}
 .sub{color:var(--muted);margin:0 0 4px}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:start}
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:24px;align-items:start}
+.photo{width:132px;height:132px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:var(--soft)}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .links a{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px;text-decoration:none;color:var(--ink);background:var(--panel)}
 .links a:hover{border-color:var(--accent);color:var(--accent)}
@@ -60,6 +61,7 @@ a.card:hover{border-color:var(--accent)}
 footer{border-top:1px solid var(--line);padding:18px 0 28px;font-size:13.5px;color:var(--muted)}
 @media (max-width:640px){
   .hero{grid-template-columns:1fr}
+  .photo{width:112px;height:112px}
   h1{font-size:24px}
   table.cv td:first-child{width:auto;white-space:nowrap}
 }
