@@ -9,560 +9,796 @@
    "authors": "S Moon",
    "venue": "Journal of KIIT 24 (9), 207-212, 2026",
    "year": "2026",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14801/jkiit.2026.24.9.207",
+   "venue_full": "The Journal of Korean Institute of Information Technology, vol. 24, no. 9, pp. 207-212, 2026",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Zero-Jitter Multi-Channel ASCON-AEAD128 Gateway on FPGA SoC for Safety-Critical IIoT",
    "authors": "Y Choi, S Moon",
    "venue": "IEEE Access, 2026",
    "year": "2026",
-   "cites": 1
+   "cites": 1,
+   "url": "https://doi.org/10.1109/access.2026.3694712",
+   "venue_full": "IEEE Access, vol. 14, pp. 79901-79921, 2026",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Hybrid Framework for Secure Low-Power Data Encryption with Adaptive Payload Compression in Resource-Constrained IoT Systems",
    "authors": "YR Choi, HY Jeong, S Moon",
    "venue": "Sensors 26 (7), 2253, 2026",
    "year": "2026",
-   "cites": 4
+   "cites": 4,
+   "url": "https://doi.org/10.3390/s26072253",
+   "venue_full": "Sensors, vol. 26, no. 7, pp. 2253, 2026",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Interleaved ASCON-128 Hardware Implementation for Multi-Channel IIoT Environments",
    "authors": "S Moon",
    "venue": "Journal of KIIT 24 (2), 121-126, 2026",
    "year": "2026",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14801/jkiit.2026.24.2.121",
+   "venue_full": "The Journal of Korean Institute of Information Technology, vol. 24, no. 2, pp. 121-126, 2026",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "YOLO-Based C-ITS Integrated Hazard Warning System for Road Surface Anomalies",
    "authors": "K Lee, HJ Lee, S Moon",
    "venue": "Proceedings of the International Conference on Smart Mobility And …, 2026",
    "year": "2026",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "A Study on AI-Based Single Image Restoration Techniques for Drone Image",
    "authors": "J Si, Y Kim, S Moon",
    "venue": "Proceedings of the International Conference on Smart Mobility And …, 2026",
    "year": "2026",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "Development of a spatial recognition module for AI unmanned platforms",
    "authors": "Y Kim, S Moon",
    "venue": "Proceedings of The International Workshop on Future Technology, 106-110, 2025",
    "year": "2025",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "LED-Camera-Based Wireless Data Communication System and Method for Limited Environments",
    "authors": "J Lee, Y Choi, J Park, S Moon",
    "venue": "Proceedings of The International Workshop on Future Technology, 45-47, 2025",
    "year": "2025",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "Efficient Leak Detection Techniques for Insulated Pipe Systems",
    "authors": "S Moon",
    "venue": "Journal of KIIT 23 (2), 93-99, 2025",
    "year": "2025",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14801/jkiit.2025.23.2.93",
+   "venue_full": "The Journal of Korean Institute of Information Technology, vol. 23, no. 2, pp. 93-99, 2025",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A Wireless Edge Sensor Module for Edge Computing in Industrial Infrastructure Diagnostics",
    "authors": "S Moon",
    "venue": "Journal of KIIT 23 (1), 65-71, 2025",
    "year": "2025",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14801/jkiit.2025.23.1.65",
+   "venue_full": "The Journal of Korean Institute of Information Technology, vol. 23, no. 1, pp. 65-71, 2025",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A Complexity-Enhanced Self-Reconfiguring Random Number Generator using Big/Little Endian Concept",
    "authors": "S Moon",
    "venue": "Journal of KIIT 22 (12), 227-233, 2024",
    "year": "2024",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14801/jkiit.2024.22.12.227",
+   "venue_full": "The Journal of Korean Institute of Information Technology, vol. 22, no. 12, pp. 227-233, 2024",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Enhancing Communication Security with Advanced Encryption",
    "authors": "S Moon",
    "venue": "Proceedings of the International Conference on Smart Mobility And …, 2024",
    "year": "2024",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "A novel ultrasonic leak detection system in nuclear power plants using rigid guide tubes with fcog and snr",
    "authors": "YR Choi, D Yeo, JC Lee, JW Cho, S Moon",
    "venue": "Sensors 24 (20), 6524, 2024",
    "year": "2024",
-   "cites": 7
+   "cites": 7,
+   "url": "https://doi.org/10.3390/s24206524",
+   "venue_full": "Sensors, vol. 24, no. 20, pp. 6524, 2024",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Low-Power Wireless Sensor Module for Machine Learning-Based Continuous Monitoring of Nuclear Power Plants",
    "authors": "JC Lee, YR Choi, D Yeo, S Moon",
    "venue": "Sensors 24 (13), 4209, 2024",
    "year": "2024",
-   "cites": 10
+   "cites": 10,
+   "url": "https://doi.org/10.3390/s24134209",
+   "venue_full": "Sensors, vol. 24, no. 13, pp. 4209, 2024",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Heterodyne-Based Ultrasonic Signal Detection for Low-Power Sensing Applications",
    "authors": "J Lee, Y Lee, S Kim, S Moon",
    "venue": "Proceedings of The International Workshop on Future Technology, 101-104, 2024",
    "year": "2024",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "Securing Infrared Communication in Nuclear Power Plants: Advanced Encryption for Infrared Sensor Networks",
    "authors": "TJ Park, K Kim, S Moon",
    "venue": "Sensors 24 (7), 2054, 2024",
    "year": "2024",
-   "cites": 8
+   "cites": 8,
+   "url": "https://doi.org/10.3390/s24072054",
+   "venue_full": "Sensors, vol. 24, no. 7, pp. 2054, 2024",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Enhanced Security in Infrared Communication Using Self-Adjusting Sensor Address Generator",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2023",
    "year": "2023",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.6109/jkiice.2023.27.5.668",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Self-reconfiguring Pseudo Random Address Generator for Secure Infrared Communication",
    "authors": "S Moon, JC Lee",
    "venue": "International Conference on Frontier Computing, 89-93, 2022",
    "year": "2022",
-   "cites": 1
+   "cites": 1,
+   "url": "https://doi.org/10.1007/978-981-99-1428-9_10",
+   "venue_full": "Lecture Notes in Electrical Engineering, pp. 89-93, 2023",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "Development of a Low-Cost Thermal Image Hidden Fire Detector Using Open Source Hardware",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2019",
    "year": "2019",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2019"
   },
   {
    "title": "Memory-efficient Integer Fourier Transform for Lattice Cryptography",
    "authors": "S Moon",
    "venue": "Journal of Platform Technology 5 (4), 68-73, 2017",
    "year": "2017",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal"
   },
   {
    "title": "Proxy Bits for Low Cost Floating-Point Fused Multiply–Add Unit",
    "authors": "H Kim, S Moon",
    "venue": "Journal of Circuits, Systems and Computers 25 (10), 1650127, 2016",
    "year": "2016",
-   "cites": 1
+   "cites": 1,
+   "url": "https://doi.org/10.1142/s0218126616501279",
+   "venue_full": "Journal of Circuits, Systems and Computers, vol. 25, no. 10, pp. 1650127, 2016",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Memory Saving Architecture of Number Theoretic Transform for Lattice Cryptography",
    "authors": "S Moon",
    "venue": "International Journal of Security and Its Applications 10 (9), 9-18, 2016",
    "year": "2016",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14257/ijsia.2016.10.9.02",
+   "venue_full": "International Journal of Security and Its Applications, vol. 10, no. 9, pp. 9-18, 2016",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A universal infrared remote controller implementation for custom code identification systems",
    "authors": "JY Kim, S Moon",
    "venue": "Asia-pacific Journal of Multimedia Services Convergent with Art, Humanities …, 2016",
    "year": "2016",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14257/ajmahs.2016.11.16",
+   "venue_full": "Asia-pacific Journal of Multimedia Services Convergent with Art, Humanities, and Sociology, vol. 6, no. 11, pp. 621-628, 2016",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Implementation of a drone using the PID control of an 8-bit microcontroller",
    "authors": "DH Lee, S Moon",
    "venue": "Asia-pacific Journal of Multimedia Services Convergent with Art, Humanities …, 2016",
    "year": "2016",
-   "cites": 4
+   "cites": 4,
+   "url": "https://doi.org/10.14257/ajmahs.2016.09.37",
+   "venue_full": "Asia-pacific Journal of Multimedia Services Convergent with Art, Humanities, and Sociology, vol. 6, no. 9, pp. 81-90, 2016",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Survey and Analysis of the Present State of Education in Regard to the Accreditation in Engineering Education",
    "authors": "S Moon",
    "venue": "Asia-pacific Journal of Multimedia Services Convergent with Art, Humanities …, 2016",
    "year": "2016",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14257/ajmahs.2016.01.36",
+   "venue_full": "Asia-pacific Journal of Multimedia Services Convergent with Art, Humanities, and Sociology, vol. 6, no. 1, pp. 271-280, 2016",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "An Efficient Algorithm of Number Theoretic Transform for Cryptographic Applications",
    "authors": "S Moon",
    "venue": "Advanced Science and Technology Letters 135, 108-111, 2016",
    "year": "2016",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal"
   },
   {
    "title": "Embedded network camera processor system on a chip for various low-power multimedia applications",
    "authors": "J Park, S Moon, SH Oh, YS Lee",
    "venue": "Telecommunication Systems 60 (2), 251-260, 2015",
    "year": "2015",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.1007/s11235-015-0027-4",
+   "venue_full": "Telecommunication Systems, vol. 60, no. 2, pp. 251-260, 2015",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Design of a Robust Normal Distribution Sampler for Ring-Learning-With-Errors Cryptographic Scheme",
    "authors": "S Moon",
    "venue": "International Journal of Security and Its Applications 9 (9), 45-54, 2015",
    "year": "2015",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14257/ijsia.2015.9.9.05",
+   "venue_full": "International Journal of Security and Its Applications, vol. 9, no. 9, pp. 45-54, 2015",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A Reconfigurable Design of Lattice Cryptographic Functional Server Farms",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 7 …, 2015",
    "year": "2015",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 7, 2015"
   },
   {
    "title": "Hardware Architecture of FAST Algorithm for Feature Point Detection",
    "authors": "CS Seo, HJ Chung, SY Kim, S Moon, YH Lee",
    "venue": "The Second International Conference on Electrical, Electronics, Computer …, 2015",
    "year": "2015",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference"
   },
   {
    "title": "A Gaussian Sampler for Ring-Learning-With-Errors Scheme Reusing a Cryptographic Module",
    "authors": "S Moon",
    "venue": "Advanced Science and Technology Letters 109, 5-9, 2015",
    "year": "2015",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.14257/astl.2015.109.02",
+   "venue_full": "Advanced Science and Technology Letters, pp. 5-9, 2015",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "Modified Cooley-Tukey FFT method for Polynomial Multiplication in Lattice Cryptography",
    "authors": "S Moon",
    "venue": "Proceedings of 2015 International Workshop on Security, Reliability and …, 2015",
    "year": "2015",
-   "cites": 2
+   "cites": 2,
+   "url": "https://doi.org/10.14257/astl.2015.93.04",
+   "venue_full": "Advanced Science and Technology Letters, pp. 14-18, 2015",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "Constructing a Support Vector Machine for Localization on a Low-End Cluster Sensor Network",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2014",
    "year": "2014",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.6109/jkiice.2014.18.12.2885",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Securing a distributed policy-based cognitive radio",
    "authors": "J Thakkar, D Ali, JMJ Park, S Moon",
    "venue": "Proceedings of the 8th International Conference on Ubiquitous Information …, 2014",
    "year": "2014",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.1145/2557977.2557987",
+   "venue_full": "Proceedings of the 8th International Conference on Ubiquitous Information Management and Communication, pp. 1-8, 2014",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "Radix-16 Booth multiplier using novel weighted 2-stage Booth algorithm",
    "authors": "H Kim, S Moon, Y Lee",
    "venue": "IEICE Electronics express 11 (13), 20140407-20140407, 2014",
    "year": "2014",
-   "cites": 4
+   "cites": 4,
+   "url": "https://doi.org/10.1587/elex.11.20140407",
+   "venue_full": "IEICE Electronics Express, vol. 11, no. 13, pp. 20140407-20140407, 2014",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A System Level Design of Heterogeneous Multiplication Server Farms",
    "authors": "S Moon",
    "venue": "Proceedings of the Korean Institute of Information and Commucation Sciences …, 2014",
    "year": "2014",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "Proceedings of the Korean Institute of Information and Communication Sciences Conference, 2014"
   },
   {
    "title": "System level design of reconfigurable server farms using elliptic curve cryptography processor engines",
    "authors": "S Moon, J Park",
    "venue": "Journal of Applied Mathematics 2014 (1), 390176, 2014",
    "year": "2014",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.1155/2014/390176",
+   "venue_full": "Journal of Applied Mathematics, vol. 2014, pp. 1-8, 2014",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Enhancing MPI performance using atomic pipelined message broadcast in a distributed memory MPSoC",
    "authors": "J Park, H Yun, S Moon",
    "venue": "IEICE Electronics Express 11 (13), 20140357-20140357, 2014",
    "year": "2014",
-   "cites": 7
+   "cites": 7,
+   "url": "https://doi.org/10.1587/elex.11.20140357",
+   "venue_full": "IEICE Electronics Express, vol. 11, no. 13, pp. 20140357-20140357, 2014",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Design Approach with Higher Levels of Abstraction: Implementing Heterogeneous Multiplication Server Farms",
    "authors": "S Moon",
    "venue": "Journal of information and communication convergence engineering 11 (2), 112-117, 2013",
    "year": "2013",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.6109/jicce.2013.11.2.112",
+   "venue_full": "Journal of information and communication convergence engineering, vol. 11, no. 2, pp. 112-117, 2013",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Low-power booth multiplier architecture with dynamic operand interchange technique for multimedia cloud computing",
    "authors": "J Park, J Kim, S Moon",
    "venue": "Advanced Science Letters 19 (6), 1744-1748, 2013",
    "year": "2013",
-   "cites": 2
+   "cites": 2,
+   "url": "https://doi.org/10.1166/asl.2013.4515",
+   "venue_full": "Advanced Science Letters, vol. 19, no. 6, pp. 1744-1748, 2013",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Network Security Camera System and Its Application for Consumer Electronics Devices Supporting Machine-to-Machine Communications Platform",
    "authors": "J Park, SH Oh, S Moon",
    "venue": "Advanced Science Letters 19 (6), 1605-1609, 2013",
    "year": "2013",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.1166/asl.2013.4514",
+   "venue_full": "Advanced Science Letters, vol. 19, no. 6, pp. 1605-1609, 2013",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Design of multiplication server farms using electronic system level with higher level of abstraction",
    "authors": "S Moon",
    "venue": "Advanced Science Letters 19 (5), 1441-1444, 2013",
    "year": "2013",
-   "cites": 2
+   "cites": 2,
+   "url": "https://doi.org/10.1166/asl.2013.4501",
+   "venue_full": "Advanced Science Letters, vol. 19, no. 5, pp. 1441-1444, 2013",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "An Advanced Paradigm of Electronic System Level Hardware Description Language; Bluespec SystemVerilog",
    "authors": "S Moon",
    "venue": "Proceedings of the Korean Institute of Information and Commucation Sciences …, 2013",
    "year": "2013",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "Proceedings of the Korean Institute of Information and Communication Sciences Conference, 2013"
   },
   {
    "title": "Systemverilog-based approach of a design of multiplication server farms",
    "authors": "S Moon",
    "venue": "2012 Fourth International Conference on Ubiquitous and Future Networks …, 2012",
    "year": "2012",
-   "cites": 1
+   "cites": 1,
+   "url": "https://doi.org/10.1109/icufn.2012.6261754",
+   "venue_full": "2012 Fourth International Conference on Ubiquitous and Future Networks (ICUFN), pp. 478-479, 2012",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "Design of a high precision logarithmic converter in a binary floating point divider",
    "authors": "YH Lee, YS Cho, S Moon",
    "venue": "Concurrency and Computation: Practice and Experience 24 (4), 342-353, 2012",
    "year": "2012",
-   "cites": 4
+   "cites": 4,
+   "url": "https://doi.org/10.1002/cpe.1569",
+   "venue_full": "Concurrency and Computation: Practice and Experience, vol. 24, no. 4, pp. 342-353, 2012",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Design of an SPI interface for multimedia cards in ARM embedded systems",
    "authors": "SG Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2012",
    "year": "2012",
-   "cites": 3
+   "cites": 3,
+   "url": "https://doi.org/10.6109/jkiice.2012.16.2.273",
+   "venue_full": "The Journal of the Korean Institute of Information and Communication Engineering, vol. 16, no. 2, pp. 273-278, 2012",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Design of a GPIO Unit for Bluetooth Embedded Systems",
    "authors": "SG Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2012",
    "year": "2012",
-   "cites": 3
+   "cites": 3,
+   "url": "https://doi.org/10.6109/jkiice.2012.16.1.107",
+   "venue_full": "The Journal of the Korean Institute of Information and Communication Engineering, vol. 16, no. 1, pp. 107-112, 2012",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Building a Platform of an Embedded System of a Monitoring Device for Elders Living Alone",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 4 …, 2011",
    "year": "2011",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 4, 2011"
   },
   {
    "title": "An FPGA-based Design Using SPARTAN-3E Embedded system",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 4 …, 2011",
    "year": "2011",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 4, 2011"
   },
   {
    "title": "Design of an FPGA-based IP using SPARTAN-3E embedded system",
    "authors": "SO Moon",
    "venue": "Journal of Information and Communication Convergence Engineering 9 (4), 428-430, 2011",
    "year": "2011",
-   "cites": 1
+   "cites": 1,
+   "url": "https://doi.org/10.6109/jicce.2011.9.4.428",
+   "venue_full": "Journal of information and communication convergence engineering, vol. 9, no. 4, pp. 428-430, 2011",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A survey on the works of designing an SoC platform for smart motor vehicle info-tainment",
    "authors": "SK Moon",
    "venue": "Proceeding of KIICE Spring conference 2011, 699-701, 2011",
    "year": "2011",
-   "cites": 3
+   "cites": 3,
+   "kind": "conference"
   },
   {
    "title": "Design of a General Purpose I/O Module Suitable for Embedded Systems",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 2 …, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 2, 2009"
   },
   {
    "title": "Design of a High-Speed Serial Port Interface Suitable for Bluetooth Embedded Systems",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 2 …, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 2, 2009"
   },
   {
    "title": "Design of a High-Performance Information Security System-On-a-Chip using Software/Hardware Optimized Elliptic Curve Finite Field Computational Algorithms",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2009"
   },
   {
    "title": "HW/SW Co-Design of an Adaptive Frequency Decision in the Bluetooth Wireless Network",
    "authors": "SO Moon",
    "venue": "Journal of Information and Communication Convergence Engineering 7 (3), 399-403, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal"
   },
   {
    "title": "Design of a General Purpose I/O Suitable for Embedded Systems",
    "authors": "S Moon",
    "venue": "Proceedings of the Korean Institute of Information and Commucation Sciences …, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "Proceedings of the Korean Institute of Information and Communication Sciences Conference, 2009"
   },
   {
    "title": "Design of a Serial Port Interface Suitable for Bluetooth Embedded Systems",
    "authors": "S Moon",
    "venue": "Proceedings of the Korean Institute of Information and Commucation Sciences …, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "Proceedings of the Korean Institute of Information and Communication Sciences Conference, 2009"
   },
   {
    "title": "Design of an Optimized 32-bit Multiplier for RSA Cryptoprocessors",
    "authors": "SO Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2009",
    "year": "2009",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2009"
   },
   {
    "title": "Design of a Binary Adder Structure Suitable for High-Security Public Key Cryptography Processor",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2008",
    "year": "2008",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2008"
   },
   {
    "title": "Design of an Efficient MAC Unit for RSA Cryptoprocessors",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2008",
    "year": "2008",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2008"
   },
   {
    "title": "Design of a scalable RSA cryptoprocessor embedded with an efficient MAC unit",
    "authors": "S Moon",
    "venue": "2008 Second International Conference on Future Generation Communication and …, 2008",
    "year": "2008",
-   "cites": 4
+   "cites": 4,
+   "url": "https://doi.org/10.1109/fgcn.2008.196",
+   "venue_full": "2008 Second International Conference on Future Generation Communication and Networking, pp. 74-77, 2008",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "Cell Microprocessor Design Concept and Architecture Analysis",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 1 …, 2007",
    "year": "2007",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 1, 2007"
   },
   {
    "title": "HW/SW Co-Design of an Adaptive Frequency Decision in the IEEE 802.15. 1 Ad-Hoc Network",
    "authors": "S Moon",
    "venue": "INTERNATIONAL CONFERENCE ON FUTURE INFORMATION & COMMUNICATION ENGINEERING 1 …, 2007",
    "year": "2007",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Conference on Future Information & Communication Engineering (ICFICE), vol. 1, 2007"
   },
   {
    "title": "Consideration of Wireless Technology in Industrial Networks",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2007",
    "year": "2007",
-   "cites": 1
+   "cites": 1,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2007"
   },
   {
    "title": "A binary redundant scalar point multiplication in secure elliptic curve cryptosystems",
    "authors": "S Moon",
    "venue": "International journal of network security 3 (2), 132-137, 2006",
    "year": "2006",
-   "cites": 27
+   "cites": 27,
+   "kind": "journal"
   },
   {
    "title": "GF MULTIPLIER ARCHITECTURE USING MULTIPLE ORDER α-MULTIPLYING CIRCUIT",
    "authors": "S Moon",
    "venue": "ITC-CSCC: International Technical Conference on Circuits Systems, Computers …, 2006",
    "year": "2006",
-   "cites": 0
+   "cites": 0,
+   "kind": "conference",
+   "venue_full": "International Technical Conference on Circuits/Systems, Computers and Communications (ITC-CSCC), 2006"
   },
   {
    "title": "An adaptive frequency hopping method in the bluetooth baseband",
    "authors": "S Moon",
    "venue": "2006 1st International Symposium on Wireless Pervasive Computing, 1-4, 2006",
    "year": "2006",
-   "cites": 2
+   "cites": 2,
+   "url": "https://doi.org/10.1109/iswpc.2006.1613638",
+   "venue_full": "2006 1st International Symposium on Wireless Pervasive Computing, pp. 1-4, 2006",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "3X Serial GF(2^m) Multiplier Architecture on Polynomial Basis Finite Field",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2006",
    "year": "2006",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2006"
   },
   {
    "title": "A 193-bit encryption processor for elliptic curve cryptosystem using fast VLSI algorithms in finite fields",
    "authors": "S Moon",
    "venue": "Second IEEE Consumer Communications and Networking Conference, 2005. CCNC …, 2005",
    "year": "2005",
-   "cites": 2
+   "cites": 2,
+   "url": "https://doi.org/10.1109/ccnc.2005.1405251",
+   "venue_full": "Second IEEE Consumer Communications and Networking Conference, 2005. CCNC. 2005, pp. 611-613, 2005",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "An Adaptive Frequency Hopping Method in the Bluetooth Baseband",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2005",
    "year": "2005",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.1109/iswpc.2006.1613638",
+   "venue_full": "2006 1st International Symposium on Wireless Pervasive Computing, pp. 1-4, 2005",
+   "kind": "conference",
+   "match": 1.0,
+   "hidden": "duplicate"
   },
   {
    "title": "VLSI Design of an Improved Structure of a GF(2^m) Divider",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2005",
    "year": "2005",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2005"
   },
   {
    "title": "Elliptic Curve Scalar Point Multiplication Algorithm Using Radix-4 Booth’s Algorithm",
    "authors": "S Moon",
    "venue": "ECTI Transactions on Computer and Information Technology (ECTI-CIT) 1 (1), 3-8, 2005",
    "year": "2005",
-   "cites": 3
+   "cites": 3,
+   "url": "https://doi.org/10.37936/ecti-cit.200511.51824",
+   "venue_full": "ECTI Transactions on Computer and Information Technology (ECTI-CIT), vol. 1, no. 1, pp. 3-8, 2005",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "Elliptic curve scalar point multiplication using radix-4 Booth's algorithm [cryptosystems]",
    "authors": "S Moon",
    "venue": "IEEE International Symposium on Communications and Information Technology …, 2004",
    "year": "2004",
-   "cites": 11
+   "cites": 11,
+   "kind": "conference",
+   "venue_full": "IEEE International Symposium on Communications and Information Technology (ISCIT), 2004"
   },
   {
    "title": "Elliptic Curve Scalar Point Multiplication Using Radix-4 Modified Booth's Algorithm",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2004",
    "year": "2004",
-   "cites": 0
+   "cites": 0,
+   "url": "https://doi.org/10.1109/iscit.2004.1412454",
+   "venue_full": "IEEE International Symposium on Communications and Information Technology (ISCIT)",
+   "kind": "conference",
+   "match": 0.941
   },
   {
    "title": "Fast GF (2m) Multiplier Architecture Based on Common Factor Post-Processing Method",
    "authors": "S Moon",
    "venue": "Journal of the Korea Institute of Information and Communication Engineering …, 2004",
    "year": "2004",
-   "cites": 0
+   "cites": 0,
+   "kind": "journal",
+   "venue_full": "Journal of the Korea Institute of Information and Communication Engineering, 2004"
   },
   {
    "title": "A fast finite field multiplier architecture for high-security elliptic curve cryptosystems",
    "authors": "S Moon, YJ Lee, JM Park, BI Moon, YS Lee",
    "venue": "IEICE TRANSACTIONS on Information and Systems 85 (2), 418-420, 2002",
    "year": "2002",
-   "cites": 6
+   "cites": 6,
+   "kind": "journal"
   },
   {
    "title": "Fast VLSI arithmetic algorithms for high-security elliptic curve cryptographic applications",
    "authors": "S Moon, J Park, Y Lee",
    "venue": "IEEE Transactions on Consumer Electronics 47 (3), 700-708, 2001",
    "year": "2001",
-   "cites": 49
+   "cites": 49,
+   "url": "https://doi.org/10.1109/30.964166",
+   "venue_full": "IEEE Transactions on Consumer Electronics, vol. 47, no. 3, pp. 700-708, 2001",
+   "kind": "journal",
+   "match": 1.0
   },
   {
    "title": "A fast finite field multiplier architecture for high-security cryptographic applications",
    "authors": "S Moon, Y Lee, J Park, Y Lee",
    "venue": "ICCE. International Conference on Consumer Electronics (IEEE Cat. No …, 2001",
    "year": "2001",
-   "cites": 5
+   "cites": 5,
+   "url": "https://doi.org/10.1109/icce.2001.935281",
+   "venue_full": "ICCE. International Conference on Consumer Electronics (IEEE Cat. No.01CH37182), pp. 216-217, 2001",
+   "kind": "conference",
+   "match": 1.0
   },
   {
    "title": "A 32-bit RISC microprocessor with DSP functionality: Rapid prototyping",
    "authors": "BI Moon, DR Ryu, JW Hong, TY Lee, S Moon, YS Lee",
    "venue": "IEICE TRANSACTIONS on Fundamentals of Electronics, Communications and …, 2001",
    "year": "2001",
-   "cites": 13
+   "cites": 13,
+   "kind": "journal",
+   "venue_full": "IEICE Transactions on Fundamentals of Electronics, Communications and Computer Sciences, 2001"
   },
   {
    "title": "Design of a combined processor containing a 32-bit RISC microprocessor and a 16-bit fixed-point DSP on a chip",
    "authors": "W Jeong, S An, M Kim, S Heo, Y Kim, S Moon, Y Lee",
    "venue": "ICVC'99. 6th International Conference on VLSI and CAD (Cat. No. 99EX361 …, 1999",
    "year": "1999",
-   "cites": 9
+   "cites": 9,
+   "url": "https://doi.org/10.1109/icvc.1999.820913",
+   "venue_full": "ICVC '99. 6th International Conference on VLSI and CAD (Cat. No.99EX361), pp. 305-308, 1999",
+   "kind": "conference",
+   "match": 1.0
   }
  ]
 }

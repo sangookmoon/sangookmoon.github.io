@@ -3,35 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="alternate" hreflang="ko" href="https://sangookmoon.github.io/">
 <title>Sangook Moon | Mokwon University</title>
-<meta name="description" content="Sangook Moon, Professor of Electrical and Electronic Engineering at Mokwon University. Hardware security, FPGA, cryptographic hardware, industrial IoT.">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<meta name="description" content="Sangook Moon, Professor of Electrical and Electronic Engineering, Mokwon University. Hardware security, FPGA, cryptographic hardware, industrial IoT.">
+<link rel="alternate" hreflang="ko" href="https://sangookmoon.github.io/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="site" href="/en/">Sangook Moon<span>Mokwon University</span></a>
+  <a class="brand" href="/en/"><img class="lg-l" src="/assets/logo.svg" alt="Mokwon University" width="130" height="33"><img class="lg-d" src="/assets/logo-dark.svg" alt="" width="130" height="33"><span class="nm">Sangook Moon</span></a>
   <nav class="menu"><a class="on" href="/en/">About</a><a href="/en/publications.html">Publications</a><a href="/en/teaching/">Teaching</a><a class="lang" href="/" hreflang="ko" lang="ko">한국어</a></nav>
 </div></header>
 
 <main><div class="wrap">
   <section class="hero">
-    <img class="photo" src="/assets/photo.jpg" width="132" height="132" alt="Photo of Sangook Moon">
+    <img class="photo" src="/assets/photo.jpg" width="160" height="200" alt="Photo of Sangook Moon">
     <div>
       <h1>Sangook Moon</h1>
       <p class="sub">Professor, Department of Electrical and Electronic Engineering<br>Mokwon University, Daejeon, Korea</p>
-      <div class="links">
-        <a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a>
-        <a href="https://orcid.org/0000-0002-0290-1887">ORCID</a>
-        <a href="mailto:smoon@mokwon.ac.kr">smoon@mokwon.ac.kr</a>
-      </div>
+      <div class="links"><a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a><a href="https://orcid.org/0000-0002-0290-1887">ORCID</a><a href="/cv/Sangook_Moon_CV.pdf">CV</a><a href="mailto:smoon@mokwon.ac.kr">Email</a></div>
     </div>
-    <div class="stats" id="stats" aria-label="Google Scholar metrics"></div>
   </section>
 
-  <h2>Research Interests</h2>
-  <div class="tags"><span>Hardware Security</span><span>FPGA</span><span>Cryptographic Hardware</span><span>Industrial IoT</span><span>Computer Arithmetic</span></div>
+  <h2>Research</h2>
+  <p class="kw">Hardware security · FPGA · Cryptographic hardware · Industrial IoT · Computer arithmetic</p>
   <p>I work on cryptographic and security hardware for resource-constrained SoC-FPGAs, and on real-time signal-processing hardware for the industrial Internet of Things. Recent topics include lightweight cryptography (ASCON), homomorphic encryption, real-time anomaly-detection engines, and hardware for ultrasonic leak monitoring.</p>
 
   <h2>Education</h2>
@@ -48,23 +45,15 @@
   </table>
 
   <h2>Teaching</h2>
-  <p>Web-based simulators used in my courses, organized by course. They run in the browser with no installation. <a href="/en/teaching/">Teaching and simulators →</a></p>
+  <p>Interactive web simulators from my courses, organized by course. They run in the browser with no installation. <a class="nw" href="/en/teaching/">Teaching →</a></p>
 
   <h2>Contact</h2>
   <ul class="plain">
     <li>Department of Electrical and Electronic Engineering, Mokwon University<br>88 Doanbuk-ro, Seo-gu, Daejeon 35349, Republic of Korea</li>
-    <li>Phone +82-42-829-7637 · Email <a href="mailto:smoon@mokwon.ac.kr">smoon@mokwon.ac.kr</a></li>
+    <li>Phone <a href="tel:+82428297637">+82-42-829-7637</a> · Email <a href="mailto:smoon@mokwon.ac.kr">smoon@mokwon.ac.kr</a></li>
   </ul>
 </div></main>
 
-<footer><div class="wrap">© 2026 Sangook Moon · Last updated 2026-11-22</div></footer>
-<script>
-fetch('/assets/publications.json').then(r=>r.json()).then(d=>{
-  const s=document.getElementById('stats');
-  [['Citations',d.citations],['h-index',d.h],['Papers',d.pubs.length]].forEach(([k,v])=>{
-    const e=document.createElement('div'); e.className='stat'; e.innerHTML='<b>'+v+'</b><span>'+k+'</span>'; s.appendChild(e);
-  });
-}).catch(()=>{});
-</script>
+<footer><div class="wrap"><img class="lg-l" src="/assets/logo.svg" alt="Mokwon University" width="130" height="33"><img class="lg-d" src="/assets/logo-dark.svg" alt="" width="130" height="33"><span>© 2026 Sangook Moon</span><span>Last updated 2026-11-22</span></div></footer>
 </body>
 </html>

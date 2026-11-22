@@ -1,49 +1,56 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<link rel="alternate" hreflang="en" href="https://sangookmoon.github.io/en/publications.html">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>논문 | 문상국</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<meta name="description" content="문상국, 목원대학교 전기전자공학과 교수. 하드웨어 보안, FPGA, 암호 하드웨어, 산업 IoT.">
+<link rel="alternate" hreflang="en" href="https://sangookmoon.github.io/en/publications.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="site" href="./">문상국<span>Sangook Moon</span></a>
-  <nav class="menu"><a href="./">소개</a><a class="on" href="publications.html">논문</a><a href="teaching/">수업 · 시뮬레이터</a><a class="lang" href="/en/publications.html" hreflang="en" lang="en">English</a></nav>
+  <a class="brand" href="/"><img class="lg-l" src="/assets/logo.svg" alt="목원대학교" width="130" height="33"><img class="lg-d" src="/assets/logo-dark.svg" alt="" width="130" height="33"><span class="nm">문상국</span></a>
+  <nav class="menu"><a href="/">소개</a><a class="on" href="/publications.html">논문</a><a href="/teaching/">수업</a><a class="lang" href="/en/publications.html" hreflang="en" lang="en">English</a></nav>
 </div></header>
 
 <main><div class="wrap">
   <h1>논문</h1>
   <p class="sub" id="meta">Google Scholar 기준</p>
-  <div class="filter"><input id="q" type="search" placeholder="제목·저자·학술지로 찾기" aria-label="논문 찾기"><span class="note" id="cnt"></span></div>
+  <div class="filter"><input id="q" type="search" placeholder="제목·저자·학술지로 찾기" aria-label="논문 찾기"><span class="seg" role="radiogroup"><label><input type="radio" name="kind" value="all" checked>전체</label><label><input type="radio" name="kind" value="journal">학술지</label><label><input type="radio" name="kind" value="conference">학술대회</label></span><span class="note" id="cnt"></span></div>
   <div id="list"></div>
-  <p class="note" style="margin-top:24px">전체 목록과 인용 정보는 <a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a>에서 볼 수 있습니다.</p>
+  <p class="note" style="margin-top:28px">전체 목록과 인용 정보는 <a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a>에서 볼 수 있습니다.</p>
 </div></main>
 
-<footer><div class="wrap">© 2026 문상국</div></footer>
+<footer><div class="wrap"><img class="lg-l" src="/assets/logo.svg" alt="목원대학교" width="130" height="33"><img class="lg-d" src="/assets/logo-dark.svg" alt="" width="130" height="33"><span>© 2026 문상국</span><span>마지막 수정 2026-11-22</span></div></footer>
 <script>
+const L10N={count:n=>n+'편',noyear:'연도 미상',cited:n=>'인용 '+n,meta:d=>'Google Scholar 기준 · <span class="nw">인용 '+d.citations+'</span> · <span class="nw">h-index '+d.h+'</span> · <span class="nw">i10-index '+d.i10+'</span> · '+d.updated+' 갱신'};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let all=[];
 function render(){
   const q=document.getElementById('q').value.trim().toLowerCase();
-  const L=all.filter(p=>!q||(p.title+' '+p.authors+' '+p.venue).toLowerCase().includes(q));
-  document.getElementById('cnt').textContent=L.length+'편';
+  const k=document.querySelector('input[name=kind]:checked').value;
+  const L=all.filter(p=>!p.hidden&&(k==='all'||p.kind===k)&&(!q||(p.title+' '+p.authors+' '+(p.venue_full||p.venue)).toLowerCase().includes(q)));
+  document.getElementById('cnt').textContent=L10N.count(L.length);
   let html='',y=null;
   for(const p of L){
-    const yr=p.year||'연도 미상';
+    const yr=p.year||L10N.noyear;
     if(yr!==y){html+='<div class="pubyear">'+esc(yr)+'</div>';y=yr;}
-    const a=esc(p.authors).replace(/S Moon|SG Moon|S-G Moon|SangGook Moon|Sangook Moon/g,m=>'<b>'+m+'</b>');
-    html+='<div class="pub"><div class="t">'+esc(p.title)+'</div><div class="a">'+a+'</div><div class="v">'+esc(p.venue)+(p.cites?' <span class="c">· 인용 '+p.cites+'</span>':'')+'</div></div>';
+    const a=esc(p.authors).replace(/S Moon|SG Moon|S-G Moon|SangGook Moon|Sangook Moon|S\. Moon/g,m=>'<b>'+m+'</b>');
+    const t=p.url?'<a href="'+esc(p.url)+'">'+esc(p.title)+'</a>':esc(p.title);
+    html+='<div class="pub"><div class="t">'+t+'</div><div class="a">'+a+'</div><div class="v">'+esc(p.venue_full||p.venue)+(p.cites?' <span class="c">· '+L10N.cited(p.cites)+'</span>':'')+'</div></div>';
   }
   document.getElementById('list').innerHTML=html;
 }
-fetch('assets/publications.json').then(r=>r.json()).then(d=>{
-  all=d.pubs; document.getElementById('meta').textContent='Google Scholar 기준 · 인용 '+d.citations+' · h-index '+d.h+' · i10-index '+d.i10+' · '+d.updated+' 갱신';
+fetch('/assets/publications.json').then(r=>r.json()).then(d=>{
+  all=d.pubs; document.getElementById('meta').innerHTML=L10N.meta(d);
   render();
 });
 document.getElementById('q').addEventListener('input',render);
+document.querySelectorAll('input[name=kind]').forEach(e=>e.addEventListener('change',render));
 </script>
 </body>
 </html>
