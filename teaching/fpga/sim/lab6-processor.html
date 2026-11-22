@@ -1,0 +1,1330 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lab 6 프로세서 시뮬레이터</title>
+<meta name="author" content="문상국, 목원대학교 전기전자공학과">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* 레이아웃: 왼쪽 = 데이터 경로 그림 + 지금 단계 설명, 오른쪽 = 조작 + ROM, 아래 = 클럭 기록 */
+:root{
+  --bg:#F4F6F9; --panel:#FFFFFF; --ink:#1B2333; --muted:#5B6475; --line:#C7CEDA; --soft:#E9EDF3;
+  --accent:#1F3864; --accent-ink:#FFFFFF; --hot:#D9480F; --chg:#C00000;
+  --rom:#FFF4D1; --rom-line:#B8860B; --alu:#E3F1E6; --alu-line:#4C8A5B; --reg:#FFFFFF; --pill:#E9EDF3;
+  --f-body:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,"D2Coding",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F131A; --panel:#171C26; --ink:#E6E9F0; --muted:#9AA3B5; --line:#384152; --soft:#202735;
+  --accent:#8FB0E8; --accent-ink:#0F131A; --hot:#F08A4B; --chg:#FF6B6B;
+  --rom:#3A3220; --rom-line:#D9B44A; --alu:#1D3326; --alu-line:#7CC294; --reg:#1C2230; --pill:#262E3D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F131A; --panel:#171C26; --ink:#E6E9F0; --muted:#9AA3B5; --line:#384152; --soft:#202735;
+  --accent:#8FB0E8; --accent-ink:#0F131A; --hot:#F08A4B; --chg:#FF6B6B;
+  --rom:#3A3220; --rom-line:#D9B44A; --alu:#1D3326; --alu-line:#7CC294; --reg:#1C2230; --pill:#262E3D; color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+html{overflow-anchor:none}
+body{font-family:var(--f-body);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header h1{font-size:22px;margin:0;font-weight:700;text-wrap:balance}
+header p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.brand{display:flex;align-items:center;gap:14px;margin:0 0 16px;padding:10px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.brand img{height:44px;width:auto;flex:none}
+.brand .lg-d{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand .lg-l{display:none}:root:not([data-theme="light"]) .brand .lg-d{display:block}}
+:root[data-theme="dark"] .brand .lg-l{display:none}:root[data-theme="dark"] .brand .lg-d{display:block}
+.brand .bt{display:flex;flex-direction:column;line-height:1.35}
+.brand .bt b{font-size:17px;color:var(--accent)}
+.brand .bt span{font-size:13.5px;color:var(--muted)}
+.brand .copy{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap;text-align:right;line-height:1.5}
+.brand .copy .ver{font-size:12px}
+@media (max-width:560px){.brand .copy{display:none}.brand img{height:44px}}
+.foot{margin:24px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;line-height:1.6}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:900px){.grid{display:flex;flex-direction:column}.col{display:contents}.o0{order:0}.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.panel h2{font-size:13px;letter-spacing:.04em;color:var(--muted);margin:0 0 8px;font-weight:700}
+svg{width:100%;height:auto;display:block}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button:disabled{opacity:.45;cursor:default}
+select{font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{padding:5px 10px;font-size:13.5px;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{font-weight:700;color:var(--accent)}
+.sw{display:inline-flex;gap:6px;align-items:center;font-size:14px}
+.now{border-left:4px solid var(--hot);padding:2px 0 2px 12px}
+.now .step{font-weight:700;font-size:16px}
+.now .asm{font-family:var(--f-mono);font-weight:700}
+.now p{margin:4px 0}
+.edge{margin-top:8px;font-size:14px}
+.edge b{color:var(--hot)}
+.chg b{color:var(--chg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted);font-size:12.5px;margin-top:8px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid var(--hot);vertical-align:middle;margin-right:5px}
+.legend i.live{border-top:2px solid var(--rom-line)}
+.live{stroke:var(--rom-line);stroke-width:2;fill:none}
+.legend i.dash{border-top:2px dashed var(--hot)}
+.legend i.red{border:none;width:auto;height:auto;color:var(--chg);font-style:normal;font-weight:700;margin-right:4px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:4px 6px;text-align:left;border-bottom:1px solid var(--soft);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:12.5px}
+.rom td input{width:3.2em;font-family:var(--f-mono);font-size:13.5px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);text-transform:uppercase}
+.rom td input.bad{border-color:var(--chg)}
+.rom tr.pc td{background:color-mix(in srgb,var(--hot) 14%,transparent)}
+.rom tr.pc td:first-child{font-weight:700}
+.rom .lab{color:var(--accent);font-weight:700;font-size:12px}
+.scroll{overflow-x:auto}
+.hist{max-height:320px;overflow:auto}
+.hist td.c{color:var(--chg);font-weight:700}
+.hist tr.cur td{background:var(--soft)}
+.sigs{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.sgrp{--gc:var(--muted);border:1px solid color-mix(in srgb,var(--gc) 45%,var(--line));border-left:5px solid var(--gc);border-radius:8px;padding:6px 10px 8px;background:color-mix(in srgb,var(--gc) 7%,var(--panel))}
+.sgrp.g-bus{--gc:#2B6CB0}.sgrp.g-in{--gc:var(--hot)}.sgrp.g-alu{--gc:var(--alu-line)}.sgrp.g-end{--gc:#6B6B6B}
+.sghead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:5px}
+.sghead b{color:var(--gc);font-size:13.5px}
+.sghead span{color:var(--muted);font-size:12px}
+.sigchips{display:flex;flex-wrap:wrap;gap:6px}
+.sgrp .sig.on{background:var(--gc);border-color:var(--gc);color:#FFFFFF}
+.sig{font-family:var(--f-mono);font-size:13px;padding:3px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted);background:var(--pill)}
+.sig.on{background:var(--hot);border-color:var(--hot);color:#FFFFFF;font-weight:700}
+.sigbox{margin-top:12px;border-top:1px solid var(--soft);padding-top:10px}
+.sigbox .note{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+.msg{font-size:13.5px;color:var(--hot);min-height:1.4em}
+.ctl{padding:10px 12px}
+.ctl .controls{gap:6px}
+.ctl button{font-size:13.5px;padding:5px 8px}
+.ctl select{font-size:13px;padding:4px 6px}
+.ctl .row{gap:8px 10px}
+.ctl .seg label{padding:3px 8px;font-size:13px}
+.ctl .msg{font-size:13px;min-height:0}
+#quizbox{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.qhead{margin:0 0 10px;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.qlab{font-weight:700;color:var(--muted);font-size:13px}
+.qins{font-family:var(--f-mono);font-size:18px;font-weight:700;padding:4px 12px;border-radius:7px;border:1.5px solid var(--hot);background:color-mix(in srgb,var(--hot) 14%,var(--panel));color:var(--ink)}
+.qins a.ml{color:inherit}
+.qq{flex-basis:100%;font-size:13.5px}
+.qgrid{display:flex;flex-wrap:wrap;gap:8px 12px}
+.qf{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:700;color:var(--muted)}
+.qf input{font-family:var(--f-mono);font-size:15px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:104px}
+.qf input.w4{width:60px}.qf input.w1{width:36px;text-align:center}
+.qf input.bad{border-color:var(--hot);outline:2px solid color-mix(in srgb,var(--hot) 35%,transparent);background:color-mix(in srgb,var(--hot) 12%,var(--panel))}
+.qf input.good{border-color:var(--alu-line);outline:2px solid color-mix(in srgb,var(--alu-line) 35%,transparent);background:color-mix(in srgb,var(--alu-line) 14%,var(--panel))}
+.qf .qwas{font-weight:500;font-size:11.5px;color:var(--hot);font-family:var(--f-mono)}
+.qbtns{margin-top:8px;gap:8px}
+.qidrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 10px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.qidrow label{font-size:13px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px}
+.qidrow input{font-family:var(--f-mono);font-size:15px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:96px}
+.qidrow input:disabled{opacity:1;background:var(--bg);color:var(--ink)}
+.qidrow .qidn{font-size:12.5px;color:var(--muted)}
+.qcert{flex-basis:100%;word-break:keep-all;padding:10px 12px;border-radius:8px;border:1.5px solid var(--alu-line);background:color-mix(in srgb,var(--alu-line) 12%,var(--panel));font-size:14px;line-height:1.7}
+.qcert.no{border-color:var(--line);background:var(--panel);color:var(--muted)}
+.qcert .qcode{font-family:var(--f-mono);font-size:19px;letter-spacing:1px;padding:1px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line)}
+.qscore{color:var(--muted);font-size:13px}
+.qres{margin-top:6px;font-size:13.5px;line-height:1.6}
+.qres .ok{color:var(--alu-line);font-weight:700}.qres .ng{color:var(--hot);font-weight:700}
+.ctl .msg:not(:empty){margin-top:6px}
+.foot{color:var(--muted);font-size:12.5px}
+/* SVG */
+.box{fill:var(--reg);stroke:var(--line);stroke-width:1.5}
+.box.rom{fill:var(--rom);stroke:var(--rom-line)}
+.box.alu{fill:var(--alu);stroke:var(--alu-line)}
+.box.inc{fill:var(--panel);stroke:var(--accent);stroke-width:1.5}
+.box.inc.act{stroke:var(--hot);stroke-width:2.5}
+.inc-t{font-family:var(--f-mono);font-weight:700;font-size:13px;fill:var(--accent)}
+.box.dec{fill:color-mix(in srgb,var(--alu-line) 16%,var(--panel));stroke:var(--alu-line)}
+.box.dec.act{stroke:var(--hot);stroke-width:2.5}
+.box.dst{stroke:var(--hot);stroke-width:2.5;stroke-dasharray:6 4}
+.lbl{fill:var(--muted);font-size:13px;font-family:var(--f-body);font-weight:700}
+.val{fill:var(--ink);font-size:15px;font-family:var(--f-mono);font-weight:700}
+.val.c{fill:var(--chg)}
+.small{fill:var(--muted);font-size:11.5px;font-family:var(--f-body)}
+.wire{stroke:var(--line);stroke-width:2;fill:none}
+.busline{stroke:var(--line);stroke-width:7}
+.hot{stroke:var(--hot);stroke-width:3.2;fill:none}
+.busline.hotbus{stroke:var(--hot)}
+.pill{fill:var(--pill);stroke:var(--line)}
+.pill.on{fill:var(--accent);stroke:var(--accent)}
+.pilltx{font-size:13px;font-family:var(--f-mono);font-weight:700;fill:var(--muted)}
+.pilltx.on{fill:var(--accent-ink)}
+.fld{font-size:12px;font-family:var(--f-body);font-weight:700}
+@media (prefers-reduced-motion:no-preference){.val.c{animation:pop .5s ease}}
+@keyframes pop{from{opacity:.2}to{opacity:1}}
+
+[hidden]{display:none!important}
+/* 탭 · 매뉴얼 */
+:root{--link:#1F5FBF;--fa:#DCE6F7;--fb:#EADCF5;--fc:#DDF0E1;--fd:#FCE5D4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--link:#8FB0E8;--fa:#23324D;--fb:#3A2A4A;--fc:#1F3A2A;--fd:#4A3022}}
+:root[data-theme="dark"]{--link:#8FB0E8;--fa:#23324D;--fb:#3A2A4A;--fc:#1F3A2A;--fd:#4A3022}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.tabs{display:inline-flex;gap:4px}
+.tabs a{padding:4px 12px;border-radius:8px;border:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:13.5px;background:var(--panel)}
+.tabs a.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+a{color:var(--link);text-underline-offset:2px}
+a.ml{color:inherit;text-decoration:underline dotted;text-decoration-color:var(--muted)}
+a.ml:hover{color:var(--link);text-decoration-style:solid}
+.man{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
+.mside{box-sizing:border-box}
+.mside input{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.mside h3{font-size:12px;color:var(--muted);margin:14px 0 4px;letter-spacing:.04em}
+.mside ul{list-style:none;margin:0;padding:0}
+.mside li a{display:block;padding:4px 8px;border-radius:6px;font-size:14px;text-decoration:none;color:var(--ink);line-height:1.4}
+.mside li a:hover{background:var(--soft)}
+.mside li.sg{font-size:12px;font-weight:700;color:var(--muted);padding:8px 8px 2px}
+.mside li a.in{padding-left:18px}
+.mside li a.on{background:var(--soft);color:var(--link);font-weight:700}
+.mside .none{color:var(--muted);font-size:13.5px}
+.mart{padding:22px 30px 26px;line-height:1.75}
+.mart::after{content:"";display:block;clear:both}
+.mart h1{font-size:25px;margin:2px 0 14px;line-height:1.35;text-wrap:balance}
+.mart h2{overflow:hidden;font-size:18px;margin:26px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.mart p,.mart li{max-width:72ch}
+.mart p{margin:8px 0}
+.mart .lead{font-size:16px}
+.mart code{font-family:var(--f-mono);font-size:.92em;background:var(--soft);padding:1px 5px;border-radius:4px}
+.crumb{font-size:12.5px;color:var(--muted)}
+.crumb a{color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:0 6px;border-radius:4px;background:#2D3FB0;color:#fff;vertical-align:middle;line-height:1.6}
+.tag.big{font-size:13px;padding:1px 8px}
+.infobox{float:right;width:270px;margin:0 0 14px 22px;border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:13.5px;line-height:1.5}
+.infobox .ibh{background:var(--accent);color:var(--accent-ink);font-family:var(--f-mono);font-weight:700;font-size:18px;text-align:center;padding:6px}
+.infobox table{font-size:13.5px}
+.infobox th{width:68px;vertical-align:top;color:var(--muted);font-weight:700;white-space:normal}
+.infobox td{white-space:normal;font-family:var(--f-mono);font-size:13px}
+.tb{margin:8px 0}
+.tb th,.tb td{white-space:normal;vertical-align:top;padding:6px 8px}
+.tb thead th{background:var(--soft);color:var(--ink);font-weight:700}
+.tb.hx td{text-align:center;line-height:1.4}
+.lst{margin:8px 0;font-size:14px}
+.lst td{padding:3px 8px}
+.lst td.cm{color:var(--muted);white-space:normal;font-size:13px}
+.lst .lab{color:var(--accent);font-weight:700;font-size:12.5px}
+.lst tr.bad td{background:color-mix(in srgb,var(--chg) 10%,transparent)}
+.err{color:var(--chg)}
+pre.code,pre.anat{font-family:var(--f-mono);font-size:13.5px;background:var(--soft);border-radius:8px;padding:10px 14px;overflow-x:auto;line-height:1.6;margin:8px 0}
+pre.anat{font-size:15px;line-height:1.9}
+.pa{color:var(--accent);font-weight:700}.pb{color:var(--hot);font-weight:700}.pc{color:var(--alu-line);font-weight:700}.pd{color:#8A4FB0;font-weight:700}.pe{color:var(--muted)}
+.callout{border-radius:8px;padding:10px 14px;margin:14px 0;max-width:76ch}
+.callout.tip{background:var(--alu);border-left:4px solid var(--alu-line)}
+.callout.warn{background:var(--rom);border-left:4px solid var(--rom-line)}
+ol.steps li{margin:3px 0}
+.bits{border-collapse:separate;border-spacing:3px;width:auto;margin:8px 0 2px}
+.bits{border-spacing:4px;margin:12px 0 4px;table-layout:fixed;width:476px}
+.bits col{width:56px}
+.bits th{text-align:center;font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--muted);padding:0;border:none}
+.bits td{text-align:center;border:1px solid var(--line);border-radius:6px;font-family:var(--f-mono);font-weight:700;font-size:26px;width:54px;min-width:54px;padding:8px 0}
+.bits tr.nm td{font-family:var(--f-body);font-size:14.5px;font-weight:700;line-height:1.45;padding:7px 6px}
+.bits tr.nm td small{display:block;font-weight:500;font-size:13px}
+.bits.form tr.nm td{font-size:15.5px;padding:10px 6px}
+@media (max-width:640px){.bits{border-spacing:2px;width:322px}.bits col{width:38px}.bits td{font-size:19px;width:36px;min-width:36px;padding:5px 0}.bits tr.nm td{font-size:12.5px;padding:5px 2px}.bits tr.nm td small{font-size:11.5px}.bits.form tr.nm td{font-size:13px;padding:6px 2px}}
+.bin{font-family:var(--f-mono);font-weight:700;white-space:nowrap;display:inline-flex;gap:2px}
+.bin span{display:inline-block;width:22px;text-align:center;padding:2px 0;border-radius:0;font-size:15px}
+.bin span.l{border-radius:4px 0 0 4px}.bin span.r{border-radius:0 4px 4px 0}.bin span.l.r{border-radius:4px}
+.bin.bnum span{font-weight:500;font-size:11.5px;color:var(--muted);padding:0}
+.leg{font-size:13.5px;color:var(--muted);line-height:2}
+.fa{background:var(--fa)}.fb{background:var(--fb)}.fc{background:var(--fc)}.fd{background:var(--fd)}
+.swatch{display:inline-block;padding:0 6px;border-radius:4px;font-family:var(--f-mono);font-weight:700;font-size:13px}
+.hx{color:var(--muted);font-size:.9em}
+.bitsum{margin:4px 0 12px;font-size:15px}
+button.try{border-color:var(--accent);color:var(--accent);font-weight:700}
+.trynote{color:var(--muted);font-size:13.5px}
+.pn{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:12px;border-top:1px solid var(--line);font-size:14px;clear:both}
+.conv input{font-size:16px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;width:min(320px,100%);background:var(--panel);color:var(--ink)}
+.ed textarea{width:100%;box-sizing:border-box;font-size:14px;line-height:1.55;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);resize:vertical}
+.edbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+dl.gl dt{font-weight:700;margin-top:10px}
+dl.gl dd{margin:0 0 0 16px;max-width:70ch}
+#view-man,.man>*{min-width:0}
+@media (max-width:900px){.man{display:flex;flex-direction:column;align-items:stretch}.mside{position:static}.infobox{float:none;width:auto;margin:0 0 14px}.mart{padding:16px}}
+</style>
+
+<div class="wrap">
+
+  <div class="brand"><img class="lg-l" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzAiIGhlaWdodD0iMzMiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0yMS41IDI3LjNINi42QTIuNiAyLjYgMCAwMTQgMjQuN1Y2aDIwdjE4LjdjMCAxLjQtMS4xIDIuNi0yLjUgMi42Ii8+PHBhdGggZD0iTTQxLjggMTEuMkgzMnYuOGwyLjMuOGgxOC4zdi0xLjZoLTcuOFY5LjRoNS40VjcuN2gtLjhzMS00LjYgMS02aC0xNnYuOGwyLjMuN3Y2LjloMy4ydi0uOGgxLjl2MS45em0tMi0zLjRWMy40aDcuNWwtLjIgNC40aC03LjJ6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNNDEuOCAxMS4ySDMydi44bDIuMy44aDE4LjN2LTEuNmgtNy44VjkuNGg1LjRWNy43aC0uOHMxLTQuNiAxLTZoLTE2di44bDIuMy43djYuOWgzLjJ2LS44aDEuOXYxLjl6bS0yLTMuNFYzLjRoNy41bC0uMiA0LjRoLTcuMnoiLz48cGF0aCBkPSJNMzUgMTQuMmgxNS4ydjcuMkg0N3YtNS42SDM2LjdsLTEuNi0uOHoiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik0zNSAxNC4yaDE1LjJ2Ny4ySDQ3di01LjZIMzYuN2wtMS42LS44eiIvPjxwYXRoIGQ9Ik02Mi40IDIuNWMwLS4zLS40LS41LS40LS41TDU4IDEuNFYycy43LjIuOS40YzAgMCAuNC4yIDAgLjUtMi40LjQtNC4yIDEuOS00LjIgMy42IDAgMi4xIDIuNSAzLjggNS42IDMuOCAzLjEgMCA1LjYtMS43IDUuNi0zLjggMC0xLjctMS43LTMuMi00LTMuNiAwIDAgLjMgMCAuNC0uNG0tMiA2LjJhMi4yIDIuMiAwIDExMC00LjQgMi4yIDIuMiAwIDAxMCA0LjQiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik02Mi40IDIuNWMwLS4zLS40LS41LS40LS41TDU4IDEuNFYycy43LjIuOS40YzAgMCAuNC4yIDAgLjUtMi40LjQtNC4yIDEuOS00LjIgMy42IDAgMi4xIDIuNSAzLjggNS42IDMuOCAzLjEgMCA1LjYtMS43IDUuNi0zLjggMC0xLjctMS43LTMuMi00LTMuNiAwIDAgLjMgMCAuNC0uNHptLTIgNi4yYTIuMiAyLjIgMCAxMTAtNC40IDIuMiAyLjIgMCAwMTAgNC40eiIvPjxwYXRoIGQ9Ik02NiAuOHYxbDEuNy42djExSDYydi45bDIuMS43aDMuNHYyLjRoMy4zVjEuOHoiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik02NiAuOHYxbDEuNy42djExSDYydi45bDIuMS43aDMuNHYyLjRoMy4zVjEuOHoiLz48cGF0aCBkPSJNNjYuOSAxMGMtNS4yIDEuOC0xMy40IDEuMi0xMy40IDEuMnYuOGwxLjUuNmgzdjMuMmgzLjJ2LTMuM2MzLjQtLjMgNS43LTEgNS43LTFWMTB6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNNjYuOSAxMGMtNS4yIDEuOC0xMy40IDEuMi0xMy40IDEuMnYuOGwxLjUuNmgzdjMuMmgzLjJ2LTMuM2MzLjQtLjMgNS43LTEgNS43LTFWMTB6Ii8+PHBhdGggZD0iTTU2LjQgMTUuOXYuNmwxLjYgMXYyczAgMS41IDEuMiAxLjdoMTJ2LTEuNmgtMTB2LTNsLTQuOC0uN3oiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik01Ni40IDE1Ljl2LjZsMS42IDF2MnMwIDEuNSAxLjIgMS43aDEydi0xLjZoLTEwdi0zbC00LjgtLjd6Ii8+PHBhdGggZD0iTTcxLjMgMy44djFsMi4xLjZ2OS45cy4yIDEuOSAxLjggMS44YzAgMCAxLjguNCA3LTEuNWguMXY0aDIuOXYtMTBoMS4zdjExLjhoM1YxLjhsLTQuMy0xdjEuM2wxLjMuNFY4aC0xLjNWMi41bC00LjgtMXYuOWwxLjguOHYxMXMtNSAxLjMtNS41LjlWNS4zaDVWMy44SDcxLjN6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNNzEuMyAzLjh2MWwyLjEuNnY5LjlzLjIgMS45IDEuOCAxLjhjMCAwIDEuOC40IDctMS41aC4xdjRoMi45di0xMGgxLjN2MTEuOGgzVjEuOGwtNC4zLTF2MS4zbDEuMy40VjhoLTEuM1YyLjVsLTQuOC0xdi45bDEuOC44djExcy01IDEuMy01LjUuOVY1LjNoNVYzLjhINzEuM3oiLz48cGF0aCBkPSJNOTQuNSAyaDYuOXYxLjRoLTQuOGwtMi0uNnoiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik05NC41IDJoNi45djEuNGgtNC44bC0yLS42eiIvPjxwYXRoIGQ9Ik05OCA2Yy0zLjIgMC01LjcgMS42LTUuNyAzLjdzMi41IDMuOCA1LjYgMy44YzMuMiAwIDUuNy0xLjcgNS43LTMuOCAwLTItMi41LTMuOC01LjctMy44bTAgNmEyLjMgMi4zIDAgMTEwLTQuNCAyLjMgMi4zIDAgMDEwIDQuNSIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuMSIgZD0iTTk4IDZjLTMuMiAwLTUuNyAxLjYtNS43IDMuN3MyLjUgMy44IDUuNiAzLjhjMy4yIDAgNS43LTEuNyA1LjctMy44IDAtMi0yLjUtMy44LTUuNy0zLjh6bTAgNmEyLjMgMi4zIDAgMTEwLTQuNSAyLjMgMi4zIDAgMDEwIDQuNXoiLz48cGF0aCBkPSJNOTkuNCA1LjVoNVY0SDkxdjFsMiAuNWgzLjVzMSAuMyAwIC44aDIuOXMuOS0uNCAwLS44Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNOTkuNCA1LjVoNVY0SDkxdjFsMiAuNWgzLjVzMSAuMyAwIC44aDIuOXMuOS0uNCAwLS44eiIvPjxwYXRoIGQ9Ik0xMDMuNi44djFsMS42LjZ2MTEuMmgzLjFWOS43aDNWOGgtMi44VjEuN3oiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik0xMDMuNi44djFsMS42LjZ2MTEuMmgzLjFWOS43aDNWOGgtMi44VjEuN3oiLz48cGF0aCBkPSJNOTIuNiAxNC4ydjFsMiAuNUgxMDV2NS43aDMuMXYtNy4yeiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuMSIgZD0iTTkyLjYgMTQuMnYxbDIgLjVIMTA1djUuN2gzLjF2LTcuMnoiLz48cGF0aCBkPSJNMTExLjMgMy43di44bDEuNi42aDEyLjJWOXMtLjMgNC45LTEuMiA3LjNoMi4yczEuOC0zLjYgMi4yLTlWMy42aC0xN3oiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik0xMTEuMyAzLjd2LjhsMS42LjZoMTIuMlY5cy0uMyA0LjktMS4yIDcuM2gyLjJzMS44LTMuNiAyLjItOVYzLjZoLTE3eiIvPjxwYXRoIGQ9Ik0xMTQgOC40djEuMmwxLjUuNFYxOGgtNS45di44bDIuNC44aDE4VjE4aC02LjdWOC43bC00LjctMXYxbDEuNS43VjE4aC0xLjZWOS4yeiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuMSIgZD0iTTExNCA4LjR2MS4ybDEuNS40VjE4aC01Ljl2LjhsMi40LjhoMThWMThoLTYuN1Y4LjdsLTQuNy0xdjFsMS41LjdWMThoLTEuNlY5LjJ6Ii8+PHBhdGggZD0iTTMyLjYgMjQuMnMtLjUuMiAwIC4zYzAgMCAuOC4yLjggMS4ydjMuN3MwIDEuMi0uOCAxLjJjMCAwLS4zLjMuMS4zSDM1cy4yLS4yIDAtLjJjMCAwLTEuMyAwLTEuMy0xLjN2LTQuMWwuMi0uMSAyLjcgNS45IDIuNy01LjhzLjItLjMuMi4ydjRzMCAxLjEtMS4xIDEuMWMwIDAtLjUuMi0uMi4zSDQxcy4yLS4yLS4xLS4zYzAgMC0uOCAwLS44LTEuMnYtNC4yczAtLjguOC0uOGMwIDAgLjMtLjIgMC0uMmgtMS42cy0uOCAyLjYtMi41IDUuNWMwIDAtMS0xLjgtMi41LTUuNWgtMS42eiIvPjxwYXRoIGQ9Ik00MC44IDI2LjRzLjctMi41IDMuOS0yLjNjMCAwIDMgMCAzIDMuMyAwIDAgLjQgMy41LTMuMyAzLjkgMCAwLTMuMi4zLTMuNy0zLjEgMCAwLS4xLS45LjEtMS44bS43IDFjLS4xIDEuOC44IDIuNC44IDIuNC43IDEgMi4xLjkgMi4xLjkgMSAuMiAxLjktLjcgMS45LS43IDEtMS40LjUtMy40LjUtMy40LS40LTEuNS0xLjgtMS45LTEuOC0xLjktMS42LS40LTIuNi40LTIuNi40LTEgLjctMSAyLjQtMSAyLjRNNjIuOCAyNi4zcy43LTIuNSAzLjktMi4zYzAgMCAzIDAgMy4xIDMuMyAwIDAgLjMgMy41LTMuNCAzLjggMCAwLTMuMi4zLTMuNy0zbC4xLTEuOG0uNyAxYzAgMS43LjggMi40LjggMi40LjcgMSAyLjEuOCAyLjEuOCAxIC4yIDEuOS0uNiAxLjktLjYgMS0xLjQuNS0zLjQuNS0zLjQtLjQtMS41LTEuOC0yLTEuOC0yLTEuNi0uMy0yLjYuNC0yLjYuNC0xIC44LS45IDIuNS0uOSAyLjUiLz48cGF0aCBkPSJNNDcuNiAyNC4ycy0uMyAwIDAgLjNjMCAwIC43IDAgLjguN3Y0LjVzMCAuOC0uOCAxYzAgMC0uNC4yLjIuMmgyLjRzLjMtLjItLjEtLjNjMCAwLTEuMiAwLTEuMi0xLjJ2LTJzLjYtLjIgMiAxLjdsMS4yIDEuN0g1My4zcy4zLS4xLS4zLS4zYzAgMC0uMyAwLS42LS41bC0xLjYtMnMtLjctLjgtMS4yLTFsMi0ycy4zLS41LjktLjZjMCAwIC40IDAgMC0uMmgtMS44cy0uMi4xIDAgLjNjMCAwIC43LjEuMy43bC0xLjcgMS43cy0uMi0uMS0uNCAwdi0xLjdzMC0uOCAxLS44YzAgMCAuMi0uMi0uMS0uMmgtMi4yek02MC4yIDMwLjlsLTEuNi01LjJjMC0uMy0uMyAwLS4zIDBzLTEuNiA0LjItMS42IDVsLS4xLjJINTZsLS4xLS4xLS45LTMuMmMtLjgtMy0xLjUtMy4xLTEuNS0zLjEtLjYtLjIgMC0uMyAwLS4zaDIuN2MuMy4xIDAgLjMgMCAuM2gtMWMtLjIuMi0uNC41LS4zLjdsLjYgMi4yLjggMi41IDEuOS01LjVjMC0uMy4zLS4zLjMtLjNzLjIgMCAuNSAxLjJjMCAwIC43IDIuOCAxLjQgNC4zbC4xLjMgMS4yLTRjLjMtLjkgMC0xLjIgMC0xLjItLjMtLjItMS4xLS4zLTEuMS0uMy0uNCAwIDAtLjIgMC0uMmgyYy4zIDAgLjEuMy4xLjNzLTEuNSAzLjktMS44IDUuN2MwIDAtLjEuNi0uMy43aC0uNXpNNzUgMjkuNXYtMy44YzAtLjgtLjUtMS0uNS0xLS4zLS4yLS45LS4yLS45LS4yLS4zLS4xIDAtLjMgMC0uM2gyLjVjLjUuMSAwIC4zIDAgLjNsLS40LjJjLS4zLjEtLjMuNi0uMy42djUuNGMwIC4zLS4yLjItLjIuMi0uNCAwLS42LS41LS42LS41LTItMy0zLjctNC44LTMuNy00Ljh2NGMwIC40LjIuNS4yLjUuMi42IDEuMi41IDEuMi41LjIuMSAwIC4zIDAgLjNoLTIuNmMtLjMtLjIgMC0uMyAwLS4zLjggMCAuOC0xIC44LTF2LTQuMWMwLS41LS4yLS43LS4yLS43LS4zLS4zLS43LS4zLS43LS4zLS4yLS4yIDAtLjMgMC0uM2gxLjJzLjMuMS40LjVjMCAwIC45IDEuNCAzLjMgNC40IDAgMCAuNC42LjUuNE03OC4yIDI0LjJzLS40LjEgMCAuM2MwIDAgLjUgMCAuNS40djMuOXMwIDIuMyAyLjQgMi4zYzAgMCAyLjMgMCAyLjMtMi4zVjI1czAtLjYuNi0uNmMwIDAgLjMtLjIgMC0uM0g4MnMtLjMgMCAwIC4yYzAgMCAuOSAwIC45Ljd2NC4ycy0uMiAxLjUtMiAxLjVjMCAwLTEuNi0uMS0xLjYtMS42di00czAtLjYuNS0uNmMwIDAgLjQtLjIuOC0uMSAwIDAgLjQtLjMgMC0uM2gtMi41ek05MS41IDI0LjJzLS4zLjIgMCAuM2MwIDAgLjUgMCAuNS42djQuN3MwIC44LS43LjhjMCAwLS40LjMgMCAuM2gyLjFzLjMtLjEgMC0uM2MwIDAtLjcgMC0uNy0uOHYtNC41czAtLjguNy0uOGMwIDAgLjQtLjIgMC0uM2gtMS45ek05Ny43IDMwLjdjLS4yLjYtMSAuMy0xIC4zbC0xLjMtMy42LTEtMi40Yy0uMi0uNS0uNS0uNS0uNS0uNS0uMy0uMSAwLS4zIDAtLjNoMi42Yy40LjEgMCAuMyAwIC4zSDk2Yy0uOC4yLS4zIDEuMy0uMyAxLjNsMS43IDQuNyAxLjgtNWMuMi0uNC0uMS0uNy0uMS0uNy0uNC0uNC0xLS4zLTEtLjMtLjItLjEgMC0uMyAwLS4zaDJzLjMgMCAwIC40YzAgMC0xLjIgMi43LTIuMyA2LjFNMTAwLjYgMjQuNXMuNi4xLjYuOFYzMHMwIC43LS43LjdjMCAwLS40LjEgMCAuM2g0LjZ2LTEuN3MtLjMtLjMtLjMgMGMwIDAgLjEgMS4zLS44IDEuM2gtMi4xdi0zaDFzMSAwIDEgLjljMCAwIC4xLjUuMiAwdi0xLjlzLS4xLS40LS4yIDBjMCAwIDAgLjgtLjguOEgxMDJ2LTIuMXMwLS42LjYtLjZoMS41cy43IDAgLjcgMWMwIDAgLjEuMi4zIDB2LTEuNGgtNC40cy0uMy4xIDAgLjNNMTA4LjQgMjcuNGMuOC4yIDEuMyAxLjUgMS4zIDEuNWwuNiAxLjNjLjIuMy42LjQuNi40LjMuMSAwIC4zIDAgLjNoLTFjLS4yIDAtMS4yLTIuNC0xLjItMi40LS4zLS43LS44LTEtLjgtMS0uMi0uMS0uOCAwLS44IDB2Mi4yYzAgMSAuOSAxIC45IDEgLjUgMCAuMi4yLjIuMmgtMi42Yy0uMy0uMiAwLS4zIDAtLjMgMSAwIC44LS44LjgtLjh2LTQuOWMwLS40LS43LS4zLS43LS4zLS40LS4zIDAtLjQgMC0uNGgyLjhjMS42IDAgMS42IDEuNiAxLjYgMS42IDAgMS41LTEuNyAxLjYtMS43IDEuNm0xLTEuNXMuMS0xLjMtMS40LTEuM2MwIDAtLjktLjEtLjkuNHYyLjFoMS4yczEuMS0uMiAxLjEtMS4yTTExMy41IDI0LjJzLTIuMiAwLTIuMiAxLjdjMCAwIDAgLjkgMSAxLjRsMS45LjlzLjYuMi42IDEuMWMwIDAgLjEgMS40LTEuNCAxLjMgMCAwLTEuNy4yLTEuNy0uOHYtLjZzLS4yLS40LS4zIDB2MS42bC4zLjFoMi4yczEuNiAwIDEuNy0xLjVjMCAwIC4xLTEuMS0xLjEtMS44bC0yLTFzLS40LS4yLS40LS44YzAgMC0uMi0xLjIgMS40LTEuMiAwIDAgMS40LS4yIDEuNSAxLjIgMCAwIC4xLjMuMiAwdi0xLjVsLS4yLS4xaC0xLjV6TTExOC43IDI0LjJoNS40bC4xLjJ2MS4zcy0uMS4zLS4yIDBjMCAwLS4zLTEuMi0xLjItMS4yaC0xdjVzMCAxLjEgMSAxLjFjMCAwIC40LjMuMS4zSDEyMHMtLjMtLjIuMS0uM2MwIDAgMSAuMSAxLTEuMXYtNWgtMXMtMSAwLTEuMSAxLjFjMCAwLS4yLjMtLjMgMHYtMS40ek0xMjQuOSAyNC4ycy0uNCAwIDAgLjNjMCAwIC4zLS4xIDIuMiAzdjIuMnMwIC45LTEgLjljMCAwLS4zLjEgMCAuMmgyLjdzLjMgMCAwLS4yYzAgMC0xIDAtMS0xdi0yLjJsMi4xLTMuMnMuMi0uMiAwLS4yaC0uN2wtMS42IDMuMy0xLjMtMnMtLjUtLjkuNC0uOWguNXMuNC0uMSAwLS4ySDEyNXpNODkuNyAyOS41di0zLjhjMC0uOC0uNS0xLS41LTEtLjMtLjItLjktLjItLjktLjItLjMtLjEgMC0uMyAwLS4zaDIuNWMuNS4xIDAgLjMgMCAuM2wtLjQuMmMtLjMuMS0uMy42LS4zLjZ2NS40YzAgLjMtLjIuMi0uMi4yLS41LS4yLS42LS42LS42LS42LTIuMS0zLTMuNy00LjgtMy43LTQuOHY0LjJjMCAuMy4yLjQuMi40LjIuNiAxLjIuNSAxLjIuNS4yLjEgMCAuMyAwIC4zaC0yLjZjLS4zLS4yIDAtLjMgMC0uMy44IDAgLjgtMSAuOC0xdi00YzAtLjYtLjItLjgtLjItLjgtLjMtLjMtLjYtLjMtLjYtLjMtLjMtLjIgMC0uMyAwLS4zaDEuMXMuMy4xLjQuNWEzOS4yIDM5LjIgMCAwMDMuOCA0LjhNMTE2LjMgMjQuMnMtLjMuMiAwIC4zYzAgMCAuNSAwIC41LjZ2NC43czAgLjgtLjcuOGMwIDAtLjQuMiAwIC4zaDIuMXMuMy0uMiAwLS4zYzAgMC0uNyAwLS43LS44di00LjZzMC0uNy43LS43YzAgMCAuNC0uMi0uMS0uM2gtMS44eiIvPjxwYXRoIGZpbGw9IiNBNjJCNDMiIGQ9Ik0xNC40IDI5LjN2LTFsLS43IDF6TTYuNSAyNC45YS42LjYgMCAwMC0uNi0uMmMtLjIgMC0uNCAwLS42LjMtLjMuMi0uNC40LS40LjZ2LjZjLjIuMi40LjIuNi4yLjMgMCAuNS0uMS43LS4zLjItLjIuNC0uNC40LS43VjI1TTExLjQgMjcuNkgxMWwtLjIuNXYuNGMwIC4xIDAgLjIuMi4zbC4zLS4xLjItLjR2LS41bC0uMi0uMk0xMy41IDMyaC0uMS0uMi4zek0zLjIgMTguNmwuNy0uMmEuNi42IDAgMDAwLTFjLS4yLS4yLS40LS4zLS43LS4zLS4zIDAtLjYgMC0uNy4yYS42LjYgMCAwMDAgMWMuMS4yLjQuMy43LjMiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjYuOCAxLjdoLTEuNmwtMiAyLjFWLjdoLTJsLTIuNCAyLjdWLS4xaC0zLjJsLTIuMiAyLjhMMTEtLjFIOHYzLjZMNS41LjdIMy41djMuMkwxLjMgMS43SDB2MTYuOEMwIDI2LjIgNiAzMiAxMy40IDMyYzcuNiAwIDEzLjQtNiAxMy40LTEzLjN2LTE3em0tNCAxMi41bC4yLjIuMi0uMS42LS40LS42LS40SDIyLjlWMTN2LjJsLjMuMi43LjRIMjQuOHYtLjMuN0gyMy45bC0uNy40LS4zLjN2LS43em0yIDMuNkgyMy4yIDIzdi4yaC0uMXYtLjhsLjEuMkgyNC44di0uMmguMXYuOC0uMnptLjEtMS4ydi0uM0gyM3YuNWwuMy4yaC0uNVYxNnYtLjdoLjVsLS4zLjJ2LjVoMS44di0uMmguMXYuOXpNMTkgNmwyLjQtMi43djIuNmwtMi41IDIuN1Y2em0tMi41LTMuNXYzLjNsLTEuMiAxLjQtMS40LTEuNiAyLjYtMy4xem0tNi4yIDBsMi43IDMtMS40IDEuNy0xLjMtMS42VjIuNHptLTQuNyAxTDguMSA2djIuN0w1LjUgNlYzLjR6bTAgMTVWOGwyLjYgMi42djYuNnMwIDMuMy44IDMuOGwuMS01LjR2LTMuMmguNHYzLjFjMCAzLjUuMyA1LjguNCA2LjdsLjQuNHMuMi0zLjcuMi03LjV2LTRoLjRWMTVjMCAzLjEuMyA3LjYuNSA4LjRsLjMuMnMuMy0xLjkuMi04LjZWOS45aC40djVjLjEgNS41LjQgOC42LjUgOC45aC40bC4xLThWOWguNHY1LjdjMCA0IC4zIDggLjUgOS4ybC40LS4xLjEtNy44VjkuOWguNHY1Yy4xIDQgLjMgNyAuNSA4LjZsLjUtLjJzLjItMy42LjEtOFYxMWguNHY0YzAgMy4xLjMgNi40LjUgNy42bC4zLS40LjItNi4ydi0zLjZoLjR2M2MwIDIuNy4yIDUuNS4zIDUuNyAwIDAgLjYtLjguNi0zLjJ2LTcuMkwyMS4zIDh2MTAuOWMtLjEgNC41LTQuNCA3LjYtNy42IDcuNmgtLjJjLTQuNSAwLTgtNC04LTcuOXYtLjF6TTMuOCAxNGguM3YtLjIuNWwtMS40LjggMS41Ljh2LjVINHYtLjJIMi4xdi4yLS43LjNoMS42bC0xLjUtLjggMS43LS45SDIuMnYuMy0uOC4yaDEuNnpNMS40IDMuOEwzLjUgNnYyLjNsLTItMlYzLjh6bTEgMTMuM2MuMi0uMi41LS4zLjgtLjMuMyAwIC42IDAgLjguMy4yLjIuMy40LjMuNyAwIC4zIDAgLjUtLjIuN2ExLjIgMS4yIDAgMDEtLjkuNGMtLjMgMC0uNi0uMS0uOC0uM2ExIDEgMCAwMS0uMy0uOGMwLS4zIDAtLjUuMy0uN20wIDMuOHYuMmgtLjF2LS40bDEtMS4xaC0xdi4zbC0uMS0uOC4xLjJINGwuMi0uMVYxOWguMXYuOC0uMkgzLjJsLjcuNi4yLjJ2LS4yaC4xdi42bC0uMy0uNC0uNi0uNi0uOC45LS4yLjJ6bTEuMiAzLjR2LS4xTDQuNyAyMyAzIDIzbDEuMy0xLjMuMi0uMnYtLjJsLjMuNWgtLjFsLS4yLS4xaC0uMWwtMSAxIDEuOC0uMUw0IDI0bDEuNC0uMmguMlYyMy40bC40LjZoLS41bC0xLjguMnptMiAyLjNhMSAxIDAgMDEtLjctLjMgMSAxIDAgMDEtLjItLjhjMC0uMy4xLS41LjMtLjhsLjgtLjNjLjMgMCAuNi4yLjguNC4yLjIuMy41LjIuOCAwIC4zLS4xLjUtLjQuN2ExLjIgMS4yIDAgMDEtLjguM005IDI3aC0uNGwtMSAxLjUtLjItMi4yLS43IDEtLjEuMy4xLjF2LjFsLS42LS40SDYuNWwuMS0uMS45LTEuMi0uMS0uM3YtLjFsLjMuMi4yIDIgLjctMSAuMS0uMS0uMS0uMi42LjN2LjFIOXptMS4xIDIuNWwtMS0uNFYyOWguNWwuNS0xLjUtLjQtLjF2LS4xaC44TDkuOCAyOXYuMmwuMy4yem0xLjctLjdjMCAuNC0uMi42LS41LjgtLjIuMi0uNS4zLS44LjJoLS4xdi0uMmguN2wuMy0uNC4yLS40di0uMmwtLjMuM0gxMWEuNS41IDAgMDEtLjMtLjN2LS41YzAtLjIuMi0uNC40LS41LjEtLjEuMy0uMi41LS4xLjIgMCAuMy4yLjQuNHYuOW0xIDFjLS40LjMtLjkuMy0uOS4zVjMwYzEtLjIuOS0uNi45LS42IDAtLjItLjEtLjQtLjMtLjUtLjEtLjItLjEtLjItLjMtLjJsLjEtLjloMXYuMmgtLjl2LjVsLjUuMi4yLjZjMCAuMS0uMS40LS4zLjVtMi4xLS40aC0uM3YuNmgtLjN2LS42aC0xVjI5bDEtMS4yaC4zdjEuM2guNHYuMnptMi44LS4zYy0uMS4xLS4zLjMtLjUuM2gtLjZsLS4yLS4xLS4yLS41LS4zLS44LS4xLS4yaC0uMnYtLjFsLjctLjItLjEuMXYuM2wuMy45YzAgLjIuMS40LjMuNWguNWwuMy0uMnYtLjZsLS4zLTEtLjEtLjJIMTdsLjYtLjItLjIuMnYuMmwuMy44di44em0xLjQtMWwuMS4yaC4ybC0uNS40di0uMWwuMS0uMnYtLjJsLS45LTEuMmgtLjNsLjMtLjMgMiAuNi0uNy0xLS4yLS4yLS4yLjEuNS0uNHYuNGwxIDEuNS0yLjEtLjYuNyAxem0yLTFsLjEtLjItLjEtLjItMS0xLS4xLS4xaC0uMmwuNS0uNXYuNGwxIDEgLjIuMWguMmwtLjYuNXptMS43LTEuN2wtMi0uNGgtLjNsLjMtLjZoLjF2LjJsLjIuMSAxLjQuMy0uNy0xLjN2LS4xaC0uM2wuMy0uNHYuMmwuMS4yIDEgMS43aC0uMXptMS0xLjZWMjMuNGwtLjItLjEtMS4zLS41SDIyLjF2LjFIMjJsLjItLjV2LS4zbC4yLS4zLjEtLjQuNS4yaC0uM2wtLjIuMi0uMS41LjEuMi43LjMuMS0uNHYtLjRsLjUuMXYuMUgyMy40bC0uMS4zLS4xLjMuNy4zLjEtLjMuMi0uNC0uMi0uMi40LjEtLjYgMS40em0xLTMuNmwtMS4yLjV2LjNoLjhsLjEtLjFoLjFsLS4xLjhoLS4xdi0uM2gtLjJsLTEuNC0uM2gtLjJ2LjJoLS4ybC4yLS44YzAtLjMgMC0uNS4yLS42aC4zbC40LjEuMS41LjItLjIuMy0uMS4yLS4xYy4yIDAgLjMtLjEuMy0uMmguMXYtLjFoLjF2LjR6bTAtLjZoLS40Yy4zLS4xLjQtLjMuNC0uNnYtLjNsLS4zLS4xYy0uMiAwLS4zIDAtLjQuM2wtLjMuM2MwIC4yLS4yLjMtLjMuNGgtLjNjLS4xIDAtLjMgMC0uNC0uMmExIDEgMCAwMS0uMS0uNnYtLjVoLjZsLS40LjItLjEuNHYuM2wuNC4yYy4xIDAgLjMtLjEuNC0uNGwuMi0uMi4zLS40aC4zbC40LjF2MS4xbS4zLTEzLjVsLTIgMi4xVjZsMi0yLjFWNnoiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjMuMiAyMC4ySDIzbC0uMi41IDEgLjJ2LS4zYzAtLjEgMC0uMi0uMi0uM2wtLjMtLjEiLz48L3N2Zz4=" alt="목원대학교"><img class="lg-d" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzAiIGhlaWdodD0iMzMiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0yMS41IDI3LjRINi42QTIuNiAyLjYgMCAwMTQgMjQuOFY2aDIwdjE4LjdjMCAxLjQtMS4xIDIuNi0yLjUgMi42TTQxLjggMTEuMkgzMnYuOWwyLjIuN2gxOC40di0xLjZoLTcuOFY5LjRoNS40VjcuN2gtLjhzMS00LjUgMS02aC0xNnYuOWwyLjIuN1YxMGgzLjJ2LS44aDJ2MnptLTItMy40VjMuNWg3LjVMNDcgNy44aC03LjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQxLjggMTEuMkgzMnYuOWwyLjIuN2gxOC40di0xLjZoLTcuOFY5LjRoNS40VjcuN2gtLjhzMS00LjUgMS02aC0xNnYuOWwyLjIuN1YxMGgzLjJ2LS44aDJ2MnptLTItMy40VjMuNWg3LjVMNDcgNy44aC03LjJ6TTM1IDE0LjNoMTUuMnY3LjFINDd2LTUuNkgzNi43bC0xLjctLjd6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTM1IDE0LjNoMTUuMnY3LjFINDd2LTUuNkgzNi43bC0xLjctLjd6TTYyLjMgMi41YzAtLjItLjQtLjQtLjQtLjRsLTMuOC0uNnYuNnMuNy4yLjguNGMwIDAgLjQuMiAwIC40LTIuMy41LTQuMSAyLTQuMSAzLjcgMCAyIDIuNSAzLjggNS42IDMuOCAzIDAgNS42LTEuNyA1LjYtMy44IDAtMS43LTEuNy0zLjItNC4xLTMuNiAwIDAgLjQgMCAuNC0uNW0tMiA2LjNhMi4yIDIuMiAwIDExMC00LjQgMi4yIDIuMiAwIDAxMCA0LjQiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNjIuMyAyLjVjMC0uMi0uNC0uNC0uNC0uNGwtMy44LS42di42cy43LjIuOC40YzAgMCAuNC4yIDAgLjQtMi4zLjUtNC4xIDItNC4xIDMuNyAwIDIgMi41IDMuOCA1LjYgMy44IDMgMCA1LjYtMS43IDUuNi0zLjggMC0xLjctMS43LTMuMi00LjEtMy42IDAgMCAuNCAwIC40LS41em0tMiA2LjNhMi4yIDIuMiAwIDExMC00LjQgMi4yIDIuMiAwIDAxMCA0LjR6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2IC45di45bDEuNi43djExSDYydi44bDIuMi43aDMuNHYyLjRoMy4zVjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2IC45di45bDEuNi43djExSDYydi44bDIuMi43aDMuNHYyLjRoMy4zVjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2LjggMTBjLTUuMSAxLjktMTMuNCAxLjMtMTMuNCAxLjN2LjhsMS41LjZoM1YxNmgzLjN2LTMuM2MzLjQtLjQgNS42LTEgNS42LTFWMTB6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2LjggMTBjLTUuMSAxLjktMTMuNCAxLjMtMTMuNCAxLjN2LjhsMS41LjZoM1YxNmgzLjN2LTMuM2MzLjQtLjQgNS42LTEgNS42LTFWMTB6TTU2LjMgMTZ2LjZsMS42Ljl2Mi4xczAgMS41IDEuMiAxLjZoMTIuMXYtMS42aC0xMHYtMi45bC00LjktLjh6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTU2LjMgMTZ2LjZsMS42Ljl2Mi4xczAgMS41IDEuMiAxLjZoMTIuMXYtMS42aC0xMHYtMi45bC00LjktLjh6TTcxLjIgMy45djFsMi4yLjZ2OS44cy4yIDIgMS43IDEuOGMwIDAgMS45LjQgNy0xLjVoLjF2NGgzVjkuN2gxLjJ2MTEuOGgzVjEuOUw4NSAxdjEuM2wxLjQuM3Y1LjZoLTEuM1YyLjVsLTQuOS0xdjFsMS45Ljh2MTFzLTUuMSAxLjItNS42LjhWNS40aDVWNEg3MS4yeiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03MS4yIDMuOXYxbDIuMi42djkuOHMuMiAyIDEuNyAxLjhjMCAwIDEuOS40IDctMS41aC4xdjRoM1Y5LjdoMS4ydjExLjhoM1YxLjlMODUgMXYxLjNsMS40LjN2NS42aC0xLjNWMi41bC00LjktMXYxbDEuOS44djExcy01LjEgMS4yLTUuNi44VjUuNGg1VjRINzEuMnpNOTQuNCAyaDd2MS41aC00LjlsLTItLjZ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTk0LjQgMmg3djEuNWgtNC45bC0yLS42ek05Ny44IDZjLTMgMC01LjYgMS43LTUuNiAzLjggMCAyIDIuNSAzLjggNS42IDMuOCAzLjIgMCA1LjctMS43IDUuNy0zLjggMC0yLjEtMi41LTMuOC01LjctMy44bTAgNmEyLjMgMi4zIDAgMTEwLTQuNSAyLjMgMi4zIDAgMDEwIDQuNSIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik05Ny44IDZjLTMgMC01LjYgMS43LTUuNiAzLjggMCAyIDIuNSAzLjggNS42IDMuOCAzLjIgMCA1LjctMS43IDUuNy0zLjggMC0yLjEtMi41LTMuOC01LjctMy44em0wIDZhMi4zIDIuMyAwIDExMC00LjUgMi4zIDIuMyAwIDAxMCA0LjV6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTk5LjMgNS42aDVWNEg5MXYxbDEuOS41aDMuNXMxIC4zLjEuN2gyLjhzMS0uNCAwLS43Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTk5LjMgNS42aDVWNEg5MXYxbDEuOS41aDMuNXMxIC4zLjEuN2gyLjhzMS0uNCAwLS43eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMDMuNSAxdi44bDEuNi43djExLjJoMy4xdi00aDNWOC4yaC0yLjhWMS44eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMDMuNSAxdi44bDEuNi43djExLjJoMy4xdi00aDNWOC4yaC0yLjhWMS44ek05Mi42IDE0LjN2MWwxLjkuNUgxMDV2NS42aDMuMXYtNy4xeiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik05Mi42IDE0LjN2MWwxLjkuNUgxMDV2NS42aDMuMXYtNy4xek0xMTEuMiAzLjd2LjlsMS42LjZIMTI1djMuN3MtLjMgNS0xLjMgNy40aDIuM3MxLjctMy43IDIuMi05LjFWMy43aC0xN3oiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTExLjIgMy43di45bDEuNi42SDEyNXYzLjdzLS4zIDUtMS4zIDcuNGgyLjNzMS43LTMuNyAyLjItOS4xVjMuN2gtMTd6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTExMy45IDguNHYxLjJsMS40LjV2Ny44aC01Ljh2LjlsMi40LjdoMThWMThIMTIzVjguOGwtNC42LTEuMXYxLjFsMS40LjdWMThoLTEuNlY5LjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTExMy45IDguNHYxLjJsMS40LjV2Ny44aC01Ljh2LjlsMi40LjdoMThWMThIMTIzVjguOGwtNC42LTEuMXYxLjFsMS40LjdWMThoLTEuNlY5LjJ6TTMyLjYgMjQuMnMtLjUuMiAwIC40YzAgMCAuOC4xLjggMS4ydjMuN3MwIDEuMi0uOCAxLjJjMCAwLS4zLjIuMS4ySDM1cy4zLS4xIDAtLjJjMCAwLTEuMi4xLTEuMi0xLjN2LTRsLjItLjIgMi43IDUuOSAyLjctNS43cy4yLS40LjIuMXY0czAgMS4yLTEuMiAxLjJjMCAwLS41LjEgMCAuMmgyLjZzLjItLjEtLjItLjJjMCAwLS43LS4xLS43LTEuM3YtNC4yczAtLjguOC0uOGMwIDAgLjMtLjIgMC0uMmgtMS42cy0uOCAyLjYtMi41IDUuNmMwIDAtMS0xLjktMi42LTUuNmgtMS41eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik00MC44IDI2LjVzLjctMi42IDMuOC0yLjNjMCAwIDMgMCAzLjIgMy4yIDAgMCAuMyAzLjUtMy41IDMuOSAwIDAtMy4yLjMtMy42LTMuMXYtMS43bS44IDFjLS4xIDEuNy44IDIuNC44IDIuNC43IDEgMiAuOCAyIC44IDEuMS4yIDItLjYgMi0uNiAxLTEuNC41LTMuNC41LTMuNC0uNC0xLjUtMS44LTItMS44LTItMS42LS4zLTIuNi40LTIuNi40LTEgLjgtMSAyLjQtMSAyLjRNNjIuOCAyNi4zcy43LTIuNSAzLjgtMi4yYzAgMCAzIDAgMy4xIDMuMiAwIDAgLjQgMy41LTMuNCAzLjkgMCAwLTMuMi4zLTMuNi0zLjF2LTEuOG0uOCAxYy0uMSAxLjguNyAyLjQuNyAyLjQuOCAxIDIuMi45IDIuMi45IDEgLjIgMS44LS43IDEuOC0uNyAxLTEuNC42LTMuMy42LTMuMy0uNC0xLjYtMS44LTItMS44LTItMS42LS40LTIuNi40LTIuNi40LTEgLjgtMSAyLjQtMSAyLjQiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNDcuNiAyNC4ycy0uNC4xIDAgLjNjMCAwIC43IDAgLjcuN3Y0LjVzMCAuOC0uOCAxYzAgMC0uMy4yLjIuMmgyLjRzLjMtLjEgMC0uMmMwIDAtMS4yIDAtMS4yLTEuMnYtMi4xcy42LS4yIDEuOSAxLjdsMS4yIDEuNy4yLjFoMXMuMy0uMi0uMy0uM2wtLjUtLjUtMS42LTJzLS43LS44LTEuMi0xbDItMnMuMy0uNS45LS42YzAgMCAuMy0uMSAwLS4zaC0xLjhzLS4yLjIgMCAuM2MwIDAgLjcuMi4zLjdMNDkuMyAyN2gtLjR2LTEuN3MwLS43LjktLjdjMCAwIC4zLS4yIDAtLjJoLTIuMnpNNjAuMSAzMWwtMS42LTUuMmMwLS40LS4yIDAtLjIgMHMtMS42IDQuMS0xLjcgNC45di4ySDU2bC0xLTMuMmMtLjgtMy0xLjUtMy4yLTEuNS0zLjItLjUtLjIgMC0uMiAwLS4yaDIuOGMuMiAwIDAgLjIgMCAuMmwtMSAuMWMtLjMuMS0uNC40LS4zLjZsLjYgMi4yLjggMi41IDEuOC01LjVjMC0uMi40LS4yLjQtLjJzLjIgMCAuNSAxLjFjMCAwIC43IDIuOCAxLjMgNC4zbC4yLjMgMS4yLTMuOWMuMi0xLS4xLTEuMi0uMS0xLjItLjMtLjMtMS0uMy0xLS4zLS40LS4xLS4xLS4zLS4xLS4zaDJjLjQgMCAuMi40LjIuNHMtMS41IDMuOC0xLjkgNS43YzAgMCAwIC42LS4zLjZoLS41ek03NSAyOS41di0zLjhjLS4xLS44LS41LTEtLjUtMWwtMS0uMmMtLjMgMCAwLS4zIDAtLjNINzZjLjUuMiAwIC40IDAgLjQtLjMgMC0uNC4yLS40LjItLjIgMC0uMy41LS4zLjV2NS40YzAgLjMtLjIuMi0uMi4yLS40IDAtLjYtLjUtLjYtLjUtMi0yLjktMy42LTQuOC0zLjYtNC44djQuMWwuMS40Yy4yLjYgMS4yLjUgMS4yLjUuMy4xIDAgLjMgMCAuM2gtMi42Yy0uMi0uMiAwLS4zIDAtLjMuOCAwIC44LTEgLjgtMXYtNGMwLS41LS4yLS43LS4yLS43LS4zLS40LS42LS4zLS42LS4zLS4zLS4zIDAtLjQgMC0uNGgxLjFsLjUuNWEzOS42IDM5LjYgMCAwMDMuNyA0LjhNNzguMSAyNC4zcy0uMyAwIDAgLjJjMCAwIC42IDAgLjYuNXYzLjhzLS4xIDIuNCAyLjQgMi40YzAgMCAyLjIgMCAyLjItMi40di0zLjZzMC0uNy42LS43YzAgMCAuMy0uMiAwLS4yaC0xLjhzLS40IDAgMCAuMWMwIDAgLjggMCAuOC43djQuMnMtLjIgMS41LTIgMS41YzAgMC0xLjUgMC0xLjUtMS42di00czAtLjYuNS0uNmguN3MuNC0uMyAwLS4zSDc4ek05MS40IDI0LjNzLS4zLjEgMCAuMmMwIDAgLjUgMCAuNS42djQuOHMwIC44LS43LjhjMCAwLS40LjIgMCAuMmgyLjJzLjMgMC0uMS0uMmMwIDAtLjcgMC0uNy0uOHYtNC42czAtLjguNy0uOGMwIDAgLjQtLjIgMC0uMmgtMS45ek05Ny42IDMwLjdjLS4yLjYtMSAuNC0xIC40bC0xLjItMy43LTEtMi40Yy0uMi0uNC0uNi0uNC0uNi0uNC0uMi0uMiAwLS4zIDAtLjNoMi42Yy40IDAgMCAuMyAwIC4zSDk2Yy0uOC4xLS4zIDEuMy0uMyAxLjNsMS42IDQuNiAxLjgtNC45Yy4yLS41LS4xLS44LS4xLS44LS4zLS4zLTEtLjItMS0uMi0uMi0uMiAwLS4zIDAtLjNoMnMuMyAwIDAgLjNjMCAwLTEuMiAyLjgtMi4zIDYuMU0xMDAuNSAyNC41cy42LjIuNi45VjMwczAgLjctLjcuN2MwIDAtLjQgMCAwIC4yaDQuNnYtMS43cy0uMi0uMy0uMyAwYzAgMCAuMSAxLjQtLjggMS40aC0ydi0zaC45czEgMCAxIC44YzAgMCAuMS41LjIgMHYtMS44cy0uMS0uNC0uMiAwYzAgMCAwIC43LS44LjdoLTEuMnYtMnMwLS43LjYtLjdoMS41cy43IDAgLjcgMWMwIDAgLjEuMi4zIDB2LTEuNGgtNC40cy0uMy4yIDAgLjNNMTA4LjMgMjcuNWMuOC4xIDEuMyAxLjQgMS4zIDEuNGwuNiAxLjNjLjIuMy42LjUuNi41LjMgMCAwIC4yIDAgLjJoLTFjLS4yIDAtMS4yLTIuMy0xLjItMi4zLS4zLS44LS44LTEtLjgtMS0uMi0uMi0uOC0uMS0uOC0uMXYyLjNjMCAuOS45LjkuOS45LjUgMCAuMi4zLjIuM2gtMi42Yy0uMy0uMiAwLS4zIDAtLjMgMSAwIC44LTEgLjgtMVYyNWMwLS40LS43LS40LS43LS40LS40LS4yIDAtLjQgMC0uNGgyLjhjMS42IDAgMS42IDEuNyAxLjYgMS43IDAgMS41LTEuNyAxLjYtMS43IDEuNm0xLTEuNnMuMS0xLjMtMS40LTEuM2MwIDAtLjkgMC0uOS41djJoMS4yczEuMS0uMiAxLjEtMS4yTTExMy40IDI0LjJzLTIuMiAwLTIuMiAxLjdjMCAwIDAgMSAxIDEuNGwxLjkgMXMuNi4yLjYgMWMwIDAgLjEgMS40LTEuNCAxLjQgMCAwLTEuNyAwLTEuNy0uOXYtLjZzLS4yLS40LS4zIDB2MS42bC4zLjFoMi4yczEuNiAwIDEuNy0xLjVjMCAwIDAtMS0xLjEtMS43bC0yLTFzLS40LS4yLS40LS45YzAgMC0uMi0xLjIgMS40LTEuMiAwIDAgMS40LS4xIDEuNSAxLjIgMCAwIC4xLjQuMiAwdi0xLjRzMC0uMi0uMi0uMmgtMS41ek0xMTguNiAyNC4yaDUuNGwuMS4ydjEuNHMtLjEuMi0uMyAwYzAgMC0uMi0xLjMtMS4yLTEuM2gtLjl2NS4xczAgMSAxIDFjMCAwIC40LjMuMS4zaC0yLjlzLS4zLS4xIDAtLjJjMCAwIDEuMSAwIDEuMS0xLjJ2LTVoLTFzLTEuMSAwLTEuMSAxLjFjMCAwLS4yLjQtLjMgMHYtMS40ek0xMjQuOCAyNC4ycy0uNCAwIDAgLjRjMCAwIC4zLS4yIDIuMSAzdjIuMnMuMS44LS44LjhjMCAwLS40LjIgMCAuM2gyLjZzLjItLjEgMC0uM2MwIDAtMSAwLTEtMXYtMi4xbDIuMS0zLjNzLjItLjEgMC0uMWgtLjdsLTEuNiAzLjItMS40LTJzLS40LS45LjUtLjhoLjVzLjQtLjIgMC0uM2gtMi4zek04OS42IDI5LjV2LTMuOGMwLS44LS40LTEtLjQtMWwtMS0uMmMtLjMgMCAwLS4yIDAtLjJoMi41Yy41IDAgMCAuMyAwIC4zLS4zIDAtLjQuMi0uNC4yLS4yIDAtLjMuNS0uMy41djUuNWMwIC4yLS4yLjEtLjIuMS0uNC0uMi0uNi0uNi0uNi0uNmE0NyA0NyAwIDAwLTMuNy00Ljh2NC4yYzAgLjMuMi41LjIuNS4yLjUgMS4yLjQgMS4yLjQuMy4yIDAgLjMgMCAuM2gtMi42Yy0uMi0uMiAwLS4zIDAtLjMuOC4xLjgtMSAuOC0xdi00YzAtLjUtLjItLjctLjItLjctLjMtLjQtLjYtLjMtLjYtLjMtLjMtLjIgMC0uMyAwLS4zaDEuMXMuMyAwIC41LjRhMzkgMzkgMCAwMDMuNyA0LjhNMTE2LjIgMjQuM3MtLjMgMCAwIC4yYzAgMCAuNSAwIC41LjZ2NC43czAgLjgtLjcuOGMwIDAtLjQuMyAwIC4zaDIuMXMuMy0uMSAwLS4zYzAgMC0uNyAwLS43LS44di00LjVzMC0uOC43LS44YzAgMCAuNC0uMi0uMS0uMmgtMS44eiIvPjxwYXRoIGZpbGw9IiNBNjJCNDMiIGQ9Ik0xNC40IDI5LjN2LTFsLS42IDF6TTYuNSAyNC45YS42LjYgMCAwMC0uNS0uMmMtLjMgMC0uNS4xLS43LjMtLjIuMi0uNC40LS40LjdsLjEuNWMuMS4yLjMuMy42LjIuMiAwIC40IDAgLjYtLjMuMy0uMi40LS40LjUtLjYgMC0uMyAwLS40LS4yLS42TTExLjQgMjcuNmwtLjMuMS0uMi40di41czAgLjIuMi4yaC4zbC4yLS41VjI4YzAtLjIgMC0uMi0uMi0uM00xMy41IDMyaC0uMS0uMi4zek0zLjIgMTguNmMuMyAwIC41IDAgLjctLjIuMi0uMS4zLS4zLjMtLjVzMC0uNC0uMy0uNWMtLjItLjItLjQtLjItLjctLjItLjMgMC0uNSAwLS43LjJhLjYuNiAwIDAwMCAxbC43LjIiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjYuOCAxLjhoLTEuNmwtMiAyLjFWLjdoLTJsLTIuNCAyLjdWMGgtMy4ybC0yLjIgMi44TDExIDBIOC4xdjMuNkw1LjQuOEgzLjVWNEwxLjQgMS44SDB2MTYuOEMwIDI2LjIgNiAzMiAxMy40IDMyYzcuNiAwIDEzLjQtNS45IDEzLjQtMTMuM1YxLjh6bS00IDEyLjVsLjIuMWguMmwuNi0uNS0uNy0uMy0uMS0uMS0uMS4xaC0uMXYtLjVsLjEuMi4zLjIuNy40aC44bC4xLS4zVjE0LjJIMjMuOGwtLjcuNC0uMy40aC0uMXYtLjd6bTIgMy42SDIzLjIgMjN2LjJoLS4xdi0uOGwuMS4ySDI0Ljh2LS4yaC4xdi44LS4yem0uMS0xLjNsLS4xLS4zSDIzVjE2LjlsLjMuMXYuMWgtLjVWMTZ2LS44aC41bC0uMy4yVjE2aDEuOHYtLjNoLjF2MXpNMTkgNmwyLjQtMi42djIuNWwtMi41IDIuOFY2em0tMi41LTMuNXYzLjNsLTEuMiAxLjUtMS40LTEuNyAyLjYtM3ptLTYuMiAwTDEzIDUuNmwtMS40IDEuNy0xLjMtMS42VjIuNXptLTQuNiAxTDggNi4xdjIuNkw1LjYgNi4yVjMuNXptMCAxNVY4LjJMOCAxMC44djYuNnMwIDMuMi44IDMuN2wuMS01LjN2LTMuMmguNHYzLjFjMCAzLjQuMyA1LjguNCA2LjZsLjQuNS4yLTcuNnYtMy45aC40djMuOGMwIDMgLjMgNy41LjUgOC40bC40LjFzLjItMS44LjEtOC42di01aC40djVjLjIgNS40LjQgOC41LjUgOC44aC40bC4xLThWOWguNHY1LjhjMCA0IC4zIDggLjUgOS4xaC40bC4xLTcuOVYxMGguNXY1YzAgNC4xLjIgNyAuNCA4LjdsLjUtLjNzLjItMy42LjEtOHYtNC4xaC40djRjMCAzLjEuNCA2LjMuNSA3LjZsLjMtLjUuMi02LjF2LTMuN2guNHYzYzAgMi44LjIgNS42LjMgNS43IDAgMCAuNi0uNy42LTMuMnYtNy4yTDIxLjMgOFYxOWMtLjEgNC42LTQuNCA3LjYtNy42IDcuNmgtLjJjLTQuNSAwLTgtNC04LTcuOHYtLjJ6bS0xLjctNC4zSDRWMTRoLjF2LjVsLTEuNS43IDEuNS44di42bC0uMS0uM0gyLjN2LjJIMlYxNmguMXYuMkg0bC0xLjYtLjggMS43LS44SDIuM3YuMkgyVjE0aC4xdi4zSDR6TTEuNSAzLjlsMiAyLjF2Mi4zbC0yLTJWNHptMSAxMy4yYy4xLS4yLjQtLjMuNy0uM3MuNi4xLjguM2MuMi4yLjMuNS4zLjhhMSAxIDAgMDEtLjYgMWgtLjVjLS4zIDAtLjYgMC0uOC0uM2ExIDEgMCAwMS0uMy0uN2MwLS4zLjEtLjYuMy0uOG0wIDMuOXYuMWgtLjF2LS40bDEtMUgyLjR2LjJoLS4ydi0uOGwuMS4yaDEuOFYxOWguMnYuN2wtLjEtLjJIMy4zbC43LjcuMi4xdi0uMWguMXYuNWwtLjMtLjQtLjYtLjUtLjguOC0uMi4zem0xLjIgMy4zTDQuOCAyM2wtMS44LjEgMS40LTEuMy4xLS4ydi0uMWwuMy40aC0uNGwtMSAxIDEuOC0uMkw0IDI0bDEuMy0uMmguMlYyMy41bC40LjZoLS41bC0xLjguMnptMiAyLjRhMSAxIDAgMDEtLjctLjQgMSAxIDAgMDEtLjItLjhjMC0uMy4xLS41LjQtLjcuMi0uMi41LS4zLjgtLjMuMiAwIC41LjEuNy4zLjIuMy4zLjUuMy44IDAgLjMtLjIuNS0uNC44YTEuMiAxLjIgMCAwMS0xIC4zTTkgMjdoLS4ybC0uMS4xLTEgMS41LS4zLTIuMi0uNyAxdi40bC0uNi0uNEg2LjRsLjItLjEuOC0xLjItLjEtLjMuNC4yLjIgMiAuNi0xIC4xLS4yLS4xLS4xdi0uMWwuNi40em0xLjEgMi41bC0xLS40aC4zbC4yLS4xLjUtMS41aC0uNHYtLjJoLjhsLS43IDEuOHYuMmwuNC4xdi4xem0xLjgtLjdjLS4xLjQtLjMuNy0uNi45LS4yLjItLjUuMi0uNy4xaC0uMnYtLjFoLjdsLjMtLjQuMi0uNXYtLjJjMCAuMi0uMi4zLS4zLjNIMTFhLjUuNSAwIDAxLS40LS4yVjI4YzAtLjIuMi0uNC40LS41aC41Yy4yIDAgLjMuMS40LjR2LjhtMSAxYy0uNC40LS45LjMtLjkuMyAxLS4zLjktLjcuOS0uNyAwLS4yIDAtLjQtLjMtLjVsLS4yLS4xdi0xaDF2LjNoLS44bC0uMS40LjUuM2MuMi4xLjIuMy4yLjVzMCAuNC0uMy42bTIuMi0uNGgtLjR2LjVoLS4zdi0uNmgtMXYtLjJsMS0xLjNoLjN2MS4zaC40di4zem0yLjctLjRjMCAuMi0uMy4zLS41LjRhMSAxIDAgMDEtLjYgMGwtLjItLjItLjItLjQtLjMtMXYtLjFoLS4zbC43LS4zLS4xLjJ2LjJsLjMuOWMwIC4zLjIuNC4zLjVoLjVjLjEgMCAuMiAwIC4zLS4ydi0uNmwtLjMtMS0uMS0uMUgxN2wuNi0uM3YuMWwtLjIuMXYuMmwuMy45LjEuNHYuM3ptMS40LTFsLjEuMmguMmwtLjUuNC4xLS4ydi0uMmwtLjktMS4yaC0uM1YyN2wuMy0uMiAyIC41LS43LTEtLjItLjFoLS4ybC41LS40aC4xdi4xbC0uMi4xLjEuMyAxIDEuNC0yLjEtLjYuNyAxem0yLTFsLjEtLjItLjEtLjItMS0xSDIwbC41LS42di41bDEgMWguNGwtLjYuNnptMS43LTEuN2wtMi0uNGgtLjNsLjMtLjVoLjF2LjFsLjIuMSAxLjQuNC0uNy0xLjN2LS4yaC0uM3YuMWwuMy0uNXYuMmwuMS4zIDEgMS43aC0uMXptMS0xLjZ2LS4zaC0uMmwtMS4zLS42aC0uMmwtLjEuMUgyMmwuMi0uNXYtLjJsLjItLjMuMS0uNC41LjF2LjFIMjIuNmwtLjIuMi0uMS40LjEuMi43LjMuMS0uM1YyMmwuNS4ySDIzLjRsLS4xLjMtLjIuMy44LjMuMS0uMi4yLS40LS4yLS4ydi0uMWwuNC4xLS42IDEuNHptMS0zLjVsLTEuMi40di4zbC42LjFoLjJsLjEtLjJoLjFsLS4xLjhoLS4xdi0uMmwtLjItLjEtMS40LS4yaC0uMnYuMmgtLjF2LS45bC4zLS41LjMtLjFjLjIgMCAuMyAwIC40LjJsLjEuNC4yLS4xLjMtLjJoLjJsLjMtLjIuMS0uMWguMXYuNHptMC0uNmgtLjR2LS4xYy4zIDAgLjQtLjMuNC0uNXYtLjNsLS4zLS4yYy0uMiAwLS4zLjEtLjQuM2wtLjMuMy0uMy40aC0uM2wtLjQtLjFhMSAxIDAgMDEtLjEtLjZ2LS42aC42di4xbC0uNC4yLS4xLjN2LjRsLjQuMS40LS4zLjItLjIuMy0uNC4zLS4xYy4xIDAgLjMgMCAuNC4ydjEuMW0uMy0xMy41bC0yIDIuMVY2bDItMi4ydjIuNHoiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjMuMiAyMC4ySDIzbC0uMi41di4xbDEgLjJ2LS4zYS41LjUgMCAwMC0uNS0uNSIvPjwvc3ZnPg==" alt="목원대학교"><div class="bt"><b>전기전자공학과</b><span>FPGA 설계 수업 자료 · 문상국</span></div><span class="copy">© 2026 문상국<br><span class="ver">버전 1.1 (2026-11-18)</span></span></div>
+  <div class="grid" id="view-sim">
+    <div class="col">
+  <header class="o0">
+    <div class="hrow"><h1>Lab 6 프로세서 시뮬레이터</h1><nav class="tabs"><a href="#/sim" data-tab="sim" class="on">시뮬레이터</a><a href="#/man/start" data-tab="man">명령어 매뉴얼</a></nav></div>
+    <p>8비트 · 레지스터 R0~R3 · ROM 16칸 · 단계 T0~T3. 실습에서 만드는 proc.v 와 같은 동작을 클럭 한 번씩 따라간다.</p>
+  </header>
+<section class="panel o1" aria-label="데이터 경로">
+      <h2>CPU 안 (값은 지금 레지스터에 든 것)</h2>
+      <svg id="dp" viewBox="0 0 600 422" role="img" aria-label="PC, PC 전용 +1 덧셈기, IR, 디코더, FSM 단계, 레지스터 R0~R3, 버스, A, ALU, G, Z, N 그림">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3.6" markerHeight="3.6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--hot)"/></marker>
+          <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--rom-line)"/></marker>
+          <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--line)"/></marker>
+        </defs>
+        <!-- 윗줄 (pc · IR · ROM · FSM) -->
+        <path class="wire" d="M72,36 V20 H527 V36" marker-end="url(#ag)"/>
+        <path class="wire" d="M470,52 H320" marker-end="url(#ag)"/>
+        <path class="wire" d="M170,68 V80 H72 V70" marker-end="url(#ag)"/>
+        <!-- PC 전용 +1 덧셈기 : 주소선에서 갈라져 +1 을 거쳐 PC 로 돌아온다 (ALU 와 따로) -->
+        <path class="wire" d="M72,20 H36" marker-end="url(#ag)"/>
+        <path class="wire" d="M19,28 V43 H38" marker-end="url(#ag)"/>
+        <rect id="b-inc" class="box inc" x="4" y="7" width="30" height="21" rx="3"/>
+        <text class="inc-t" x="19" y="22" text-anchor="middle">+1</text>
+        <text class="small" x="42" y="11">+1 (IRin 때) · PC 전용 덧셈기</text>
+        <!-- 직접값 : IR 아래 3비트가 선으로 바로 #D 칸에 간다 (레지스터 아님) -->
+        <path class="wire" d="M150,42 H124 V163 H186" marker-end="url(#ag)"/>
+        <text class="small" x="118" y="150" text-anchor="end">IR[2:0]</text>
+        <text id="v-D" class="small" x="118" y="166" text-anchor="end">직접값 000</text>
+        <g id="hotTop"></g>
+        <text class="small" x="300" y="14" text-anchor="middle">주소</text>
+        <text class="small" x="395" y="45" text-anchor="middle">명령어</text>
+        <text class="small" x="62" y="94" text-anchor="middle">IR[3:0] (PCin 때)</text>
+        <text id="v-ADR" class="small" x="62" y="108" text-anchor="middle">분기 주소 0000</text>
+        <text class="lbl" x="34" y="65" text-anchor="end">PC</text>
+        <rect id="b-pc" class="box" x="40" y="36" width="64" height="32" rx="4"/>
+        <text id="v-pc" class="val" x="72" y="57" text-anchor="middle">0000</text>
+        <text class="lbl" x="146" y="57" text-anchor="end">IR</text>
+        <rect id="b-IR" class="box" x="150" y="36" width="170" height="32" rx="4"/>
+        <text id="v-IR" class="val" x="235" y="57" text-anchor="middle">0000 0000</text>
+        <text id="v-irA" class="small" x="315" y="56" text-anchor="end" style="fill:var(--rom-line);font-weight:700;font-size:10.5px"></text>
+        <!-- 디코더 : IR 칸과 FSM 단계를 보고 제어 신호를 켠다 (조합 회로) -->
+        <path class="wire" d="M235,68 V84" marker-end="url(#ag)"/>
+        <path class="wire" d="M378,125 H362" marker-end="url(#ag)"/>
+        <path class="wire" d="M300,146 V160" stroke-dasharray="4 3" marker-end="url(#ag)"/>
+        <text class="small" x="308" y="161">제어 신호 → 레지스터 · 버스 · ALU</text>
+        <rect id="b-dec" class="box dec" x="150" y="86" width="210" height="60" rx="4"/>
+        <text id="dec-t" class="lbl" x="255" y="110" text-anchor="middle" style="fill:var(--alu-line)">디코더</text>
+        <text id="dec-d" class="small" x="255" y="125" text-anchor="middle">조합 회로 · 클럭 없이 바로</text>
+        <text id="v-fld" class="fld" x="255" y="137" text-anchor="middle"></text>
+        <rect id="b-rom" class="box rom" x="470" y="36" width="114" height="32" rx="4"/>
+        <text id="v-rom" class="val" x="527" y="57" text-anchor="middle">0000 0000</text>
+        <text id="v-romA" class="lbl" x="527" y="86" text-anchor="middle" style="fill:var(--rom-line)">ROM[0x00]</text>
+        <text class="lbl" x="380" y="104">FSM 단계</text>
+        <g id="pills"></g>
+        <!-- 아랫부분 (데이터 경로) -->
+        <g transform="translate(0,30)">
+        <line class="busline" id="bus" x1="190" y1="124" x2="190" y2="318"/>
+        <g id="stubs"></g>
+        <path class="wire" d="M190,186 H258" marker-end="url(#ag)"/>
+        <path class="wire" d="M352,202 V222" marker-end="url(#ag)"/>
+        <path class="wire" d="M190,213 H290 V222" marker-end="url(#ag)"/>
+        <path class="wire" d="M325,276 V292" marker-end="url(#ag)"/>
+        <path class="wire" d="M268,308 H194" marker-end="url(#ag)"/>
+        <path class="wire" d="M392,246 H510 V290" stroke-dasharray="4 4" marker-end="url(#ag)"/>
+        <path class="wire" d="M450,246 V290" stroke-dasharray="4 4" marker-end="url(#ag)"/>
+        <g id="hot"></g>
+        <!-- 레지스터 -->
+        <g id="regs"></g>
+        <text class="small" x="190" y="334" text-anchor="middle">버스</text>
+        <text id="v-bus" class="small" x="200" y="146">버스</text>
+                <!-- A, ALU, G, Z, N -->
+        <rect id="b-A" class="box" x="262" y="170" width="112" height="32" rx="4"/>
+        <text id="v-A" class="val" x="318" y="191" text-anchor="middle">0000 0000</text>
+        <text class="lbl" x="382" y="191">A</text>
+        <path id="b-ALU" class="box alu" d="M246,224 H311 L325,235 L339,224 H404 L376,276 H274 Z"/>
+        <text class="lbl" x="325" y="252" text-anchor="middle" style="fill:var(--alu-line)">ALU</text>
+        <text id="v-op" class="small" x="325" y="266" text-anchor="middle" style="font-size:10.5px">덧셈·뺄셈</text>
+        <rect id="b-G" class="box" x="270" y="292" width="112" height="32" rx="4"/>
+        <text id="v-G" class="val" x="326" y="313" text-anchor="middle">0000 0000</text>
+        <text class="lbl" x="390" y="313">G</text>
+        <rect id="b-Z" class="box" x="430" y="292" width="40" height="32" rx="4"/>
+        <text id="v-Z" class="val" x="450" y="313" text-anchor="middle">0</text>
+        <rect id="b-N" class="box" x="490" y="292" width="40" height="32" rx="4"/>
+        <text id="v-N" class="val" x="510" y="313" text-anchor="middle">0</text>
+        <text class="lbl" x="450" y="342" text-anchor="middle">Z</text>
+        <text class="lbl" x="510" y="342" text-anchor="middle">N</text>
+        <text class="small" x="480" y="360" text-anchor="middle">상태 레지스터</text>
+        <text class="small" x="480" y="376" text-anchor="middle">Z = 0인가 · N = 음수인가</text>
+        </g>
+      </svg>
+      <div class="legend"><span><i></i>지금 단계에서 수가 지나가는 길</span><span><i class="dash"></i>다음 상승 에지에 값이 들어갈 곳</span><span><i class="live"></i>ROM · +1 덧셈기는 PC 가 바뀌면 바로 ROM[PC] · PC + 1 을 내놓는다 (IR · PC 는 T0 에만 받는다)</span><span><i class="red">빨강</i>방금 에지에서 바뀐 값</span></div>
+    </section>
+<section class="panel o4" aria-label="클럭 기록">
+      <h2>클럭 기록 (상승 에지 뒤의 값, ModelSim 파형과 같은 값)</h2>
+      <div class="scroll hist" id="histwrap"><table id="hist"><thead><tr>
+        <th>클럭</th><th>단계</th><th>PC</th><th>IR</th><th>명령어</th><th>A</th><th>G</th><th>R0</th><th>R1</th><th>R2</th><th>R3</th><th>Z</th><th>N</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+    </div>
+    <div class="col">
+<section class="panel o2 ctl" aria-label="조작">
+        <div class="controls">
+          <button id="btn-clk" class="primary" title="스페이스 키">클럭 한 번 ▶</button>
+          <button id="btn-ins">명령어 하나 ▶▶</button>
+          <button id="btn-auto">자동 실행</button>
+          <button id="btn-back" title="한 클럭 뒤로">◀ 뒤로</button>
+          <button id="btn-rst">리셋</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <label class="sw" title="Run = 1 이면 명령어를 가져와 실행한다. 0 이면 명령어와 명령어 사이 (T0) 에서 멈춘다. 하던 명령어는 끝까지 마치고 멈추므로, 보드에서 리셋한 뒤 출발 시점을 정하거나 중간에 멈춰 HEX 값을 읽을 때 쓴다."><input type="checkbox" id="run" checked> Run (SW[9])</label>
+          <select id="speed" aria-label="자동 실행 빠르기"><option value="900">느리게</option><option value="450" selected>보통</option><option value="150">빠르게</option></select>
+          <span class="seg" role="radiogroup" aria-label="수 표시">
+            <label><input type="radio" name="fmt" value="bin" checked><span>2진</span></label>
+            <label><input type="radio" name="fmt" value="hex"><span>16진</span></label>
+            <label><input type="radio" name="fmt" value="dec"><span>10진</span></label>
+          </span>
+          <span class="mono" id="clkcount" style="color:var(--muted);font-size:13px">클럭 0</span>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <label class="sw"><input type="checkbox" id="quiz"> 맞혀 보기 : 명령어가 끝난 뒤의 값을 먼저 적고 확인한다</label>
+        </div>
+        <div id="quizbox" hidden>
+          <div class="qidrow"><label>학번 <input id="q-id" inputmode="numeric" maxlength="7" autocomplete="off" spellcheck="false" placeholder="7자리"></label><span class="qidn">리셋한 처음 자리에서 학번을 넣고 시작해 끝까지 하나도 틀리지 않으면 완료 코드가 나온다</span></div>
+          <p class="qhead" id="q-head"></p>
+          <div class="qgrid" id="q-grid"></div>
+          <div class="row qbtns"><button id="q-go" class="primary">확인하고 실행 ▶▶</button><button id="q-undo">다시 쓰기</button><span class="mono qscore" id="q-score"></span></div>
+          <div class="qres" id="q-res"></div>
+        </div>
+        <div class="msg" id="msg"></div>
+      </section>
+<section class="panel o3" aria-label="지금 단계">
+        <h2>지금 단계</h2>
+        <div class="now" id="now"></div>
+        <div class="edge" id="edge"></div>
+        <div class="edge chg" id="chg"></div>
+        <div class="sigbox">
+          <label class="sw"><input type="checkbox" id="showsig"> 제어 신호 보기 (지금 단계에서 디코더가 켜는 신호)</label>
+          <div id="sigwrap"><div class="sigs" id="sigs"></div>
+          <p class="note">색칠한 칩 = 1 (켜짐). 버스에 올린 값은 그림의 빨간 실선, 값을 넣을 레지스터는 그림의 점선 테두리다. Sel 번호 : 0~3 = R0~R3, 4 = 직접값 (IR[2:0]), 5 = G.</p></div>
+        </div>
+      </section>
+<section class="panel o5" aria-label="ROM 프로그램">
+      <h2>ROM (프로그램) · 16진 칸을 고치면 바로 바뀐다</h2>
+      <div class="row" style="margin-bottom:8px">
+        <label class="sw">프로그램 <select id="prog">
+          <option value="div">나눗셈 13 ÷ 4 (rom.v)</option>
+          <option value="gcd">최대공약수 gcd(12, 8) (rom_gcd.v)</option>
+          <option value="own">직접 입력</option>
+        </select></label>
+      </div>
+      <div class="scroll"><table class="rom" id="rom"><thead><tr><th>주소</th><th></th><th>기계어 (2진)</th><th>16진</th><th>명령어</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    </div>
+  </div>
+
+  <p class="foot" id="sim-foot">명령어마다 하는 일 · 기계어 · 예제는 <a href="#/man/summary">명령어 매뉴얼</a>에 있다. 명령어 형식 : op코드(2) IMM(1) rX(2) Op2(3) — op코드 00 mv · 01 add · 10 sub · 11 분기. (op코드 = 덱·Verilog 의 III) 분기는 11 CC(2) 주소(4) — CC 00 b · 01 beq · 10 bne · 11 bmi. 스페이스 키 = 클럭 한 번.</p>
+
+  <div id="view-man" hidden>
+    <header style="margin-bottom:12px"><div class="hrow"><h1>Lab 6 프로세서 · 명령어 매뉴얼</h1><nav class="tabs"><a href="#/sim" data-tab="sim">시뮬레이터</a><a href="#/man/start" data-tab="man" class="on">명령어 매뉴얼</a></nav></div>
+    <p>어셈블리를 처음 보는 사람을 위한 설명서. 명령어 이름을 누르면 그 문서로 가고, 「해 보기」 는 예제를 시뮬레이터에 올린다.</p></header>
+    <div class="man">
+      <nav class="panel mside" aria-label="문서 목록"><input id="msearch" type="search" placeholder="문서 찾기 (예 : 분기, 음수)"><div id="mside-list"></div></nav>
+      <article class="panel mart" id="mart"></article>
+    </div>
+  </div>
+<footer class="foot">© 2026 문상국 (목원대학교 전기전자공학과) · 버전 1.1 (2026-11-18). FPGA 설계 수업 자료입니다. 수업과 개인 공부에는 자유롭게 쓸 수 있고, 고치거나 다른 곳에 다시 올리려면 먼저 허락을 받으세요.</footer>
+</div>
+
+<script>
+// ---------- 프로세서 모델 (proc.v 와 같은 동작, 한 번 = 상승 에지 하나) ----------
+const CPU = {
+  reset(){ return {pc:0, IR:0, irA:null, r:[0,0,0,0], A:0, G:0, Z:0, N:0, T:0}; },
+  comb(s, run){
+    const III=s.IR>>6, IMM=(s.IR>>5)&1, rX=(s.IR>>3)&3, rY=s.IR&3, D=s.IR&7, CC=(s.IR>>4)&3, ADR=s.IR&15;
+    const take = CC===0?1 : CC===1?s.Z : CC===2?(s.Z?0:1) : s.N;
+    const g={IRin:0,Ain:0,Gin:0,AddSub:0,Rin:0,PCin:0,Done:0,Sel:'G',III,IMM,rX,rY,D,CC,ADR,take};
+    let next=s.T;
+    if(s.T===0){ g.IRin=run?1:0; if(run) next=1; }
+    else if(s.T===1){
+      if(III===0){ g.Sel=IMM?'D':rY; g.Rin=1; g.Done=1; next=0; }
+      else if(III===3){ g.PCin=take; g.Done=1; next=0; }
+      else { g.Sel=rX; g.Ain=1; next=2; }
+    } else if(s.T===2){ g.Sel=IMM?'D':rY; g.AddSub=III===2?1:0; g.Gin=1; next=3; }
+    else { g.Sel='G'; g.Rin=1; g.Done=1; next=0; }
+    g.bus = g.Sel==='G'?s.G : g.Sel==='D'?D : s.r[g.Sel];
+    g.result = (g.AddSub? s.A-g.bus : s.A+g.bus)&255;
+    g.next=next; return g;
+  },
+  edge(s, rom, run){
+    const g=CPU.comb(s,run);
+    const n={pc:s.pc, IR:s.IR, irA:s.irA, r:s.r.slice(), A:s.A, G:s.G, Z:s.Z, N:s.N, T:g.next};
+    if(g.IRin){ n.IR=rom[s.pc]; n.irA=s.pc; n.pc=(s.pc+1)&15; }
+    if(g.PCin) n.pc=g.ADR;
+    if(g.Ain) n.A=g.bus;
+    if(g.Gin){ n.G=g.result; n.Z=g.result===0?1:0; n.N=(g.result>>7)&1; }
+    if(g.Rin) n.r[g.rX]=g.bus;
+    return n;
+  }
+};
+
+// ---------- 프로그램 ----------
+const PROGS = {
+  div:{rom:[0x27,0x66,0x2C,0x30,0x81,0xF8,0x71,0xC4,0x41,0xC9], fill:0xC9, labels:{4:'LOOP',8:'DONE',9:'END'}},
+  gcd:{rom:[0x26,0x66,0x2C,0x6C,0x10,0x91,0xDC,0xFA,0x02,0xC4,0x88,0xC4,0xCC], fill:0xCC, labels:{4:'LOOP',10:'R1BIG',12:'DONE'}},
+  own:{rom:[], fill:0x00, labels:{}}
+};
+let rom=new Array(16).fill(0), labels={};
+function loadProg(k){ const p=PROGS[k]; rom=new Array(16).fill(p.fill); p.rom.forEach((v,i)=>rom[i]=v); labels=Object.assign({},p.labels); }
+
+// ---------- 표기 ----------
+let fmt='bin';
+const bin8=v=>{const b=v.toString(2).padStart(8,'0');return b.slice(0,4)+' '+b.slice(4)};
+const bin4=v=>v.toString(2).padStart(4,'0');
+const hex2=v=>v.toString(16).toUpperCase().padStart(2,'0');
+function f8(v){ return fmt==='bin'?bin8(v) : fmt==='hex'?hex2(v) : String(v); }
+function f4(v){ return fmt==='bin'?bin4(v) : fmt==='hex'?v.toString(16).toUpperCase() : String(v); }
+function sgn(v){ return v>127? v-256 : v; }
+const CCN=['b','beq','bne','bmi'];
+function asm(ir){
+  const III=ir>>6, IMM=(ir>>5)&1, rX=(ir>>3)&3, rY=ir&3, D=ir&7, CC=(ir>>4)&3, ADR=ir&15;
+  if(III===3){ const l=labels[ADR]; return CCN[CC]+' '+(l||ADR); }
+  return ['mv','add','sub'][III]+' r'+rX+', '+(IMM?'#'+D:'r'+rY);
+}
+function fields(ir){
+  const b=ir.toString(2).padStart(8,'0'), III=ir>>6;
+  if(III===3){ const CC=(ir>>4)&3; return b.slice(0,2)+' 분기 | '+b.slice(2,4)+' '+CCN[CC]+' | '+b.slice(4)+' 주소 '+(ir&15); }
+  const IMM=(ir>>5)&1;
+  return b.slice(0,2)+' '+['mv','add','sub'][III]+' | '+b[2]+(IMM?' 직접값':' 레지스터')+' | '+b.slice(3,5)+' R'+((ir>>3)&3)+' | '+b.slice(5)+(IMM?' #'+(ir&7):' R'+(ir&3));
+}
+
+// ---------- 상태 ----------
+let s=CPU.reset(), prev=null, hist=[], clocks=0, timer=null, lastG=null;
+const $=id=>document.getElementById(id);
+const run=()=>$('run').checked;
+
+// ---------- 그림 ----------
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); parent.appendChild(e); return e; }
+const REGY=[156,196,236,276];
+(function build(){
+  const g=$('regs'), st=$('stubs'), p=$('pills');
+  REGY.forEach((y,i)=>{
+    el('text',{class:'lbl',x:34,y:y+21,'text-anchor':'end'},g).textContent='R'+i;
+    el('rect',{id:'b-r'+i,class:'box',x:40,y:y,width:110,height:32,rx:4},g);
+    el('text',{id:'v-r'+i,class:'val',x:95,y:y+21,'text-anchor':'middle'},g);
+    el('path',{class:'wire',d:'M152,'+(y+16)+' H187','marker-start':'url(#ag)','marker-end':'url(#ag)'},st);   // 레지스터 ↔ 버스 : 올리기(Sel)와 넣기(Rin) 두 방향
+  });
+  for(let t=0;t<4;t++){
+    el('rect',{id:'p'+t,class:'pill',x:380+t*52,y:112,width:46,height:26,rx:13},p);
+    el('text',{id:'pt'+t,class:'pilltx',x:403+t*52,y:130,'text-anchor':'middle'},p).textContent='T'+t;
+  }
+})();
+function hotPath(d,arrow,top){ el('path',{class:'hot',d:d,'marker-end':arrow?'url(#ah)':''},$(top?'hotTop':'hot')); }
+
+// ---------- 그리기 ----------
+const STEPNAME=['① 가져오기','② 해독','④ 연산','⑤ 결과 저장'];
+function srcName(g){ return g.Sel==='G'?'G' : g.Sel==='D'?'직접값 #'+g.D : 'R'+g.Sel; }
+function render(){
+  const g=CPU.comb(s,run()); lastG=g;
+  const changed=new Set();
+  if(prev){ ['pc','IR','A','G','Z','N'].forEach(k=>{ if(prev[k]!==s[k]) changed.add(k); }); s.r.forEach((v,i)=>{ if(prev.r[i]!==v) changed.add('r'+i); }); }
+  const set=(k,txt)=>{ const t=$('v-'+k); t.textContent=txt; t.setAttribute('class','val'+(changed.has(k)?' c':'')); };
+  set('pc',f4(s.pc)); set('IR',f8(s.IR)); set('A',f8(s.A)); set('G',f8(s.G)); set('Z',String(s.Z)); set('N',String(s.N));
+  s.r.forEach((v,i)=>set('r'+i,f8(v)));
+  $('v-ADR').textContent = '분기 주소 '+(fmt==='bin'? (s.IR&15).toString(2).padStart(4,'0') : String(s.IR&15));
+  $('v-D').textContent = '직접값 '+(fmt==='bin'? (s.IR&7).toString(2).padStart(3,'0') : String(s.IR&7));
+  $('v-rom').textContent = f8(rom[s.pc]);
+  $('v-romA').textContent = 'ROM['+ax(s.pc)+']';
+  $('v-irA').textContent = s.irA==null? '' : '(ROM['+ax(s.irA)+'])';
+  { // 값과 (ROM[번지]) 를 한 덩어리로 IR 칸 가운데에 (사이 5px)
+    const v=$('v-IR'), t=$('v-irA');
+    if(s.irA==null){ v.setAttribute('text-anchor','middle'); v.setAttribute('x',235); }
+    else { v.setAttribute('text-anchor','start'); t.setAttribute('text-anchor','start');
+      let wv=0, wt=0; try{ wv=v.getBBox().width; wt=t.getBBox().width; }catch(e){}
+      if(!wv) wv=76; if(!wt) wt=66;
+      const x0=235-(wv+5+wt)/2; v.setAttribute('x',x0.toFixed(1)); t.setAttribute('x',(x0+wv+5).toFixed(1)); }
+  }
+  $('v-fld').textContent = s.IR? fields(s.IR) : '';
+  $('b-dec').setAttribute('class','box dec'+(s.T===1&&run()?' act':''));
+  $('dec-t').setAttribute('y', s.IR? 101 : 110); $('dec-d').setAttribute('y', s.IR? 115 : 125);   // 칸 풀이가 있으면 세 줄, 없으면 두 줄을 칸 위아래 가운데에
+  $('v-fld').style.fill = 'var(--accent)';
+  for(let t=0;t<4;t++){ $('p'+t).setAttribute('class','pill'+(s.T===t?' on':'')); $('pt'+t).setAttribute('class','pilltx'+(s.T===t?' on':'')); }
+  // 길·도착 표시
+  $('hot').innerHTML=''; $('hotTop').innerHTML='';
+  if(!g.IRin){ for(const d of ['M72,36 V20 H527 V36','M470,52 H320','M72,20 H36','M19,28 V43 H38']) el('path',{class:'live',d:d,'marker-end':'url(#ar)'},$('hotTop')); }   // 조합 회로 ROM : 주소와 명령어는 늘 와 있다
+  ['pc','IR','A','G','Z','N','r0','r1','r2','r3'].forEach(k=>{ const b=$('b-'+k); b.setAttribute('class',b.getAttribute('class').replace(/ dst/g,'')); });
+  const dst=k=>{ const b=$('b-'+k); b.setAttribute('class',b.getAttribute('class')+' dst'); };
+  let busUsed = g.Ain||g.Gin||g.Rin;
+  if(g.IRin){ hotPath('M72,36 V20 H527 V36',1,1); hotPath('M470,52 H320',1,1); hotPath('M72,20 H36',1,1); hotPath('M19,28 V43 H38',1,1); dst('IR'); dst('pc'); }
+  $('b-inc').setAttribute('class','box inc'+(g.IRin?' act':''));
+  if(g.PCin){ hotPath('M170,68 V80 H72 V70',1,1); dst('pc'); }
+  if(busUsed){
+    if(g.Sel==='G') hotPath('M268,308 H194',1);
+    else if(g.Sel==='D') hotPath('M150,42 H124 V163 H186',1,1);
+    else hotPath('M150,'+(REGY[g.Sel]+16)+' H186',1);
+    hotPath('M190,124 V318',0);
+  }
+  if(g.Ain){ hotPath('M190,186 H258',1); dst('A'); }
+  if(g.Gin){ hotPath('M190,213 H290 V222',1); hotPath('M352,202 V222',1); hotPath('M325,276 V292',1); hotPath('M392,246 H510 V290',1); hotPath('M450,246 V290',1); dst('G'); dst('Z'); dst('N'); }
+  if(g.Rin){ hotPath('M190,'+(REGY[g.rX]+16)+' H154',1); dst('r'+g.rX); }
+  $('bus').setAttribute('class','busline'+(busUsed?' hotbus':''));
+  $('v-bus').textContent = busUsed? '버스 = '+f8(g.bus)+'  ('+srcName(g)+')' : '버스 (이 단계에서는 쓰지 않음)';
+  $('v-op').textContent = g.Gin? 'A '+(g.AddSub?'−':'+')+' 버스 = '+f8(g.result) : '덧셈·뺄셈';
+  // 설명
+  $('now').innerHTML = explain(g);
+  $('edge').innerHTML = atEnd()? '<b>다음 상승 에지에서</b> : 같은 분기를 다시 가져온다 (값은 더 바뀌지 않는다)' : '<b>다음 상승 에지에서</b> : '+nextEdge(g);
+  $('chg').innerHTML = prev? (changed.size? '<b>방금 에지에서 바뀐 것</b> : '+[...changed].map(k=>k.toUpperCase()+' = '+(k==='pc'?f4(s.pc):k==='Z'||k==='N'?s[k]:f8(k[0]==='r'?s.r[+k[1]]:s[k]))).join(', ') : '방금 에지에서 바뀐 레지스터는 없다') : '리셋 직후 : 레지스터는 모두 0, PC = 0. 지금이 T0 (가져오기) 다. ROM 은 주소를 받으면 바로 내용을 내보내므로 명령어가 IR 앞까지 와 있고 (빨간 길), 첫 상승 에지에 IR 로 들어간다';
+  const showSig=$('showsig').checked; $('sigwrap').hidden=!showSig;
+  if(showSig){ const selN = g.Sel==='G'?5 : g.Sel==='D'?4 : g.Sel;
+    const chip=(t,v)=>'<span class="sig'+(v?' on':'')+'">'+t+'</span>';
+    const busy=g.Ain||g.Gin||g.Rin, selName=g.Sel==='G'?'G':g.Sel==='D'?'직접값':'R'+g.Sel;
+    const grp=(cls,name,what,html)=>'<div class="sgrp '+cls+'"><div class="sghead"><b>'+name+'</b><span>'+what+'</span></div><div class="sigchips">'+html+'</div></div>';
+    $('sigs').innerHTML =
+        grp('g-bus','버스에 올리기','지금 버스에 무엇을 싣나 · 이 단계 안에서 바로 (MUX)', chip('Sel = '+selN+(busy?' → '+selName+' 를 버스에':' (버스를 쓰지 않음)'),busy))
+      + grp('g-in','레지스터에 넣기','다음 상승 에지에 어느 레지스터에 무엇을 넣나 (← 오른쪽 값이 왼쪽 레지스터로)', [['IRin',g.IRin,'IR ← ROM[PC], PC ← PC + 1'],['PCin',g.PCin,'PC ← 분기 주소'],['Ain',g.Ain,'A ← 버스'],['Gin',g.Gin,'G ← ALU 결과'],['Rin',g.Rin,'R'+g.rX+' ← 버스']].map(([n,v,t])=>chip(n+' = '+v+(v?' : '+t:''),v)).join(''))
+      + grp('g-alu','연산','덧셈·뺄셈기 (ALU) 가 더하나 빼나', chip('AddSub = '+g.AddSub+(g.Gin?(g.AddSub?' (뺄셈)':' (덧셈)'):''),g.AddSub))
+      + grp('g-end','끝 · 분기','이 명령어가 끝났나, 분기하나', chip('Done = '+g.Done,g.Done)+(s.T===1&&g.III===3? chip('take = '+g.take+(g.take?' (간다)':' (안 간다)'),g.take):'')); }
+  $('clkcount').textContent='클럭 '+clocks;
+  $('btn-back').disabled = hist.length<=1;
+  { const lock=atEnd()||($('quiz')&&$('quiz').checked); ['btn-clk','btn-ins','btn-auto'].forEach(id=>$(id).disabled=lock); }
+  renderRom(); renderHist();
+}
+function atEnd(){
+  if(s.T!==0||hist.length<2) return false; const ir=s.IR;
+  return (ir>>6)===3 && (ir&15)===s.pc && rom[s.pc]===ir;
+}
+function endText(){ return '주소 '+ax(s.pc)+' 의 <span class="asm">'+asm(s.IR)+'</span> 는 자기 자신으로 가는 분기다'; }
+function explain(g){
+  const T=s.T, ir=s.IR, a=asm(ir);
+  if(atEnd()) return '<p class="step">끝 · 프로그램이 끝났다</p><p>'+endText()+'. 실제 보드에서는 여기서 이 명령어를 끝없이 되풀이한다 (제자리 돌기). 이것으로 프로그램을 끝낸다. 시뮬레이터는 여기서 멈춘다. 결과는 레지스터에 있다. 처음부터 다시 하려면 리셋.</p>';
+  if(T===0){
+    if(!run()) return '<p class="step">T0 · 멈춤</p><p>Run (SW[9]) 이 0 이라 다음 명령어를 가져오지 않는다. 명령어와 명령어 사이 (T0) 에서만 멈추므로 앞 명령어는 끝까지 마친 상태다. 1 로 올리면 여기서 이어서 실행한다.</p>';
+    return '<p class="step">T0 · ① 가져오기</p><p>PC 가 가리키는 ROM 주소 '+ax(s.pc)+' 의 명령어 <span class="mono">'+f8(rom[s.pc])+'</span> (<span class="asm">'+asm(rom[s.pc])+'</span>) 를 IR 에 담는다. 같은 에지에서 PC 는 PC 전용 +1 덧셈기를 거쳐 '+((s.pc+1)&15)+' 이 된다 (ALU 는 쓰지 않는다). 다음 명령어를 가져올 준비다.</p>';
+  }
+  if(T===1){
+    const head='<p class="step">T1 · ② 해독 — <span class="asm">'+mlink(ir,a)+'</span></p><p class="mono" style="font-size:13.5px">'+fields(ir)+'</p><p style="font-size:13px;color:var(--muted)">금색 선 : PC 가 이미 '+ax(s.pc)+' 이라 ROM 은 ROM['+ax(s.pc)+'] = <span class="mono">'+f8(rom[s.pc])+'</span> 을 내놓고 기다린다. ROM 은 조합 회로라 클럭 없이 바로 바뀐다. +1 덧셈기도 같은 까닭으로 '+ax((s.pc+1)&15)+' 을 만들어 두고 기다린다. IR 과 PC 는 IRin = 1 인 T0 에만 받으므로 지금은 받지 않는다.</p>';
+    if(g.III===0) return head+'<p>mv 는 계산이 없어 해독한 이 단계에서 바로 끝난다: '+srcName(g)+' 의 값 <span class="mono">'+f8(g.bus)+'</span> 을 버스에 올려 R'+g.rX+' 에 넣는다 (Done).</p>';
+    if(g.III===3){
+      const cond=g.CC===0?'b 는 조건 없이 언제나 간다':g.CC===1?'beq 는 Z = 1 (앞 결과가 0) 이면 간다. 지금 Z = '+s.Z:g.CC===2?'bne 는 Z = 0 이면 간다. 지금 Z = '+s.Z:'bmi 는 N = 1 (앞 결과가 음수) 이면 간다. 지금 N = '+s.N;
+      return head+'<p>'+cond+' → '+(g.take?'<b>간다</b> : PC ← '+g.ADR+(labels[g.ADR]?' ('+labels[g.ADR]+')':''):'<b>가지 않는다</b> : PC 는 그대로 '+s.pc)+'. 분기도 이 단계에서 끝난다 (Done).</p>';
+    }
+    return head+'<p>해독은 클럭을 기다리지 않으므로 같은 T1 에서 <b>③ 오퍼랜드 준비</b>도 한다: R'+g.rX+' 의 <span class="mono">'+f8(g.bus)+'</span> 을 버스에 올려 A 에 담는다.</p>';
+  }
+  if(T===2){
+    const op=g.AddSub?'−':'+';
+    return '<p class="step">T2 · ④ 연산 — <span class="asm">'+a+'</span></p><p>'+srcName(g)+' 의 <span class="mono">'+f8(g.bus)+'</span> 을 버스에 올리고, ALU 가 A '+op+' 버스 = <span class="mono">'+f8(s.A)+' '+op+' '+f8(g.bus)+' = '+f8(g.result)+'</span> ('+sgn(s.A)+' '+op+' '+g.bus+' = '+sgn(g.result)+') 를 계산해 G 에 담는다. 결과가 0 인지 (Z), 음수인지 (N = 맨 앞 비트) 도 함께 저장한다.</p>';
+  }
+  return '<p class="step">T3 · ⑤ 결과 저장 — <span class="asm">'+a+'</span></p><p>G 의 <span class="mono">'+f8(s.G)+'</span> 을 버스에 올려 R'+g.rX+' 에 넣는다. 명령어 하나가 끝난다 (Done).</p>';
+}
+function nextEdge(g){
+  const L=[];
+  if(g.IRin) L.push('IR ← '+f8(rom[s.pc]), 'PC ← '+f4((s.pc+1)&15));
+  if(g.PCin) L.push('PC ← '+f4(g.ADR));
+  if(g.Ain) L.push('A ← '+f8(g.bus));
+  if(g.Gin) L.push('G ← '+f8(g.result), 'Z ← '+(g.result===0?1:0), 'N ← '+((g.result>>7)&1));
+  if(g.Rin) L.push('R'+g.rX+' ← '+f8(g.bus));
+  L.push('단계 T'+s.T+' → T'+g.next);
+  return L.join(', ');
+}
+const ax=i=>'0x'+i.toString(16).toUpperCase().padStart(2,'0');
+function renderRom(){
+  const tb=$('rom').tBodies[0];
+  if(tb.rows.length!==16){ tb.innerHTML=''; for(let i=0;i<16;i++){ const tr=tb.insertRow(); tr.innerHTML='<td class="mono">'+ax(i)+'</td><td class="lab"></td><td class="mono"></td><td><input id="rom'+i+'" maxlength="2" aria-label="주소 '+ax(i)+' 기계어 16진"></td><td class="mono"></td>';
+      const inp=tr.querySelector('input'); inp.addEventListener('input',()=>{ const v=inp.value.trim(); if(/^[0-9a-fA-F]{1,2}$/.test(v)){ inp.classList.remove('bad'); rom[i]=parseInt(v,16); $('prog').value='own'; render(); } else inp.classList.add('bad'); }); } }
+  for(let i=0;i<16;i++){ const tr=tb.rows[i]; tr.className = i===s.pc?'pc':'';
+    tr.cells[0].textContent=(i===s.pc?'▶ ':'')+ax(i); tr.cells[1].textContent=labels[i]||'';
+    const inp=tr.cells[3].firstChild; if(document.activeElement!==inp){ inp.value=hex2(rom[i]); inp.classList.remove('bad'); }
+    tr.cells[2].textContent=bin8(rom[i]); tr.cells[4].innerHTML=mlink(rom[i],asm(rom[i])); }
+}
+function renderHist(){
+  const tb=$('hist').tBodies[0]; tb.innerHTML='';
+  hist.forEach((h,idx)=>{ const p=idx?hist[idx-1].s:null, q=h.s; const tr=tb.insertRow(); if(idx===hist.length-1) tr.className='cur';
+    const c=(cond,txt)=>'<td class="mono'+(cond?' c':'')+'">'+txt+'</td>';
+    tr.innerHTML='<td class="mono">'+(idx===0?'리셋':h.n)+'</td><td class="mono">T'+q.T+'</td>'+c(p&&p.pc!==q.pc,f4(q.pc))+c(p&&p.IR!==q.IR,f8(q.IR))+'<td class="mono">'+(q.IR||idx?asm(q.IR):'')+'</td>'+c(p&&p.A!==q.A,f8(q.A))+c(p&&p.G!==q.G,f8(q.G))+q.r.map((v,i)=>c(p&&p.r[i]!==v,f8(v))).join('')+c(p&&p.Z!==q.Z,q.Z)+c(p&&p.N!==q.N,q.N); });
+  const w=$('histwrap'); w.scrollTop=w.scrollHeight;
+}
+
+// ---------- 동작 ----------
+function msg(t){ $('msg').textContent=t||''; }
+function clock(){
+  if(atEnd()){ stopAuto(); msg('프로그램이 끝났다 : '+asm(s.IR)+' 가 자기 자신으로 분기한다. 리셋하면 처음부터.'); render(); return; }
+  const g=CPU.comb(s,run());
+  // 제자리 분기 (b END 처럼 자기 번지로 가는 분기) 에서 자동 실행을 멈춘다
+  if(timer && s.T===1 && g.III===3 && g.take && g.ADR===((s.pc-1)&15)){ stopAuto(); msg('프로그램 끝 : '+asm(s.IR)+' 가 제자리로 되돌아간다. 결과는 레지스터에 있다.'); }
+  prev=s; s=CPU.edge(s,rom,run()); clocks++; hist.push({n:clocks,s:s}); render();
+}
+function instr(){ msg(''); if(atEnd()){ clock(); return; } for(let k=0;k<5;k++){ const g=CPU.comb(s,run()); clock(); if(g.Done||!run()) break; } }
+function reset(){ stopAuto(); s=CPU.reset(); prev=null; clocks=0; hist=[{n:0,s:s}]; msg(''); if(typeof qOk!=='undefined'){ qOk=0; qAll=0; qKey=''; qStart=true; qId=''; qIdLock(false); const r=$('q-res'); if(r) r.innerHTML=''; } render(); }
+function back(){ if(hist.length<=1) return; stopAuto(); hist.pop(); s=hist[hist.length-1].s; prev=hist.length>1?hist[hist.length-2].s:null; clocks=hist[hist.length-1].n; msg(''); render(); }
+function stopAuto(){ if(timer){ clearInterval(timer); timer=null; } $('btn-auto').textContent='자동 실행'; }
+function toggleAuto(){ if(timer){ stopAuto(); return; } msg(''); $('btn-auto').textContent='멈춤 ⏸'; timer=setInterval(clock,+$('speed').value); }
+// ---------- 맞혀 보기 ----------
+const QF=[['R0',t=>t.r[0],8],['R1',t=>t.r[1],8],['R2',t=>t.r[2],8],['R3',t=>t.r[3],8],['PC',t=>t.pc,4],['A',t=>t.A,8],['G',t=>t.G,8],['Z',t=>t.Z,1],['N',t=>t.N,1]];
+const SIM_VER='1.1';
+let qKey='', qOk=0, qAll=0, qStart=false, qId='', qProg='', qAt='';
+const QNAME={div:'나눗셈 13 ÷ 4',gcd:'최대공약수 gcd(12, 8)'};
+function qHash(str){ let h1=0xdeadbeef,h2=0x41c6ce57; for(let i=0;i<str.length;i++){ const ch=str.charCodeAt(i); h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677); }
+  h1=Math.imul(h1^(h1>>>16),2246822507); h1^=Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507); h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return 4294967296*(2097151&h2)+(h1>>>0); }
+function qCode(id,pg){ let n=qHash('mwfpga26|'+id+'|'+pg); const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<8;i++){ c+=A[n%32]; n=Math.floor(n/32); } return c.slice(0,4)+'-'+c.slice(4); }
+function qRomOk(pg){ const p=PROGS[pg]; if(!p) return false; for(let i=0;i<16;i++){ if(rom[i]!==(i<p.rom.length?p.rom[i]:p.fill)) return false; } return true; }
+function qIdLock(on){ const e=$('q-id'); if(e) e.disabled=on; }
+function qCert(){
+  const why = !qAll ? '맞혀 본 명령어가 없다' : !qStart ? '리셋한 처음 자리에서 시작하지 않았다' : !qId ? '학번 7자리를 넣지 않고 시작했다' : !QNAME[qProg] ? '직접 입력한 프로그램에는 완료 코드가 없다'
+    : ($('prog').value!==qProg || !qRomOk(qProg)) ? '도중에 ROM 프로그램이 바뀌었다' : qOk!==qAll ? '틀린 명령어가 '+(qAll-qOk)+'개 있다' : '';
+  if(why) return '<div class="qcert no">완료 코드 없음 : '+why+'. 리셋하고 처음부터 다시 맞혀 본다.</div>';
+  return '<div class="qcert"><b>✓ 완료</b> · '+QNAME[qProg]+' · 명령어 '+qAll+'개 모두 맞힘<br>학번 <b class="mono">'+qId+'</b> · 완료 코드 <span class="qcode">'+qCode(qId,qProg)+'</span><br><span class="mono">'+qAt+'</span> · 시뮬레이터 버전 '+SIM_VER+'</div>'; }
+function qOn(){ return $('quiz').checked; }
+function qFmt(v,b){ return b===1?String(v) : b===4?f4(v) : f8(v); }
+function qParse(str,b){
+  const t=String(str).replace(/[\s_]/g,''); if(t==='') return null;
+  if(b===1) return /^[01]$/.test(t)?+t:null;
+  let n=null;
+  if(fmt==='bin'){ if(/^[01]+$/.test(t)&&t.length<=b) n=parseInt(t,2); }
+  else if(fmt==='hex'){ if(/^[0-9a-fA-F]+$/.test(t)) n=parseInt(t,16); }
+  else if(/^-?\d+$/.test(t)) n=parseInt(t,10);
+  if(n===null||isNaN(n)) return null;
+  if(b===8){ if(n<-128||n>255) return null; return n&255; }
+  return (n>=0&&n<=15)?n:null;
+}
+function qTarget(){ let t=s; for(let k=0;k<5;k++){ const g=CPU.comb(t,run()); t=CPU.edge(t,rom,run()); if(g.Done||!run()) break; } return t; }
+function qWhat(){ const a=s.T===0?s.pc:((s.pc-1)&15), code=s.T===0?rom[s.pc]:s.IR; return '주소 '+ax(a)+' · '+mlink(code,asm(code)); }
+function qSync(force){
+  if(!qOn()) return; const key=hist.length+fmt;
+  if(!force && key===qKey) return; qKey=key;
+  if(atEnd()){ $('q-head').innerHTML='<span class="qlab">끝</span><span class="qq">'+endText()+'. 프로그램이 끝났다. 리셋하면 처음부터 다시 맞혀 볼 수 있다.</span>'; $('q-grid').innerHTML=qCert(); $('q-go').disabled=true; $('q-score').textContent=qAll?'맞힌 명령어 '+qOk+' / '+qAll:''; return; }
+  $('q-go').disabled=false;
+  $('q-head').innerHTML=(run()?'<span class="qlab">'+(s.T===0?'다음 명령어':'지금 명령어')+'</span><span class="qins">'+qWhat()+'</span><span class="qq">이 명령어가 끝나면 값은? 바뀔 것 같은 칸만 고쳐 쓴다.</span>':'Run (SW[9]) 이 0 이면 명령어를 가져오지 않는다. Run 을 켠다.');
+  $('q-grid').innerHTML=QF.map(([n,f,b])=>'<label class="qf">'+n+'<input data-q="'+n+'" class="'+(b===4?'w4':b===1?'w1':'')+'" value="'+qFmt(f(s),b)+'" autocomplete="off" spellcheck="false"></label>').join('');
+  $('q-score').textContent=qAll?'맞힌 명령어 '+qOk+' / '+qAll:'';
+}
+function qGo(){
+  if(!run()){ qSync(true); return; }
+  const what=qWhat(), want=qTarget(), wrong=[], bad=[], marks={};
+  QF.forEach(([n,f,b])=>{ const inp=document.querySelector('[data-q="'+n+'"]'); const v=qParse(inp.value,b);
+    if(v===null){ bad.push(n); inp.classList.add('bad'); return; }
+    if(v!==f(want)) wrong.push([n,inp.value,qFmt(f(want),b)]);
+    if(v!==f(s) || f(want)!==f(s)) marks[n]={ok:v===f(want), typed:inp.value}; });
+  if(bad.length){ $('q-res').innerHTML='<span class="ng">'+bad.join(', ')+'</span> 칸을 읽을 수 없다. '+(fmt==='bin'?'2진 8자리 (PC 는 4자리)':fmt==='hex'?'16진 (예 0D)':'10진 (예 13, −2)')+' 로 쓴다. Z · N 은 0 또는 1.'; return; }
+  if(qAll===0){ qStart=qStart&&hist.length===1; const id=$('q-id').value.trim(); qId=/^\d{7}$/.test(id)?id:''; qProg=$('prog').value; qIdLock(true); }
+  qAll++; if(!wrong.length) qOk++;
+  stopAuto(); instr();
+  if(atEnd()){ const d=new Date(), z=v=>String(v).padStart(2,'0'); qAt=d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+' '+z(d.getHours())+':'+z(d.getMinutes()); }
+  $('q-res').innerHTML=what+' : '+(wrong.length?'<span class="ng">틀린 칸</span> '+wrong.map(w=>w[0]+' ('+w[1]+' → 실제 <b class="mono">'+w[2]+'</b>)').join(', '):'<span class="ok">모두 맞혔다 ✓</span>')+'<br><span class="qscore">초록 = 맞힌 칸, 빨강 = 틀린 칸 (칸에는 실제 값, 아래에 쓴 값). 바뀌지 않았고 고치지도 않은 칸은 칠하지 않는다.</span>';
+  qSync(true);
+  Object.entries(marks).forEach(([n,m])=>{ const inp=document.querySelector('[data-q="'+n+'"]'); if(!inp) return;
+    inp.classList.add(m.ok?'good':'bad');
+    if(!m.ok){ const w=document.createElement('span'); w.className='qwas'; w.textContent='쓴 값 '+m.typed; inp.after(w); }
+    inp.addEventListener('input',()=>{ inp.classList.remove('good','bad'); const w=inp.nextElementSibling; if(w&&w.classList.contains('qwas')) w.remove(); },{once:true}); });
+}
+function qToggle(){
+  const on=qOn(); $('quizbox').hidden=!on; ['btn-clk','btn-ins','btn-auto'].forEach(id=>$(id).disabled=on||atEnd());
+  if(on){ stopAuto(); qOk=0; qAll=0; qStart=hist.length===1; qId=''; qIdLock(false); $('q-res').innerHTML=''; qSync(true); msg('맞혀 보기 : 클럭 · 명령어 하나 · 자동 실행 버튼은 잠긴다. 「◀ 뒤로」 와 리셋은 쓸 수 있다.'); } else msg('');
+}
+$('quiz').onchange=()=>keepPos($('quiz'),qToggle);
+$('q-go').onclick=qGo;
+$('q-undo').onclick=()=>{ $('q-res').innerHTML=''; qSync(true); };
+{ const r0=render; render=function(){ r0(); qSync(false); }; }
+$('btn-clk').onclick=()=>{ msg(''); clock(); };
+$('btn-ins').onclick=instr;
+$('btn-auto').onclick=toggleAuto;
+$('btn-back').onclick=back;
+$('btn-rst').onclick=reset;
+$('speed').onchange=()=>{ if(timer){ stopAuto(); toggleAuto(); } };
+$('run').onchange=render;
+// 펼치고 접을 때 누른 곳이 화면에서 움직이지 않게 : 페이지가 줄지 않게 붙잡고, 누른 칸의 위치를 되돌린다
+function keepPos(el,fn){ const y=el.getBoundingClientRect().top; const de=document.documentElement;
+  document.body.style.minHeight=Math.max(de.scrollHeight,parseFloat(document.body.style.minHeight)||0)+'px';
+  fn(); const d=el.getBoundingClientRect().top-y; if(Math.abs(d)>0.5) window.scrollBy(0,d); }
+$('showsig').onchange=()=>keepPos($('showsig'),render);
+$('prog').onchange=()=>{ const k=$('prog').value; if(k!=='own'){ loadProg(k); reset(); } else { labels={}; render(); } };
+document.querySelectorAll('input[name=fmt]').forEach(r=>r.onchange=()=>{ fmt=r.value; render(); });
+document.addEventListener('keydown',e=>{ if(e.code==='Space' && !$('view-sim').hidden && !$('quiz').checked && !/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement.tagName)){ e.preventDefault(); msg(''); clock(); } });
+</script>
+<script>
+// ================= 명령어 매뉴얼 (위키) =================
+// ---------- 어셈블러 (레이블 지원, 두 번 읽기) ----------
+const MN_OP={mv:0,add:1,sub:2}, MN_BR={b:0,beq:1,bne:2,bmi:3};
+function assemble(src){
+  const lines=src.split('\n'), items=[], labelAt={}, out={rom:[],labels:{},rows:[],errors:0};
+  let pending=[];
+  lines.forEach((raw,ln)=>{
+    let t=raw.replace(/;.*$/,'').trim(); let lab=null; const m=t.match(/^([A-Za-z_]\w*)\s*:\s*(.*)$/);
+    if(m){ lab=m[1].toUpperCase(); t=m[2].trim(); }
+    if(lab) pending.push(lab);
+    if(!t) return;
+    const addr=items.length;
+    pending.forEach(l=>{ labelAt[l]=addr; }); const labs=pending; pending=[];
+    items.push({ln, t, labs, comment:(raw.match(/;(.*)$/)||['',''])[1].trim()});
+  });
+  pending.forEach(l=>{ labelAt[l]=items.length; });
+  items.forEach((it,addr)=>{
+    const r={addr, labs:it.labs, text:it.t, comment:it.comment, code:null, err:null};
+    if(addr>15) r.err='ROM 은 16칸 (0~15번지) 뿐이다';
+    else{ const e=encode(it.t,labelAt); if(e.err) r.err=e.err; else r.code=e.code; }
+    if(r.err) out.errors++;
+    out.rows.push(r); if(addr<16) out.rom[addr]=r.code==null?0:r.code;
+    it.labs.forEach(l=>{ if(addr<16) out.labels[addr]=l; });
+  });
+  return out;
+}
+function encode(t,labelAt){
+  const m=t.match(/^([A-Za-z]+)\s*(.*)$/); if(!m) return {err:'명령어 이름으로 시작해야 한다'};
+  const mn=m[1].toLowerCase(), ops=m[2].split(',').map(x=>x.trim()).filter(x=>x!=='');
+  if(mn in MN_OP){
+    if(ops.length!==2) return {err:mn+' 는 오퍼랜드가 두 개다 : '+mn+' rX, rY 또는 '+mn+' rX, #D'};
+    const x=ops[0].match(/^r(\d+)$/i); if(!x) return {err:'앞 오퍼랜드는 결과를 받을 레지스터 r0~r3'};
+    if(+x[1]>3) return {err:'r'+x[1]+' 는 없다. 레지스터는 r0~r3'};
+    const y=ops[1].match(/^r(\d+)$/i), d=ops[1].match(/^#(-?\d+)$/);
+    if(y){ if(+y[1]>3) return {err:'r'+y[1]+' 는 없다. 레지스터는 r0~r3'}; return {code:(MN_OP[mn]<<6)|(+x[1]<<3)|+y[1]}; }
+    if(d){ const v=+d[1]; if(v<0||v>7) return {err:'#'+v+' 는 넣을 수 없다. #D 는 3비트라 0~7 뿐 (큰 수는 add 로 여러 번)'}; return {code:(MN_OP[mn]<<6)|32|(+x[1]<<3)|v}; }
+    if(/^\d+$/.test(ops[1])) return {err:'숫자 앞에 # 을 붙인다 : #'+ops[1]};
+    return {err:'뒤 오퍼랜드는 레지스터 r0~r3 또는 #숫자(0~7)'};
+  }
+  if(mn in MN_BR){
+    if(ops.length!==1) return {err:mn+' 는 갈 곳 하나만 쓴다 : '+mn+' 주소 또는 '+mn+' 레이블'};
+    let a; const o=ops[0];
+    if(/^\d+$/.test(o)) a=+o; else if(o.toUpperCase() in labelAt) a=labelAt[o.toUpperCase()]; else return {err:'「'+o+'」 라는 레이블이 없다'};
+    if(a>15) return {err:'갈 곳은 0~15번지 (4비트)'};
+    return {code:0xC0|(MN_BR[mn]<<4)|a};
+  }
+  return {err:'모르는 명령어 「'+m[1]+'」. 쓸 수 있는 것 : mv add sub b beq bne bmi'};
+}
+const mnOf=ir=>(ir>>6)===3?CCN[(ir>>4)&3]:['mv','add','sub'][ir>>6];
+const mlink=(ir,txt)=>String(txt).replace(/^(\S+)/,'<a class="ml" href="#/man/'+mnOf(ir)+'">$1</a>');
+
+// ---------- 예제 프로그램 (어셈블리 원문 → 어셈블러로 바꾼다) ----------
+const DEMOS={
+  first:{name:'첫 프로그램', src:'      mv  r0, #3     ; r0 ← 3\n      add r0, #4     ; r0 ← r0 + 4\nEND:  b   END        ; 제자리로 → 멈춤'},
+  mv:{name:'mv 해 보기', src:'      mv  r0, #5     ; r0 ← 5\n      mv  r1, r0     ; r1 ← r0 (r0 는 그대로)\n      mv  r2, #7     ; r2 ← 7\nEND:  b   END'},
+  add:{name:'add 해 보기', src:'      mv  r0, #7     ; r0 ← 7\n      add r0, #6     ; r0 ← 7 + 6 = 13\n      add r0, r0     ; r0 ← 13 + 13 = 26\nEND:  b   END'},
+  sub:{name:'sub 해 보기', src:'      mv  r0, #3     ; r0 ← 3\n      sub r0, #5     ; r0 ← 3 − 5 = −2 (FE), N = 1\n      mv  r1, #2     ; r1 ← 2\n      sub r1, #2     ; r1 ← 2 − 2 = 0, Z = 1\nEND:  b   END'},
+  b:{name:'b 해 보기 (끝없는 반복)', src:'      mv  r0, #0     ; r0 ← 0\nLOOP: add r0, #1     ; r0 ← r0 + 1\n      b   LOOP       ; 늘 LOOP 로 → 끝없이 센다'},
+  beq:{name:'beq 해 보기 (0 이 될 때까지)', src:'      mv  r0, #5     ; r0 ← 5\nLOOP: sub r0, #1     ; r0 ← r0 − 1\n      beq DONE       ; 0 이 되면 (Z = 1) DONE 으로\n      b   LOOP       ; 아니면 다시\nDONE: b   DONE       ; 멈춤'},
+  bne:{name:'bne 해 보기 (곱셈 5 × 3)', src:'      mv  r0, #5     ; 반복 횟수 5\n      mv  r1, #0     ; 합 = 0\nLOOP: add r1, #3     ; 합 ← 합 + 3\n      sub r0, #1     ; 횟수 − 1\n      bne LOOP       ; 0 이 아니면 (Z = 0) 다시\nEND:  b   END        ; r1 = 15'},
+  bmi:{name:'bmi 해 보기 (건너뛰기)', src:'      mv  r0, #2     ; r0 ← 2\n      sub r0, #3     ; 2 − 3 = −1 (FF), N = 1\n      bmi NEG        ; 음수면 NEG 로 (3번지를 건너뜀)\n      mv  r1, #1     ; 건너뛰는 줄\nNEG:  mv  r2, #7     ; r2 ← 7\nEND:  b   END'},
+  big:{name:'큰 수 만들기', src:'      mv  r0, #7     ; 7\n      add r0, #7     ; 14\n      add r0, r0     ; 28\n      add r0, r0     ; 56\nEND:  b   END'},
+  cmp:{name:'두 수 비교', src:'      mv  r0, #5     ; 비교할 수 a\n      mv  r1, #7     ; 비교할 수 b\n      mv  r2, r0     ; 복사본 (r0 를 지킨다)\n      sub r2, r1     ; r2 ← a − b\n      beq SAME       ; a = b\n      bmi SMALL      ; a < b\n      mv  r3, #1     ; a > b 이면 r3 = 1\n      b   END\nSAME: mv  r3, #2     ; a = b 이면 r3 = 2\n      b   END\nSMALL: mv r3, #3     ; a < b 이면 r3 = 3\nEND:  b   END'},
+  div:{name:'나눗셈 13 ÷ 4', src:'      mv  r0, #7     ; r0 = 7\n      add r0, #6     ; r0 = 13 (나눌 수)\n      mv  r1, #4     ; r1 = 4  (나누는 수)\n      mv  r2, #0     ; r2 = 0  (몫)\nLOOP: sub r0, r1     ; r0 ← r0 − 4\n      bmi DONE       ; 음수가 되면 끝\n      add r2, #1     ; 몫 + 1\n      b   LOOP       ; 다시\nDONE: add r0, r1     ; 한 번 더 뺀 것을 되돌림\nEND:  b   END        ; 멈춤'},
+  gcd:{name:'최대공약수 gcd(12, 8)', src:'      mv  r0, #6\n      add r0, #6     ; r0 = 12\n      mv  r1, #4\n      add r1, #4     ; r1 = 8\nLOOP: mv  r2, r0\n      sub r2, r1     ; r2 = r0 − r1\n      beq DONE       ; 같으면 끝\n      bmi R1BIG      ; r0 < r1\n      mv  r0, r2     ; r0 = r0 − r1\n      b   LOOP\nR1BIG: sub r1, r0    ; r1 = r1 − r0\n      b   LOOP\nDONE: b   DONE'}
+};
+function loadSource(src,name){
+  const a=assemble(src); if(a.errors) return false;
+  const last=a.rows[a.rows.length-1]; const selfStop=last&&last.code!=null&&(last.code>>4)===0xC&&(last.code&15)===last.addr;
+  rom=new Array(16).fill(selfStop?last.code:0); a.rom.forEach((v,i)=>rom[i]=v); labels=Object.assign({},a.labels);
+  $('prog').value='own'; go('#/sim'); reset(); msg('매뉴얼에서 올린 프로그램 : '+name+'. 「클럭 한 번」 또는 「자동 실행」으로 따라간다.');
+  return true;
+}
+
+// ---------- 그림 조각 ----------
+function bitsHTML(code){
+  const b=code.toString(2).padStart(8,'0'), br=(code>>6)===3;
+  const cls=br?['fa','fa','fb','fb','fd','fd','fd','fd']:['fa','fa','fb','fc','fc','fd','fd','fd'];
+  let h='<table class="bits">'+'<colgroup>'+'<col>'.repeat(8)+'</colgroup>'+'<tr>'+[7,6,5,4,3,2,1,0].map(i=>'<th>'+i+'</th>').join('')+'</tr><tr>'+[...b].map((c,i)=>'<td class="'+cls[i]+'">'+c+'</td>').join('')+'</tr><tr class="nm">';
+  if(br){ const CC=(code>>4)&3; h+='<td colspan="2" class="fa">op코드<small>11 = 분기</small></td><td colspan="2" class="fb">CC 조건<small>'+b.slice(2,4)+' = '+CCN[CC]+'</small></td><td colspan="4" class="fd">주소<small>'+b.slice(4)+' = '+(code&15)+'번지</small></td>'; }
+  else{ const IMM=(code>>5)&1; h+='<td colspan="2" class="fa">op코드<small>'+b.slice(0,2)+' = '+['mv','add','sub'][code>>6]+'</small></td><td class="fb">IMM<small>'+b[2]+' = '+(IMM?'직접값':'레지스터')+'</small></td><td colspan="2" class="fc">rX<small>'+b.slice(3,5)+' = R'+((code>>3)&3)+'</small></td><td colspan="3" class="fd">Op2<small>'+b.slice(5)+' = '+(IMM?'#'+(code&7):'R'+(code&3))+'</small></td>'; }
+  return h+'</tr></table><p class="bitsum mono">'+b.slice(0,4)+' '+b.slice(4)+' → 16진 <b>'+hex2(code)+'</b> = '+asm(code)+'</p>';
+}
+function binHTML(code){
+  const b=code.toString(2).padStart(8,'0'), seg=(code>>6)===3?[['fa',0,2],['fb',2,4],['fd',4,8]]:[['fa',0,2],['fb',2,3],['fc',3,5],['fd',5,8]];
+  return '<span class="bin">'+seg.map(([c,a,z])=>[...b.slice(a,z)].map((x,i)=>'<span class="'+c+(i===0?' l':'')+(a+i===z-1?' r':'')+'">'+x+'</span>').join('')).join('')+'</span>';
+}
+const binHead='<span class="bin bnum">'+[7,6,5,4,3,2,1,0].map(i=>'<span>'+i+'</span>').join('')+'</span>';
+function formHTML(kind){
+  if(kind==='op') return '<table class="bits form">'+'<colgroup>'+'<col>'.repeat(8)+'</colgroup>'+'<tr>'+[7,6,5,4,3,2,1,0].map(i=>'<th>'+i+'</th>').join('')+'</tr><tr class="nm"><td colspan="2" class="fa">op코드<small>명령어 종류</small></td><td class="fb">IMM<small>직접값인가</small></td><td colspan="2" class="fc">rX<small>결과 칸</small></td><td colspan="3" class="fd">Op2<small>재료 rY · #D</small></td></tr></table>';
+  return '<table class="bits form">'+'<colgroup>'+'<col>'.repeat(8)+'</colgroup>'+'<tr>'+[7,6,5,4,3,2,1,0].map(i=>'<th>'+i+'</th>').join('')+'</tr><tr class="nm"><td colspan="2" class="fa">op코드<small>11 = 분기</small></td><td colspan="2" class="fb">CC<small>조건</small></td><td colspan="4" class="fd">주소<small>갈 곳 0~15</small></td></tr></table>';
+}
+function listingHTML(key){
+  const d=DEMOS[key], a=assemble(d.src);
+  return '<div class="scroll"><table class="lst"><thead><tr><th>번지 (16진)</th><th>레이블</th><th>기계어</th><th>어셈블리</th><th>주석</th></tr></thead><tbody>'+
+    a.rows.map(r=>'<tr><td class="mono">'+r.addr+' <span class="hx">(0x'+hex2(r.addr)+')</span></td><td class="lab">'+r.labs.join(' ')+'</td><td class="mono">'+(r.code==null?'??':hex2(r.code))+'</td><td class="mono">'+(r.code==null?r.text:mlink(r.code,esc(r.text.replace(/\s+/,' ').replace(/^(\w+) /,(m0,m1)=>m1.padEnd(4,' ')))))+'</td><td class="cm">'+esc(r.comment)+'</td></tr>').join('')+'</tbody></table></div>';
+}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ---------- 문서 ----------
+const A=(id,t)=>'<a href="#/man/'+id+'">'+(t||id)+'</a>';
+const TRY=(k,t)=>'<p><button class="try" data-try="'+k+'">▶ 시뮬레이터에서 해 보기</button>'+(t?' <span class="trynote">'+t+'</span>':'')+'</p>';
+const PAGES=[
+{id:'start',g:'시작',t:'처음 읽기 : 어셈블리가 처음이라면',k:'어셈블리 기계어 프로그램 처음 시작',html:`
+<p class="lead">이 프로세서는 ROM 에 든 <b>명령어</b>를 0번지부터 하나씩 읽어 그대로 한다. 명령어 하나가 하는 일은 아주 작다. 「R0 에 7 을 넣어라」, 「R0 에서 R1 을 빼라」, 「4번지로 가라」 같은 것이다. 이런 명령어를 여러 줄 늘어놓은 것이 <b>프로그램</b>이다.</p>
+<h2>기계어와 어셈블리</h2>
+<p>ROM 에는 8비트 수만 들어 있다. 나눗셈 프로그램의 0번지에는 2진 <code>0010 0111</code>, 16진으로 <code>27</code> 이 들어 있다. 프로세서가 읽는 이 수를 <b>기계어</b>라고 한다.</p>
+<p>기계어는 사람이 읽기 어렵다. 그래서 같은 명령어를 짧은 영어 낱말로 적는다. <code>27</code> 은 <code>mv r0, #7</code> 이고, 뜻은 「R0 에 7 을 넣어라」 이다. 이렇게 적은 것을 <b>어셈블리</b>라고 한다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>기계어 (2진, 8비트)<br>${binHead}</th><th>16진</th><th>어셈블리</th><th>뜻</th></tr></thead><tbody>
+<tr><td>${binHTML(0x27)}</td><td class="mono">27</td><td class="mono">${A('mv','mv')} r0, #7</td><td>R0 ← 7</td></tr>
+<tr><td>${binHTML(0x66)}</td><td class="mono">66</td><td class="mono">${A('add','add')} r0, #6</td><td>R0 ← R0 + 6</td></tr>
+<tr><td>${binHTML(0xC4)}</td><td class="mono">C4</td><td class="mono">${A('b','b')} 4</td><td>4번지로 간다</td></tr></tbody></table></div>
+<p class="leg">2진의 색은 칸이다. <span class="swatch fa">op코드</span> 명령어 종류 · <span class="swatch fb">IMM</span> 직접값인가 · <span class="swatch fc">rX</span> 결과 칸 · <span class="swatch fd">Op2</span> 재료.<br>분기는 <span class="swatch fa">op코드 11</span> · <span class="swatch fb">CC</span> 조건 · <span class="swatch fd">주소</span> 갈 곳 으로 나눈다.</p>
+<p>어셈블리 한 줄은 기계어 하나와 짝이 맞는다. 바꾸는 법은 ${A('encoding','기계어 형식')}에 있고, 직접 쓴 어셈블리를 바꿔 주는 도구는 ${A('editor','연습장')}에 있다.</p>
+<h2>실행 순서</h2>
+<p><b>PC</b> (program counter) 는 다음에 읽을 번지를 가리킨다. 명령어를 하나 가져올 때마다 PC 가 1 늘어나므로, 프로그램은 위에서 아래로 차례로 실행된다.</p>
+<p>순서를 바꾸는 것은 <b>분기</b> 명령어 (${A('b')} · ${A('beq')} · ${A('bne')} · ${A('bmi')}) 뿐이다. 분기로 위로 되돌아가면 <b>반복</b>이 되고, 조건에 따라 몇 줄을 건너뛰면 「만약 ~이면」 이 된다.</p>
+<h2>첫 프로그램</h2>
+<div data-src="first"></div>
+<p>한 줄씩 읽으면 이렇다 : 「R0 에 3 을 넣는다. R0 에 4 를 더한다. 그 자리에 머문다.」 끝나면 R0 = 7 이다. 마지막 줄은 자기 번지로 가는 분기라서 프로세서가 거기서 맴돈다. 이것으로 프로그램을 끝낸다.</p>
+${TRY('first','끝나면 R0 = 0000 0111 (7)')}
+<h2>읽는 순서</h2>
+<ol class="steps">
+<li>${A('regs','레지스터와 플래그')} : 값을 담는 칸</li>
+<li>${A('syntax','어셈블리 한 줄 읽는 법')} : 쉼표, #, 레이블</li>
+<li>${A('summary','명령어 한눈에')} : 일곱 개 전체</li>
+<li>${A('mv')} · ${A('add')} · ${A('sub')} : 값 넣기와 계산</li>
+<li>${A('b')} · ${A('bmi')} : 반복과 끝내기 (${A('beq')} · ${A('bne')} 는 Part2)</li>
+<li>${A('ex-div','예제 : 나눗셈 13 ÷ 4')} : Part1 프로그램 한 줄씩</li></ol>
+<div class="callout tip"><b>명령어는 일곱 개뿐이다.</b> 곱셈, 나눗셈, 두 수 비교 명령어는 없다. 덧셈 · 뺄셈과 분기를 엮어서 만든다. ${A('patterns','자주 쓰는 꼴')}을 본다.</div>`},
+
+{id:'regs',g:'시작',t:'레지스터와 플래그',k:'r0 r1 r2 r3 pc IR A G Z N 플래그 레지스터 리셋',html:`
+<p class="lead">레지스터는 프로세서 안에서 값을 담는 칸이다. 어셈블리에서 이름으로 부를 수 있는 것은 <b>R0 ~ R3</b> 넷뿐이다. 어셈블리 줄에는 소문자로 <code>r0</code> ~ <code>r3</code> 처럼 쓰고, Verilog 코드 (proc.v) 의 이름도 소문자 <code>r0</code> · <code>pc</code> 다. 나머지는 프로세서가 명령어를 실행하면서 저절로 쓴다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>이름</th><th>크기</th><th>하는 일</th><th>명령어에 쓰나</th></tr></thead><tbody>
+<tr><td class="mono"><b>R0 ~ R3</b></td><td>8비트</td><td>프로그램이 쓰는 값</td><td>쓴다 (rX, rY)</td></tr>
+<tr><td class="mono">PC</td><td>4비트</td><td>다음에 읽을 ROM 번지 (0~15). 명령어를 가져오면 다음 것을 가리키게 1 늘어난다</td><td>분기로만 바꾼다</td></tr>
+<tr><td class="mono">IR</td><td>8비트</td><td>지금 실행하는 명령어 (instruction register)</td><td>아니다</td></tr>
+<tr><td class="mono">A</td><td>8비트</td><td>덧셈·뺄셈의 앞 수를 잠시 담는다</td><td>아니다 (add·sub 가 저절로)</td></tr>
+<tr><td class="mono">G</td><td>8비트</td><td>덧셈·뺄셈 결과를 잠시 담는다</td><td>아니다 (add·sub 가 저절로)</td></tr>
+<tr><td class="mono">Z</td><td>1비트</td><td>마지막 add·sub 결과가 0 이면 1 (zero)</td><td>${A('beq')} · ${A('bne')} 가 본다</td></tr>
+<tr><td class="mono">N</td><td>1비트</td><td>마지막 add·sub 결과의 맨 앞 비트. 음수면 1 (negative)</td><td>${A('bmi')} 가 본다</td></tr></tbody></table></div>
+<h2>플래그 Z · N</h2>
+<p>Z 와 N 을 <b>플래그</b>(깃발)라고 한다. ${A('add')} · ${A('sub')} 를 실행할 때만 새로 정해지고, ${A('mv')} 와 분기는 바꾸지 않는다. 그래서 분기 명령어는 늘 <b>바로 앞의 add·sub 결과</b>를 본다. 그 사이에 mv 가 끼어 있어도 마찬가지다.</p>
+<div class="callout warn"><code>mv r0, #0</code> 을 해도 Z 는 1 이 되지 않는다. Z 를 1 로 만들려면 결과가 0 인 add·sub 를 해야 한다 (예 <code>sub r0, r0</code>).</div>
+<h2>리셋</h2>
+<p>리셋하면 모든 레지스터와 플래그가 0 이 되고, PC = 0 이라 0번지부터 실행한다.</p>
+<h2>Run (SW[9]) : 출발 · 일시 정지 스위치</h2>
+<p>Run 이 1 이면 프로세서가 명령어를 가져와 실행하고, 0 이면 다음 명령어를 가져오지 않고 T0 에서 기다린다. 멈추는 곳은 <b>명령어와 명령어 사이 (T0)</b> 뿐이다. add 처럼 4 단계짜리 명령어도 하던 것은 끝까지 마치고 멈추므로, 레지스터에 반쯤 계산된 값이 남지 않는다.</p>
+<p>왜 있나 : 리셋한 뒤 Run 을 올리는 순간부터 프로그램이 시작되게 하고 (출발), 실행 도중 내리면 그 자리에서 멈춰 HEX 에 나온 R0 · R1 · R2 를 차분히 읽을 수 있다 (일시 정지). 다시 올리면 이어서 실행한다. 제어 FSM 에서는 T0 → T1 로 넘어가는 조건이 바로 Run 이다.</p>
+<h2>보드에서 보이는 것</h2>
+<p>DE1-SoC 보드의 HEX 표시기에는 R0 · R1 · R2 만 나온다 (HEX5~4 R0, HEX3~2 R1, HEX1~0 R2). R3 는 쓸 수는 있지만 보드에서는 보이지 않는다. 시뮬레이터에서는 넷 다 보인다.</p>
+<h2>8비트의 범위</h2>
+<p>레지스터 하나에는 0000 0000 ~ 1111 1111, 곧 0 ~ 255 를 담는다. 맨 앞 비트가 1 인 수를 음수로 읽기도 한다 (−128 ~ 127). 자세한 것은 ${A('negative','음수와 8비트')}에 있다.</p>`},
+
+{id:'syntax',g:'시작',t:'어셈블리 한 줄 읽는 법',k:'문법 오퍼랜드 레이블 주석 # 즉시값 쉼표 화살표',html:`
+<p class="lead">어셈블리 한 줄은 많아야 네 부분이다. 레이블과 주석은 없어도 된다.</p>
+<pre class="anat"><span class="pa">LOOP:</span>  <span class="pb">sub</span>  <span class="pc">r0</span>, <span class="pd">r1</span>     <span class="pe">; r0 ← r0 − r1</span>
+<span class="pa">레이블</span>  <span class="pb">명령어</span> <span class="pc">rX</span>  <span class="pd">Op2</span>    <span class="pe">주석</span></pre>
+<h2>명령어 이름</h2>
+<p>무엇을 할지 정한다. 영어 낱말을 줄인 것이다 : mv (move), add, sub (subtract), b (branch), beq (branch if equal), bne (branch if not equal), bmi (branch if minus).</p>
+<h2>오퍼랜드 : 앞은 결과 칸, 뒤는 재료</h2>
+<p>명령어 뒤에 오는 것을 <b>오퍼랜드</b>(operand, 연산 대상)라고 한다. mv · add · sub 는 오퍼랜드가 두 개이고 쉼표로 나눈다.</p>
+<ul><li><b>앞 (rX)</b> : 결과를 받을 레지스터. 늘 r0 ~ r3 중 하나다.</li>
+<li><b>뒤 (Op2)</b> : 재료. 레지스터 (rY) 이거나 # 을 붙인 직접값 (#D) 이다.</li></ul>
+<p>읽을 때는 화살표로 바꾼다. 「←」 는 오른쪽 값을 왼쪽 레지스터에 넣는다는 뜻이다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>어셈블리</th><th>화살표로</th><th>말로</th></tr></thead><tbody>
+<tr><td class="mono">mv r1, #4</td><td class="mono">R1 ← 4</td><td>R1 에 4 를 넣는다</td></tr>
+<tr><td class="mono">add r2, #1</td><td class="mono">R2 ← R2 + 1</td><td>R2 를 1 늘린다</td></tr>
+<tr><td class="mono">sub r0, r1</td><td class="mono">R0 ← R0 − R1</td><td>R0 에서 R1 을 뺀 값을 R0 에 넣는다</td></tr></tbody></table></div>
+<h2># 이 붙으면 숫자 그 자체</h2>
+<p><code>#4</code> 는 숫자 4 이고, <code>r1</code> 은 R1 에 들어 있는 값이다. 이렇게 명령어 안에 바로 적은 숫자를 <b>직접값</b>(immediate, 즉시값이라고도 한다)이라고 한다. 이 프로세서의 즉시값은 3비트라 <b>#0 ~ #7</b> 만 쓸 수 있다. 더 큰 수를 만드는 법은 ${A('patterns','자주 쓰는 꼴')}에 있다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>R1 = 5 일 때</th><th>결과</th></tr></thead><tbody>
+<tr><td class="mono">mv r0, #1</td><td>R0 = 1 (숫자 1)</td></tr>
+<tr><td class="mono">mv r0, r1</td><td>R0 = 5 (R1 에 든 값)</td></tr></tbody></table></div>
+<h2>레이블 : 번지에 붙인 이름</h2>
+<p><code>LOOP:</code> 처럼 줄 앞에 이름과 콜론을 쓰면 그 줄의 번지에 이름이 붙는다. 분기할 때 번지 숫자 대신 이 이름을 쓴다. 나눗셈 프로그램에서 LOOP 는 4번지라서 <code>b LOOP</code> 와 <code>b 4</code> 는 같은 기계어 <code>C4</code> 가 된다.</p>
+<p>레이블은 사람이 읽기 위한 것이라 기계어에는 남지 않는다. 줄을 하나 끼워 넣으면 뒤 번지가 모두 밀리는데, 레이블을 쓰면 ${A('editor','연습장')}이 번지를 다시 세어 준다.</p>
+<h2>주석</h2>
+<p><code>;</code> 뒤는 사람이 읽는 메모다. 프로세서는 보지 않는다. 몇 번째 줄이 무슨 뜻인지 적어 두면 나중에 읽기 쉽다.</p>`},
+
+{id:'summary',g:'명령어',t:'명령어 한눈에',k:'명령어 목록 표 요약 일곱 7개 클럭',html:`
+<p class="lead">이 프로세서의 명령어는 일곱 개이고, 하는 일에 따라 세 계열로 나뉜다. <b>mv 계열</b>은 값을 옮기고, <b>add 계열</b> (add · sub) 은 계산하고, <b>br 계열</b> (b · beq · bne · bmi) 은 다음에 실행할 번지를 바꾼다. 계열은 op코드로도 갈린다 : 00 = mv, 01 · 10 = add 계열, 11 = br 계열.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>계열</th><th>명령어</th><th>꼴</th><th>하는 일</th><th>Z · N</th><th>클럭</th><th>예 (16진)</th></tr></thead><tbody>
+<tr><td><b>mv 계열</b><br><small>값 옮기기</small></td><td>${A('mv')}</td><td class="mono">mv rX, rY<br>mv rX, #D</td><td class="mono">rX ← rY<br>rX ← D</td><td>그대로</td><td>2</td><td class="mono">2C = mv r1, #4</td></tr>
+<tr><td rowspan="2"><b>add 계열</b><br><small>계산</small></td><td>${A('add')}</td><td class="mono">add rX, rY<br>add rX, #D</td><td class="mono">rX ← rX + rY<br>rX ← rX + D</td><td>바뀜</td><td>4</td><td class="mono">71 = add r2, #1</td></tr>
+<tr><td>${A('sub')}</td><td class="mono">sub rX, rY<br>sub rX, #D</td><td class="mono">rX ← rX − rY<br>rX ← rX − D</td><td>바뀜</td><td>4</td><td class="mono">81 = sub r0, r1</td></tr>
+<tr><td rowspan="4"><b>br 계열</b><br><small>분기 (branch)</small></td><td>${A('b')}</td><td class="mono">b 주소</td><td>늘 그 주소로</td><td>그대로</td><td>2</td><td class="mono">C4 = b 4</td></tr>
+<tr><td>${A('beq')} <span class="tag">Part2</span></td><td class="mono">beq 주소</td><td>Z = 1 이면 그 주소로</td><td>그대로</td><td>2</td><td class="mono">DC = beq 12</td></tr>
+<tr><td>${A('bne')} <span class="tag">Part2</span></td><td class="mono">bne 주소</td><td>Z = 0 이면 그 주소로</td><td>그대로</td><td>2</td><td class="mono">E2 = bne 2</td></tr>
+<tr><td>${A('bmi')}</td><td class="mono">bmi 주소</td><td>N = 1 이면 그 주소로</td><td>그대로</td><td>2</td><td class="mono">F8 = bmi 8</td></tr></tbody></table></div>
+<p>rX · rY 는 r0 ~ r3, #D 는 #0 ~ #7, 주소는 0 ~ 15 다. 클럭은 명령어 하나를 끝내는 데 드는 클럭 수다 (${A('steps','명령어 하나의 단계')}).</p>
+<h2>분기 조건 정리</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>명령어</th><th>원래 말</th><th>가는 조건</th><th>sub a, b 뒤라면</th></tr></thead><tbody>
+<tr><td class="mono">b</td><td>branch</td><td>언제나</td><td>—</td></tr>
+<tr><td class="mono">beq</td><td>branch if equal</td><td>Z = 1</td><td>a = b</td></tr>
+<tr><td class="mono">bne</td><td>branch if not equal</td><td>Z = 0</td><td>a ≠ b</td></tr>
+<tr><td class="mono">bmi</td><td>branch if minus</td><td>N = 1</td><td>a &lt; b</td></tr></tbody></table></div>
+<div class="callout tip"><b>없는 것.</b> 곱셈, 나눗셈, 비교 (cmp), 메모리 읽기 · 쓰기 명령어는 없다. 곱셈은 덧셈을 되풀이하고, 나눗셈은 뺄셈을 되풀이하고, 비교는 sub 뒤에 분기한다. ${A('patterns','자주 쓰는 꼴')}을 본다.</div>`},
+
+{id:'mv',g:'명령어',sg:'mv 계열 : 값 옮기기',t:'mv : 값 넣기',k:'move 복사 옮기기 넣기',info:[['꼴','mv rX, rY<br>mv rX, #D'],['하는 일','rX ← rY<br>rX ← D'],['원래 말','move'],['클럭','2 (T0 · T1)'],['Z · N','바꾸지 않는다'],['16진','00 ~ 3F']],html:`
+<p class="lead"><b>mv</b> 는 오른쪽 값을 왼쪽 레지스터에 넣는다. 레지스터 값을 복사하거나, 작은 수 (0~7) 를 넣을 때 쓴다.</p>
+<h2>두 가지 꼴</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>어셈블리</th><th>하는 일</th><th>예 (R1 = 5 일 때)</th></tr></thead><tbody>
+<tr><td class="mono">mv rX, rY</td><td>rY 의 값을 rX 에 복사한다. rY 는 그대로 남는다</td><td class="mono">mv r0, r1 → R0 = 5, R1 = 5</td></tr>
+<tr><td class="mono">mv rX, #D</td><td>숫자 D (0~7) 를 rX 에 넣는다</td><td class="mono">mv r1, #4 → R1 = 4</td></tr></tbody></table></div>
+<p>이름은 「옮기기」 (move) 지만 실제로는 <b>복사</b>다. <code>mv r0, r1</code> 뒤에도 R1 은 바뀌지 않는다.</p>
+<h2>기계어</h2>
+${formHTML('op')}
+<p>op코드 = 00 이 mv 다. 예 : <code>mv r1, #4</code></p>
+<div data-bits="2C"></div>
+<h2>단계</h2>
+<p>계산이 없어서 덧셈·뺄셈기 (ALU) 를 쓰지 않는다. T0 에서 가져오고, T1 에서 해독하면서 값을 버스에 올려 rX 에 바로 넣고 끝난다. 그래서 2 클럭이다.</p>
+<h2>주의</h2>
+<ul><li>#D 는 0~7 뿐이다. <code>mv r0, #13</code> 은 쓸 수 없다. <code>mv r0, #7</code> 다음 <code>add r0, #6</code> 처럼 두 번에 만든다.</li>
+<li>mv 는 플래그 Z · N 을 바꾸지 않는다. mv 바로 뒤의 ${A('beq')} · ${A('bmi')} 는 mv 가 아니라 그 앞의 add·sub 결과를 본다.</li>
+<li>16진 <code>00</code> 은 <code>mv r0, r0</code> 이다. 아무것도 바뀌지 않는다.</li></ul>
+<h2>해 보기</h2>
+<div data-src="mv"></div>
+${TRY('mv','끝나면 R0 = 5, R1 = 5, R2 = 7')}`},
+
+{id:'add',g:'명령어',sg:'add 계열 : 계산',t:'add : 더하기',k:'덧셈 더하기 두배 넘침',info:[['꼴','add rX, rY<br>add rX, #D'],['하는 일','rX ← rX + rY<br>rX ← rX + D'],['원래 말','add'],['클럭','4 (T0 ~ T3)'],['Z · N','결과로 바뀐다'],['16진','40 ~ 7F']],html:`
+<p class="lead"><b>add</b> 는 rX 에 오른쪽 값을 더해 그 결과를 다시 rX 에 넣는다.</p>
+<h2>두 가지 꼴</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>어셈블리</th><th>하는 일</th><th>예 (R0 = 13, R1 = 4)</th></tr></thead><tbody>
+<tr><td class="mono">add rX, rY</td><td>rX ← rX + rY</td><td class="mono">add r0, r1 → R0 = 17</td></tr>
+<tr><td class="mono">add rX, #D</td><td>rX ← rX + D (D 는 0~7)</td><td class="mono">add r0, #6 → R0 = 19</td></tr>
+<tr><td class="mono">add rX, rX</td><td>rX ← rX + rX = 두 배</td><td class="mono">add r0, r0 → R0 = 26</td></tr></tbody></table></div>
+<h2>플래그</h2>
+<p>결과가 0 이면 Z = 1, 결과의 맨 앞 비트가 1 이면 N = 1 이 된다. 다음 add·sub 를 할 때까지 그대로 남는다.</p>
+<h2>8비트를 넘으면</h2>
+<p>결과는 8비트만 남는다. 255 를 넘으면 256 을 뺀 값이 된다. 예 : 250 + 10 = 260 → 4. 결과가 128 ~ 255 이면 맨 앞 비트가 1 이라 N = 1 이 된다 (${A('negative','음수와 8비트')}).</p>
+<h2>기계어</h2>
+<p>op코드 = 01 이 add 다. 예 : <code>add r2, #1</code></p>
+<div data-bits="71"></div>
+<h2>단계</h2>
+<ol class="steps"><li><b>T0</b> 가져오기 : IR ← ROM[PC], PC ← PC + 1</li>
+<li><b>T1</b> 해독, 그리고 rX 의 값을 A 에 담는다</li>
+<li><b>T2</b> Op2 를 버스에 올려 A + Op2 를 계산해 G 에 담는다. Z · N 도 이때 정해진다</li>
+<li><b>T3</b> G 를 rX 에 넣고 끝난다</li></ol>
+<p>각 단계에서 켜지는 제어 신호는 시뮬레이터의 「제어 신호 보기」로 본다.</p>
+<h2>해 보기</h2>
+<div data-src="add"></div>
+${TRY('add','끝나면 R0 = 0001 1010 (26)')}`},
+
+{id:'sub',g:'명령어',sg:'add 계열 : 계산',t:'sub : 빼기',k:'뺄셈 빼기 비교 음수 subtract',info:[['꼴','sub rX, rY<br>sub rX, #D'],['하는 일','rX ← rX − rY<br>rX ← rX − D'],['원래 말','subtract'],['클럭','4 (T0 ~ T3)'],['Z · N','결과로 바뀐다'],['16진','80 ~ BF']],html:`
+<p class="lead"><b>sub</b> 는 rX 에서 오른쪽 값을 빼서 그 결과를 다시 rX 에 넣는다. 뺄셈 자체보다 <b>두 수를 비교</b>할 때 더 자주 쓴다.</p>
+<h2>두 가지 꼴</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>어셈블리</th><th>하는 일</th><th>예 (R0 = 13, R1 = 4)</th></tr></thead><tbody>
+<tr><td class="mono">sub rX, rY</td><td>rX ← rX − rY</td><td class="mono">sub r0, r1 → R0 = 9</td></tr>
+<tr><td class="mono">sub rX, #D</td><td>rX ← rX − D (D 는 0~7)</td><td class="mono">sub r0, #1 → R0 = 12</td></tr>
+<tr><td class="mono">sub rX, rX</td><td>rX ← 0, Z = 1</td><td class="mono">sub r0, r0 → R0 = 0</td></tr></tbody></table></div>
+<p>빼는 순서는 늘 <b>앞 − 뒤</b>다. <code>sub r0, r1</code> 은 R0 − R1 이고, R1 − R0 이 아니다.</p>
+<h2>플래그와 비교</h2>
+<p>결과가 0 이면 Z = 1, 음수면 N = 1 이 된다. 그래서 <code>sub a, b</code> 뒤의 플래그로 두 수의 크기를 안다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>a − b 의 결과</th><th>플래그</th><th>뜻</th><th>쓰는 분기</th></tr></thead><tbody>
+<tr><td>0</td><td class="mono">Z = 1</td><td>a = b</td><td>${A('beq')}</td></tr>
+<tr><td>음수</td><td class="mono">N = 1</td><td>a &lt; b</td><td>${A('bmi')}</td></tr>
+<tr><td>양수</td><td class="mono">Z = 0, N = 0</td><td>a &gt; b</td><td>(분기하지 않고 아래로)</td></tr></tbody></table></div>
+<div class="callout warn">sub 는 rX 를 결과로 덮어쓴다. 비교만 하고 원래 값을 지키려면 먼저 ${A('mv')} 로 복사본을 만들어 복사본에서 뺀다 (${A('ex-gcd','최대공약수 예제')}의 <code>mv r2, r0</code> · <code>sub r2, r1</code>).</div>
+<h2>음수 결과</h2>
+<p>3 − 5 = −2 는 8비트로 <code>1111 1110</code> (FE) 이다. 맨 앞 비트가 1 이라 N = 1 이 된다. 읽는 법은 ${A('negative','음수와 8비트')}에 있다.</p>
+<h2>기계어</h2>
+<p>op코드 = 10 이 sub 다. 예 : <code>sub r0, r1</code></p>
+<div data-bits="81"></div>
+<h2>단계</h2>
+<p>${A('add')} 와 같은 4 클럭이다. T2 에서 ALU 가 더하는 대신 A − Op2 를 계산하는 것만 다르다.</p>
+<h2>해 보기</h2>
+<div data-src="sub"></div>
+${TRY('sub','끝나면 R0 = 1111 1110 (−2), R1 = 0. 마지막 sub 뒤 Z = 1, N = 0')}`},
+
+{id:'b',g:'명령어',sg:'br 계열 : 분기',t:'b : 늘 분기',k:'branch 분기 점프 반복 멈추기 goto',info:[['꼴','b 주소'],['하는 일','PC ← 주소'],['원래 말','branch'],['클럭','2 (T0 · T1)'],['Z · N','바꾸지 않는다'],['16진','C0 ~ CF']],html:`
+<p class="lead"><b>b</b> 는 조건 없이 늘 그 주소로 간다. 다음에 실행할 명령어가 그 주소의 명령어가 된다.</p>
+<h2>쓰는 곳</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>꼴</th><th>쓰임</th></tr></thead><tbody>
+<tr><td class="mono">b LOOP</td><td>반복의 끝에서 위로 되돌아간다</td></tr>
+<tr><td class="mono">END: b END</td><td>자기 번지로 가서 맴돈다 = 프로그램 끝</td></tr>
+<tr><td class="mono">b END</td><td>아래 몇 줄을 건너뛴다 (if ~ else 의 else 건너뛰기)</td></tr></tbody></table></div>
+<h2>주소와 레이블</h2>
+<p>주소는 4비트라 0 ~ 15 다. 숫자 대신 레이블을 쓰면 읽기 쉽고, 줄을 끼워 넣어도 ${A('editor','연습장')}이 번지를 다시 센다. <code>b LOOP</code> 는 LOOP 가 4번지면 <code>b 4</code> 와 같다.</p>
+<h2>기계어</h2>
+${formHTML('br')}
+<p>op코드 11 이 분기, CC = 00 이 b 다. 예 : <code>b 4</code></p>
+<div data-bits="C4"></div>
+<h2>단계</h2>
+<p>T0 에서 가져올 때 PC 는 이미 다음 번지로 늘어 있다. T1 에서 조건이 맞으면 (b 는 언제나) PC 를 주소로 바꾸고 끝난다. 2 클럭이다.</p>
+<h2>해 보기</h2>
+<div data-src="b"></div>
+${TRY('b','R0 가 1, 2, 3 … 으로 끝없이 는다. 255 다음은 0. 자동 실행은 「멈춤」 으로 멈춘다')}`},
+
+{id:'beq',g:'명령어',sg:'br 계열 : 분기',t:'beq : 0 이면 분기',k:'branch if equal 같으면 Z 0이면',part:2,info:[['꼴','beq 주소'],['하는 일','Z = 1 이면 PC ← 주소'],['원래 말','branch if equal'],['클럭','2 (T0 · T1)'],['Z · N','바꾸지 않는다'],['16진','D0 ~ DF']],html:`
+<p class="lead"><b>beq</b> 는 마지막 add·sub 결과가 0 이면 (Z = 1) 그 주소로 가고, 아니면 바로 아래 줄로 간다.</p>
+<h2>왜 「같으면」 인가</h2>
+<p><code>sub a, b</code> 의 결과가 0 이라는 것은 a = b 라는 뜻이다. 그래서 이름이 branch if <b>equal</b> 이다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>앞 명령어</th><th>beq 가 가는 때</th></tr></thead><tbody>
+<tr><td class="mono">sub r2, r1</td><td>R2 = R1 이었을 때</td></tr>
+<tr><td class="mono">sub r0, #1</td><td>R0 가 1 이었다가 0 이 되었을 때</td></tr></tbody></table></div>
+<h2>기계어</h2>
+<p>CC = 01 이 beq 다. 예 : <code>beq 12</code> (최대공약수 예제의 <code>beq DONE</code>)</p>
+<div data-bits="DC"></div>
+<h2>주의</h2>
+<ul><li>mv 는 Z 를 바꾸지 않는다. <code>mv r0, #0</code> 바로 뒤의 beq 는 그 앞의 add·sub 결과를 본다.</li>
+<li>가지 않을 때는 아래 줄로 내려간다. PC 는 T0 에서 이미 1 늘어 있기 때문이다.</li></ul>
+<h2>해 보기</h2>
+<div data-src="beq"></div>
+${TRY('beq','R0 가 4, 3, 2, 1, 0 으로 줄다가 0 이 되면 DONE 에서 멈춘다')}`},
+
+{id:'bne',g:'명령어',sg:'br 계열 : 분기',t:'bne : 0 이 아니면 분기',k:'branch if not equal 다르면 Z 반복 횟수',part:2,info:[['꼴','bne 주소'],['하는 일','Z = 0 이면 PC ← 주소'],['원래 말','branch if not equal'],['클럭','2 (T0 · T1)'],['Z · N','바꾸지 않는다'],['16진','E0 ~ EF']],html:`
+<p class="lead"><b>bne</b> 는 마지막 add·sub 결과가 0 이 아니면 (Z = 0) 그 주소로 가고, 0 이면 아래 줄로 간다. ${A('beq')} 와 반대다.</p>
+<h2>정해진 횟수 반복</h2>
+<p>bne 는 「횟수를 1 씩 줄이다가 0 이 될 때까지 되풀이」 할 때 가장 많이 쓴다.</p>
+<pre class="code">      mv  r3, #5     ; 횟수
+LOOP: …              ; 되풀이할 일
+      sub r3, #1     ; 횟수 − 1
+      bne LOOP       ; 0 이 아니면 다시</pre>
+<h2>기계어</h2>
+<p>CC = 10 이 bne 다. 예 : <code>bne 2</code></p>
+<div data-bits="E2"></div>
+<h2>해 보기 : 곱셈 5 × 3</h2>
+<p>곱셈 명령어가 없으므로 3 을 다섯 번 더한다.</p>
+<div data-src="bne"></div>
+${TRY('bne','끝나면 R1 = 0000 1111 (15), R0 = 0')}`},
+
+{id:'bmi',g:'명령어',sg:'br 계열 : 분기',t:'bmi : 음수면 분기',k:'branch if minus 음수 N 작으면',info:[['꼴','bmi 주소'],['하는 일','N = 1 이면 PC ← 주소'],['원래 말','branch if minus'],['클럭','2 (T0 · T1)'],['Z · N','바꾸지 않는다'],['16진','F0 ~ FF']],html:`
+<p class="lead"><b>bmi</b> 는 마지막 add·sub 결과가 음수면 (N = 1) 그 주소로 가고, 아니면 아래 줄로 간다.</p>
+<h2>「작으면」 으로 읽기</h2>
+<p><code>sub a, b</code> 결과가 음수라는 것은 a &lt; b 라는 뜻이다. 나눗셈 프로그램은 이것으로 「더 뺄 수 없다」 를 안다.</p>
+<pre class="code">LOOP: sub r0, r1     ; r0 ← r0 − 4
+      bmi DONE       ; 음수가 되면 (r0 가 4 보다 작았으면) 끝</pre>
+<h2>기계어</h2>
+<p>CC = 11 이 bmi 다. 예 : <code>bmi 8</code> (나눗셈의 <code>bmi DONE</code>)</p>
+<div data-bits="F8"></div>
+<h2>주의</h2>
+<ul><li>N 은 결과의 맨 앞 비트일 뿐이다. 결과가 128 ~ 255 처럼 크면 음수가 아니어도 N = 1 이 된다. 이 실습의 수는 작아서 걱정하지 않아도 된다 (${A('negative','음수와 8비트')}).</li>
+<li>mv 는 N 을 바꾸지 않는다.</li></ul>
+<h2>해 보기 : 건너뛰기</h2>
+<div data-src="bmi"></div>
+${TRY('bmi','2 − 3 이 음수라 3번지를 건너뛴다. 끝나면 R1 = 0, R2 = 7')}`},
+
+{id:'encoding',g:'깊이 보기',t:'기계어 형식 : 8비트 칸 나누기',k:'기계어 형식 인코딩 16진 2진 op코드 opcode III IMM rX Op2 CC 어셈블 바꾸기 변환',html:`
+<p class="lead">명령어 하나는 8비트다. 연산 명령어와 분기 명령어는 칸을 나누는 법이 다르다. 맨 앞 두 비트를 보면 어느 쪽인지 안다.</p>
+<h2>연산 명령어 (mv · add · sub)</h2>
+${formHTML('op')}
+<div class="scroll"><table class="tb"><thead><tr><th>칸</th><th>비트</th><th>값</th></tr></thead><tbody>
+<tr><td><span class="swatch fa">op코드</span> 명령어 종류<br><small>operation code</small></td><td>7 · 6</td><td class="mono">00 mv · 01 add · 10 sub · (11 은 분기)</td></tr>
+<tr><td><span class="swatch fb">IMM</span> 직접값인가<br><small>immediate</small></td><td>5</td><td class="mono">0 = Op2 가 레지스터 rY · 1 = Op2 가 직접값 #D</td></tr>
+<tr><td><span class="swatch fc">rX</span> 결과 칸</td><td>4 · 3</td><td class="mono">00 R0 · 01 R1 · 10 R2 · 11 R3</td></tr>
+<tr><td><span class="swatch fd">Op2</span> 재료<br><small>operand 2, 두 번째 오퍼랜드</small></td><td>2 · 1 · 0</td><td class="mono">IMM = 1 : 직접값 000 ~ 111 (0~7)<br>IMM = 0 : 아래 두 비트가 rY (맨 앞 비트는 0)</td></tr></tbody></table></div>
+<div class="callout tip"><b>III 는 op코드다.</b> 덱과 Verilog 코드 (proc.v) 에서는 op코드 칸을 <code>III</code> 라고 부른다 (<code>wire [1:0] III = IR[7:6];</code>). I 셋은 이름일 뿐이고, 이 프로세서의 op코드는 2비트다.</div>
+<h2>분기 명령어 (b · beq · bne · bmi)</h2>
+${formHTML('br')}
+<div class="scroll"><table class="tb"><thead><tr><th>칸</th><th>비트</th><th>값</th></tr></thead><tbody>
+<tr><td><span class="swatch fa">op코드</span> 분기</td><td>7 · 6</td><td class="mono">늘 11</td></tr>
+<tr><td><span class="swatch fb">CC</span> 조건<br><small>condition code</small></td><td>5 · 4</td><td class="mono">00 b · 01 beq · 10 bne · 11 bmi</td></tr>
+<tr><td><span class="swatch fd">주소</span> 갈 곳</td><td>3 ~ 0</td><td class="mono">0000 ~ 1111 (0~15번지)</td></tr></tbody></table></div>
+<h2>어셈블리 → 16진 (손으로)</h2>
+<ol class="steps"><li>명령어 이름으로 op코드를 고른다. <code>add r2, #1</code> → add = <b>01</b></li>
+<li>오른쪽이 # 직접값이면 IMM = <b>1</b>, 레지스터면 0</li>
+<li>rX 를 2비트로 : R2 = <b>10</b></li>
+<li>Op2 를 3비트로 : #1 = <b>001</b></li>
+<li>이어 붙여 4비트씩 끊는다 : <b>0111 0001</b> → 7 · 1 → <b>71</b></li></ol>
+<div data-bits="71"></div>
+<h2>16진 → 어셈블리</h2>
+<p><code>C4</code> → 1100 0100 → op코드 11 = 분기, CC 00 = b, 주소 0100 = 4 → <code>b 4</code></p>
+<h2>바꿔 보기</h2>
+<p>어셈블리 한 줄 또는 16진 두 자리를 넣는다.</p>
+<div data-widget="conv"></div>
+<h2>4비트 ↔ 16진</h2>
+<div class="scroll"><table class="tb hx"><tbody>
+<tr>${[...Array(8).keys()].map(i=>'<td class="mono">'+i.toString(2).padStart(4,'0')+'<br><b>'+i.toString(16).toUpperCase()+'</b></td>').join('')}</tr>
+<tr>${[...Array(8).keys()].map(i=>'<td class="mono">'+(i+8).toString(2).padStart(4,'0')+'<br><b>'+(i+8).toString(16).toUpperCase()+'</b></td>').join('')}</tr></tbody></table></div>
+<p>이렇게 사람이 어셈블리를 기계어로 바꾸는 일을 프로그램이 대신 하면 그 프로그램을 <b>어셈블러</b>라고 한다. 이 페이지의 ${A('editor','연습장')}이 작은 어셈블러다.</p>`},
+
+{id:'negative',g:'깊이 보기',t:'음수와 8비트',k:'음수 2의 보수 넘침 오버플로 N 맨 앞 비트 FD FF',html:`
+<p class="lead">레지스터는 8비트라 0 ~ 255 만 담는다. 그 밖의 결과는 8비트만 남기고 잘린다. 뺄셈 결과가 음수일 때도 마찬가지다.</p>
+<h2>빼다가 0 아래로 가면</h2>
+<p>1 − 4 를 8비트로 하면 <code>0000 0001 − 0000 0100 = 1111 1101</code> (FD) 이 된다. 빌려 오면서 위가 모두 1 로 채워진다. 이렇게 <b>맨 앞 비트가 1 이면 음수로 읽는다</b>. 이 읽는 법을 <b>2의 보수</b>라고 한다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>8비트</th><th>16진</th><th>0 ~ 255 로 읽으면</th><th>음수로 읽으면</th><th>N</th></tr></thead><tbody>
+<tr><td class="mono">0000 0001</td><td class="mono">01</td><td>1</td><td>1</td><td>0</td></tr>
+<tr><td class="mono">0000 0000</td><td class="mono">00</td><td>0</td><td>0 (Z = 1)</td><td>0</td></tr>
+<tr><td class="mono">1111 1111</td><td class="mono">FF</td><td>255</td><td>−1</td><td>1</td></tr>
+<tr><td class="mono">1111 1110</td><td class="mono">FE</td><td>254</td><td>−2</td><td>1</td></tr>
+<tr><td class="mono">1111 1101</td><td class="mono">FD</td><td>253</td><td>−3</td><td>1</td></tr></tbody></table></div>
+<p>음수로 읽는 법 : 256 에서 뺀다. FD = 253 → 253 − 256 = −3.</p>
+<p>시뮬레이터의 「10진」 표시는 0 ~ 255 로 보여 준다 (FD 는 253). 「지금 단계」 설명의 계산식은 음수로 보여 준다.</p>
+<h2>더하다가 255 를 넘으면</h2>
+<p>250 + 10 = 260 은 9비트가 필요하다. 맨 위 비트가 잘려 260 − 256 = 4 가 남는다. 255 + 1 = 0 이다.</p>
+<h2>N 플래그</h2>
+<p>N 은 결과의 맨 앞 비트를 그대로 옮긴 것이다. 음수로 읽는 범위는 −128 ~ 127 이고, 결과가 이 범위를 넘으면 N 이 실제 부호와 다를 수 있다. 예 : 127 + 1 = 128 = <code>1000 0000</code> 이라 N = 1. 이 실습의 수는 모두 작아서 걱정하지 않아도 된다.</p>`},
+
+{id:'steps',g:'깊이 보기',t:'명령어 하나의 단계 : T0 ~ T3',k:'단계 클럭 T0 T1 T2 T3 가져오기 해독 실행 fetch decode execute 시간',html:`
+<p class="lead">프로세서는 명령어 하나를 몇 단계로 나눠 실행한다. 단계 하나가 클럭 한 번이다. 모든 명령어가 T0 에서 시작하고, 끝나면 다시 T0 으로 돌아가 다음 명령어를 가져온다.</p>
+<div class="scroll"><table class="tb"><thead><tr><th>명령어</th><th>T0</th><th>T1</th><th>T2</th><th>T3</th><th>클럭</th></tr></thead><tbody>
+<tr><td>${A('mv')}</td><td rowspan="4">① 가져오기<br><span class="mono">IR ← ROM[PC]<br>PC ← PC + 1</span></td><td>② 해독<br><span class="mono">rX ← Op2</span> (끝)</td><td>—</td><td>—</td><td>2</td></tr>
+<tr><td>분기</td><td>② 해독<br>조건이 맞으면 <span class="mono">PC ← 주소</span> (끝)</td><td>—</td><td>—</td><td>2</td></tr>
+<tr><td>${A('add')}</td><td>② 해독 · ③ 오퍼랜드 준비<br><span class="mono">A ← rX</span></td><td>④ 연산<br><span class="mono">G ← A + Op2</span>, Z · N</td><td>⑤ 결과 저장<br><span class="mono">rX ← G</span> (끝)</td><td>4</td></tr>
+<tr><td>${A('sub')}</td><td>② 해독 · ③ 오퍼랜드 준비<br><span class="mono">A ← rX</span></td><td>④ 연산<br><span class="mono">G ← A − Op2</span>, Z · N</td><td>⑤ 결과 저장<br><span class="mono">rX ← G</span> (끝)</td><td>4</td></tr></tbody></table></div>
+<p>값은 그 단계가 끝나는 클럭의 상승 에지에서 레지스터에 들어간다. 시뮬레이터의 「클럭 한 번」 이 이 에지 하나다.</p>
+<h2>왜 add · sub 만 길까</h2>
+<p>레지스터들은 <b>버스</b>라는 선 하나를 함께 쓴다. 버스에는 한 번에 값 하나만 올릴 수 있다. add 는 rX 와 Op2 두 값을 덧셈기에 넣고 결과를 다시 rX 로 보내야 해서, 버스를 세 번 (T1 · T2 · T3) 쓴다. mv 는 한 번, 분기는 버스를 쓰지 않는다.</p>
+<h2>프로그램의 클럭 수</h2>
+<p>명령어마다 클럭 수를 더하면 된다. 나눗셈 13 ÷ 4 는 리셋부터 8번지 <code>add r0, r1</code> 이 끝나 결과가 다 나올 때까지 56 클럭이다. 시뮬레이터에서 「명령어 하나」 로 넘기며 「클럭」 칸을 확인한다.</p>
+<h2>제어 신호</h2>
+<p>각 단계에서 제어 FSM 이 켜는 신호 (IRin, Ain, Gin, Rin 등) 는 시뮬레이터의 「제어 신호 보기」 에 나온다. proc.v 의 출력 결정 부분과 맞춰 본다.</p>`},
+
+{id:'patterns',g:'예제와 연습',t:'자주 쓰는 꼴',k:'패턴 반복 조건 비교 곱셈 큰 수 0 만들기 멈추기 if while',html:`
+<p class="lead">명령어가 일곱 개뿐이라 많은 일을 몇 줄을 엮어서 한다. 자주 나오는 꼴을 모았다.</p>
+<h2>큰 수 만들기</h2>
+<p>#D 는 0~7 뿐이다. 더 큰 수는 add 로 여러 번에 만든다. 두 배는 <code>add rX, rX</code> 다.</p>
+<div data-src="big"></div>
+${TRY('big','끝나면 R0 = 56')}
+<h2>0 만들기</h2>
+<div class="scroll"><table class="tb"><tbody>
+<tr><td class="mono">mv r0, #0</td><td>R0 = 0. 플래그는 그대로</td></tr>
+<tr><td class="mono">sub r0, r0</td><td>R0 = 0. 그리고 Z = 1</td></tr></tbody></table></div>
+<h2>프로그램 끝내기</h2>
+<pre class="code">END:  b   END        ; 자기 번지로 → 여기서 맴돈다</pre>
+<p>끝내기 줄이 없으면 PC 가 계속 늘어 ROM 의 나머지 칸까지 실행하고, 15번지 다음에는 0번지로 돌아간다.</p>
+<h2>정해진 횟수 되풀이</h2>
+<pre class="code">      mv  r3, #5     ; 횟수
+LOOP: …
+      sub r3, #1
+      bne LOOP</pre>
+<p>예 : ${A('bne','bne 문서')}의 곱셈 5 × 3.</p>
+<h2>조건이 맞을 때까지 되풀이 (while)</h2>
+<pre class="code">LOOP: sub r0, r1     ; 해 보고
+      bmi DONE       ; 지나쳤으면 빠져나간다
+      …              ; 되풀이할 일
+      b   LOOP
+DONE: …</pre>
+<p>나눗셈 프로그램이 이 꼴이다 (${A('ex-div','예제 : 나눗셈')}).</p>
+<h2>두 수 비교 (값을 지키면서)</h2>
+<p>sub 는 rX 를 덮어쓰므로 복사본에서 뺀다. 결과는 같다 · 작다 · 크다 세 갈래다.</p>
+<div data-src="cmp"></div>
+${TRY('cmp','5 < 7 이라 SMALL 로 간다. 끝나면 R3 = 3. R0 · R1 의 숫자를 바꿔 다시 해 본다')}
+<h2>C 언어와 나란히</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>C</th><th>어셈블리</th></tr></thead><tbody>
+<tr><td class="mono">a = 5;</td><td class="mono">mv r0, #5</td></tr>
+<tr><td class="mono">a = a + b;</td><td class="mono">add r0, r1</td></tr>
+<tr><td class="mono">if (a &lt; b) goto X;</td><td class="mono">mv r2, r0 / sub r2, r1 / bmi X</td></tr>
+<tr><td class="mono">while (a &gt;= b) { … }</td><td class="mono">LOOP: … sub · bmi DONE · … · b LOOP</td></tr></tbody></table></div>
+<p>C 의 문장 하나가 어셈블리 여러 줄이 된다. 이렇게 바꾸는 일을 하는 프로그램이 컴파일러다.</p>`},
+
+{id:'ex-div',g:'예제와 연습',t:'예제 : 나눗셈 13 ÷ 4 (Part1)',k:'나눗셈 몫 나머지 rom.v Part1 예제 LOOP DONE',html:`
+<p class="lead">Part1 의 rom.v 프로그램이다. 13 에서 4 를 빼지 못할 때까지 빼면서 뺀 횟수를 센다. 뺀 횟수가 몫, 남은 수가 나머지다.</p>
+<div data-src="div"></div>
+${TRY('div','끝나면 몫 R2 = 3, 나머지 R0 = 1')}
+<h2>한 덩어리씩</h2>
+<ul><li><b>0 ~ 3번지 : 준비.</b> #D 는 0~7 이라 13 은 7 + 6 으로 만든다. R1 = 4 (나누는 수), R2 = 0 (몫).</li>
+<li><b>4 ~ 7번지 : 반복.</b> 4 를 빼 보고 (${A('sub')}), 음수가 되었으면 빠져나간다 (${A('bmi')}). 아니면 몫을 1 늘리고 (${A('add')}) 다시 (${A('b')}).</li>
+<li><b>8번지 : 되돌리기.</b> 음수가 될 때 한 번 더 뺐으므로 4 를 다시 더한다.</li>
+<li><b>9번지 : 끝.</b> 자기 번지로 분기해 맴돈다.</li></ul>
+<h2>손으로 따라가기</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>반복</th><th>sub 뒤 R0</th><th>N</th><th>bmi</th><th>R2 (몫)</th></tr></thead><tbody>
+<tr><td>1</td><td>13 − 4 = 9</td><td>0</td><td>안 감</td><td>1</td></tr>
+<tr><td>2</td><td>9 − 4 = 5</td><td>0</td><td>안 감</td><td>2</td></tr>
+<tr><td>3</td><td>5 − 4 = 1</td><td>0</td><td>안 감</td><td>3</td></tr>
+<tr><td>4</td><td colspan="4">시뮬레이터로 확인한다 : R0 · N 은 어떻게 되고, bmi 는 어디로 가나?</td></tr></tbody></table></div>
+<h2>바꿔 보기</h2>
+<p>${A('editor','연습장')}에서 0 ~ 2번지를 고쳐 다른 두 수로 나눠 본다. 고친 프로그램은 rom.v 꼴로도 볼 수 있다.</p>`},
+
+{id:'ex-gcd',g:'예제와 연습',t:'예제 : 최대공약수 gcd(12, 8) (Part2)',k:'최대공약수 gcd 유클리드 Part2 beq bmi 예제',part:2,html:`
+<p class="lead">Part2 의 rom_gcd.v 프로그램이다. 큰 쪽에서 작은 쪽을 빼는 일을 두 수가 같아질 때까지 되풀이한다. 같아진 그 수가 최대공약수다.</p>
+<div data-src="gcd"></div>
+${TRY('gcd','끝나면 R0 = R1 = 4')}
+<h2>한 덩어리씩</h2>
+<ul><li><b>0 ~ 3번지 : 준비.</b> R0 = 12, R1 = 8.</li>
+<li><b>4 ~ 5번지 : 비교.</b> R0 를 지키려고 복사본 R2 에서 R1 을 뺀다.</li>
+<li><b>6 ~ 7번지 : 세 갈래.</b> 0 이면 같다 → DONE (${A('beq')}). 음수면 R0 가 작다 → R1BIG (${A('bmi')}). 둘 다 아니면 R0 가 크다 → 아래로.</li>
+<li><b>8 ~ 9번지 : R0 가 클 때.</b> R0 ← R0 − R1 (이미 R2 에 있다) 하고 되돌아간다.</li>
+<li><b>10 ~ 11번지 : R1 이 클 때.</b> R1 ← R1 − R0 하고 되돌아간다.</li></ul>
+<h2>값의 흐름</h2>
+<div class="scroll"><table class="tb"><thead><tr><th>R0</th><th>R1</th><th>R0 − R1</th><th>간 곳</th></tr></thead><tbody>
+<tr><td>12</td><td>8</td><td>4</td><td>아래로 → R0 = 4</td></tr>
+<tr><td>4</td><td>8</td><td>−4</td><td>R1BIG → R1 = 4</td></tr>
+<tr><td>4</td><td>4</td><td>0</td><td>DONE</td></tr></tbody></table></div>`},
+
+{id:'editor',g:'예제와 연습',t:'연습장 : 어셈블리로 프로그램 쓰기',k:'연습장 에디터 어셈블러 직접 rom.v 쓰기 편집 내 프로그램',html:`
+<p class="lead">어셈블리를 쓰면 바로 16진으로 바뀐다. 오류가 있으면 그 줄에 까닭이 나온다. 다 쓰면 시뮬레이터에 올려 돌려 본다.</p>
+<div data-widget="editor"></div>
+<h2>쓰는 규칙</h2>
+<ul><li>한 줄에 명령어 하나. 많아야 16줄 (0~15번지).</li>
+<li>레이블은 줄 앞에 <code>이름:</code>. 분기에서 숫자 대신 쓴다.</li>
+<li><code>;</code> 뒤는 주석.</li>
+<li>마지막 줄은 <code>END: b END</code> 처럼 끝내는 줄로 한다. 시뮬레이터에 올릴 때 남는 칸을 이 줄로 채운다.</li></ul>`},
+
+{id:'mistakes',g:'찾아보기',t:'흔한 실수',k:'실수 오류 안 돼요 디버그 틀림',html:`
+<div class="scroll"><table class="tb"><thead><tr><th>증상</th><th>까닭</th><th>고치기</th></tr></thead><tbody>
+<tr><td><code>mv r0, #13</code> 이 안 된다</td><td>#D 는 3비트, 0~7 뿐</td><td><code>mv r0, #7</code> · <code>add r0, #6</code></td></tr>
+<tr><td>beq · bmi 가 엉뚱하게 간다</td><td>mv 는 플래그를 바꾸지 않는다. 분기는 마지막 add·sub 를 본다</td><td>분기 바로 앞에 비교할 sub 를 둔다</td></tr>
+<tr><td>비교했더니 값이 사라졌다</td><td>sub 가 rX 를 결과로 덮어쓴다</td><td>mv 로 복사본을 만들어 복사본에서 뺀다</td></tr>
+<tr><td>뺄셈 결과가 거꾸로다</td><td><code>sub r0, r1</code> 은 R0 − R1</td><td>앞이 빼어지는 수</td></tr>
+<tr><td>분기가 엉뚱한 줄로 간다</td><td>줄을 끼워 넣어 번지가 밀렸다</td><td>번지 숫자 대신 레이블을 쓴다 (${A('editor','연습장')})</td></tr>
+<tr><td>프로그램이 끝나지 않고 처음부터 다시 돈다</td><td>끝내는 줄이 없다. 15번지 다음은 0번지</td><td>마지막에 <code>END: b END</code></td></tr>
+<tr><td>16진이 틀렸다</td><td>칸을 잘못 붙였거나 4비트씩 끊지 않았다</td><td>${A('encoding','기계어 형식')}의 「바꿔 보기」로 확인</td></tr>
+<tr><td>R3 값이 보드에 안 보인다</td><td>HEX 에는 R0 · R1 · R2 만 나온다</td><td>결과는 R0 ~ R2 에 둔다</td></tr></tbody></table></div>`},
+
+{id:'glossary',g:'찾아보기',t:'용어 사전',k:'용어 사전 뜻 단어 glossary',html:`
+<dl class="gl">
+<dt>기계어</dt><dd>프로세서가 바로 읽는 2진 수. 이 프로세서에서는 명령어 하나가 8비트. ${A('encoding','기계어 형식')}</dd>
+<dt>어셈블리</dt><dd>기계어를 사람이 읽게 낱말로 적은 것. 한 줄이 기계어 하나. ${A('syntax','한 줄 읽는 법')}</dd>
+<dt>어셈블러</dt><dd>어셈블리를 기계어로 바꾸는 프로그램. ${A('editor','연습장')}</dd>
+<dt>컴파일러</dt><dd>C 같은 언어의 문장을 명령어 여러 줄로 바꾸는 프로그램.</dd>
+<dt>명령어</dt><dd>프로세서가 하는 일 하나. 이 프로세서는 일곱 개. ${A('summary','명령어 한눈에')}</dd>
+<dt>오퍼랜드 (operand)</dt><dd>명령어가 다루는 대상. <code>add r0, r1</code> 의 R0 와 R1.</dd>
+<dt>op코드 (operation code, III)</dt><dd>기계어 맨 앞 두 비트. 명령어 종류를 정한다 : 00 mv · 01 add · 10 sub · 11 분기. 덱과 Verilog 코드에서는 III 라고 부른다. ${A('encoding','기계어 형식')}</dd>
+<dt>직접값 (immediate, #D)</dt><dd>명령어 안에 바로 적은 숫자. 0~7. 즉시값이라고도 한다.</dd>
+<dt>레지스터</dt><dd>프로세서 안의 값 칸. ${A('regs','레지스터와 플래그')}</dd>
+<dt>PC (program counter)</dt><dd>다음에 가져올 명령어의 번지.</dd>
+<dt>IR (instruction register)</dt><dd>지금 실행하는 명령어를 담는 칸.</dd>
+<dt>플래그 (Z · N)</dt><dd>마지막 add·sub 결과가 0 인가 (Z), 음수인가 (N).</dd>
+<dt>분기 (branch)</dt><dd>PC 를 바꿔 다른 번지의 명령어로 가는 것. ${A('b')} ${A('beq')} ${A('bne')} ${A('bmi')}</dd>
+<dt>레이블</dt><dd>번지에 붙인 이름. 기계어에는 남지 않는다.</dd>
+<dt>번지 (주소)</dt><dd>ROM 칸의 번호. 0~15.</dd>
+<dt>ROM</dt><dd>읽기만 하는 메모리. 프로그램을 담는다.</dd>
+<dt>2의 보수</dt><dd>맨 앞 비트가 1 인 수를 음수로 읽는 법. ${A('negative','음수와 8비트')}</dd>
+<dt>단계 (T0 ~ T3)</dt><dd>명령어 하나를 나눈 조각. 하나가 클럭 한 번. ${A('steps','명령어 하나의 단계')}</dd>
+<dt>16진</dt><dd>4비트를 0~9, A~F 한 글자로 적는 법.</dd>
+</dl>`}
+];
+const PIDX={}; PAGES.forEach((p,i)=>PIDX[p.id]=i);
+
+// ---------- 화면 ----------
+function sideHTML(q){
+  q=(q||'').trim().toLowerCase(); let h='', g=null, sg=null;
+  PAGES.forEach(p=>{ if(q && !(p.t+' '+p.id+' '+(p.k||'')).toLowerCase().includes(q)) return;
+    if(p.g!==g){ if(g!==null) h+='</ul>'; g=p.g; sg=null; h+='<h3>'+g+'</h3><ul>'; }
+    if(p.sg && p.sg!==sg){ sg=p.sg; h+='<li class="sg">'+sg+'</li>'; } else if(!p.sg) sg=null;
+    h+='<li><a href="#/man/'+p.id+'" data-pid="'+p.id+'"'+(p.sg?' class="in"':'')+'>'+p.t+(p.part?' <span class="tag">Part2</span>':'')+'</a></li>'; });
+  return h? h+'</ul>' : '<p class="none">맞는 문서가 없다</p>';
+}
+function renderSide(){ $('mside-list').innerHTML=sideHTML($('msearch').value); markSide(); }
+function markSide(){ document.querySelectorAll('#mside-list a').forEach(a=>a.classList.toggle('on',a.dataset.pid===curPage)); }
+let curPage='start';
+function renderPage(id){
+  if(!(id in PIDX)) id='start'; curPage=id; const i=PIDX[id], p=PAGES[i];
+  let h='<nav class="crumb"><a href="#/man/start">매뉴얼</a> › '+p.g+(p.sg?' › '+p.sg:'')+'</nav><h1>'+p.t+(p.part?' <span class="tag big">Part2</span>':'')+'</h1>';
+  if(p.info) h+='<aside class="infobox"><div class="ibh">'+p.id+'</div><table>'+p.info.map(([k,v])=>'<tr><th>'+k+'</th><td>'+v+'</td></tr>').join('')+'</table></aside>';
+  h+=p.html;
+  const pv=PAGES[i-1], nx=PAGES[i+1];
+  h+='<nav class="pn">'+(pv?'<a href="#/man/'+pv.id+'">← '+pv.t+'</a>':'<span></span>')+(nx?'<a href="#/man/'+nx.id+'">'+nx.t+' →</a>':'')+'</nav>';
+  const art=$('mart'); art.innerHTML=h;
+  art.querySelectorAll('[data-src]').forEach(d=>d.innerHTML=listingHTML(d.dataset.src));
+  art.querySelectorAll('[data-bits]').forEach(d=>d.innerHTML=bitsHTML(parseInt(d.dataset.bits,16)));
+  art.querySelectorAll('[data-try]').forEach(b=>b.onclick=()=>{ const d=DEMOS[b.dataset.try]; loadSource(d.src,d.name); });
+  art.querySelectorAll('[data-widget=conv]').forEach(buildConv);
+  art.querySelectorAll('[data-widget=editor]').forEach(buildEditor);
+  markSide(); document.title=p.t+' · Lab 6 명령어 매뉴얼';
+}
+function buildConv(box){
+  box.innerHTML='<div class="conv"><input id="conv-in" class="mono" value="sub r0, r1" aria-label="어셈블리 또는 16진" spellcheck="false"><div id="conv-out"></div></div>';
+  const inp=$('conv-in'), out=$('conv-out');
+  const upd=()=>{ const v=inp.value.trim(); let code=null, err=null;
+    if(/^[0-9a-fA-F]{2}$/.test(v) && !/^(b|beq|bne|bmi|mv|add|sub)$/i.test(v)) code=parseInt(v,16);
+    else if(v){ const e=encode(v,{}); if(e.err) err=e.err; else code=e.code; }
+    out.innerHTML = code!=null? bitsHTML(code)+'<p>'+A(mnOf(code),mnOf(code)+' 문서 보기')+'</p>' : err? '<p class="err">'+esc(err)+'</p>' : '';
+  };
+  inp.addEventListener('input',upd); upd();
+}
+let edSrc=null;
+function buildEditor(box){
+  box.innerHTML='<div class="ed"><div class="edbar"><button data-ld="div">나눗셈 불러오기</button><button data-ld="gcd">최대공약수 불러오기</button><button data-ld="">비우기</button></div>'+
+    '<textarea id="ed-src" class="mono" spellcheck="false" rows="14" aria-label="어셈블리"></textarea>'+
+    '<div id="ed-out"></div><p class="edbar"><button id="ed-run" class="primary">▶ 시뮬레이터에 올리기</button> <button id="ed-v">rom.v 꼴로 보기</button></p><div id="ed-v-out"></div></div>';
+  const ta=$('ed-src'); ta.value=edSrc==null?DEMOS.div.src:edSrc;
+  const upd=()=>{ edSrc=ta.value; const a=assemble(ta.value);
+    $('ed-out').innerHTML='<div class="scroll"><table class="lst"><thead><tr><th>번지 (16진)</th><th>레이블</th><th>기계어 16진</th><th>기계어 2진</th><th>어셈블리 / 오류</th></tr></thead><tbody>'+
+      (a.rows.length? a.rows.map(r=>'<tr'+(r.err?' class="bad"':'')+'><td class="mono">'+r.addr+' <span class="hx">(0x'+hex2(r.addr)+')</span></td><td class="lab">'+r.labs.join(' ')+'</td><td class="mono">'+(r.code==null?'—':hex2(r.code))+'</td><td class="mono">'+(r.code==null?'':bin8(r.code))+'</td><td class="mono">'+(r.err?'<span class="err">'+esc(r.text)+' → '+esc(r.err)+'</span>':mlink(r.code,esc(asmL(r.code,a.labels))))+'</td></tr>').join('') : '<tr><td colspan="5">어셈블리를 쓴다</td></tr>')+'</tbody></table></div>'+
+      (a.errors? '<p class="err">오류 '+a.errors+'줄. 고쳐야 올릴 수 있다.</p>' : '');
+    $('ed-run').disabled=!!a.errors||!a.rows.length; $('ed-v-out').innerHTML=''; };
+  ta.addEventListener('input',upd);
+  box.querySelectorAll('[data-ld]').forEach(b=>b.onclick=()=>{ ta.value=b.dataset.ld?DEMOS[b.dataset.ld].src:''; upd(); });
+  $('ed-run').onclick=()=>loadSource(ta.value,'연습장 프로그램');
+  $('ed-v').onclick=()=>{ const a=assemble(ta.value); if(a.errors) return;
+    const last=a.rows[a.rows.length-1]; const df=(last&&(last.code>>4)===0xC&&(last.code&15)===last.addr)?last.code:0;
+    let v='// rom.v : 연습장에서 만든 프로그램\nmodule rom (input wire [3:0] addr, output reg [7:0] data);\n    always @(*) begin\n        case (addr)\n';
+    a.rows.forEach(r=>{ const lab=r.labs.length?(r.labs.join(' ')+':').padEnd(7):'       ';
+      v+=("            4'd"+r.addr+':').padEnd(19)+" data = 8'h"+hex2(r.code)+';   // '+lab+asmL(r.code,a.labels).padEnd(14)+(r.comment?' ; '+r.comment:'')+'\n'; });
+    v+="            default: data = 8'h"+hex2(df)+';\n        endcase\n    end\nendmodule\n';
+    $('ed-v-out').innerHTML='<pre class="code" id="ed-v-txt">'+esc(v)+'</pre><p><button id="ed-copy">복사</button> <span class="trynote">Quartus 의 rom.v 를 이것으로 바꾼다 (rom.v 와 rom_gcd.v 를 함께 넣으면 module rom 이 겹친다)</span></p>';
+    $('ed-copy').onclick=()=>{ try{ navigator.clipboard.writeText(v).then(()=>{$('ed-copy').textContent='복사했다';},()=>selectV()); }catch(e){ selectV(); } };
+  };
+  upd();
+}
+function selectV(){ const r=document.createRange(); r.selectNodeContents($('ed-v-txt')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+function asmL(code,labs){ const III=code>>6; if(III===3){ const a=code&15; return CCN[(code>>4)&3]+' '+(labs[a]||a); } return ['mv','add','sub'][III]+' r'+((code>>3)&3)+', '+((code>>5)&1?'#'+(code&7):'r'+(code&3)); }
+
+// ---------- 길 찾기 (#/sim, #/man/<id>) ----------
+function go(h){
+  const m=(h||'').match(/^#\/man(?:\/([\w-]+))?/);
+  const man=!!m; $('view-sim').hidden=man; $('sim-foot').hidden=man; $('view-man').hidden=!man;
+  document.querySelectorAll('.tabs a').forEach(a=>a.classList.toggle('on',(a.dataset.tab==='man')===man));
+  if(man){ renderPage(m[1]||curPage); window.scrollTo(0,0); } else document.title='Lab 6 프로세서 시뮬레이터';
+  try{ if(location.hash!==h) history.pushState(null,'',h); }catch(e){}
+}
+document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="#/"]'); if(!a) return; e.preventDefault(); go(a.getAttribute('href')); });
+window.addEventListener('popstate',()=>go(location.hash||'#/sim'));
+window.addEventListener('hashchange',()=>go(location.hash||'#/sim'));
+$('msearch').addEventListener('input',renderSide);
+renderSide();
+go(location.hash||'#/sim');
+
+loadProg('div'); reset();
+</script>
+
+
+</body></html>

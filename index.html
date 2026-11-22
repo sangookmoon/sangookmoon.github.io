@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>문상국 | Sangook Moon</title>
+<meta name="description" content="문상국(Sangook Moon), 목원대학교 전기전자공학과 교수. 하드웨어 보안, FPGA, 암호 하드웨어, 산업 IoT.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="site" href="./">문상국<span>Sangook Moon</span></a>
+  <nav class="menu"><a class="on" href="./">소개</a><a href="publications.html">논문</a><a href="teaching/">수업 · 시뮬레이터</a></nav>
+</div></header>
+
+<main><div class="wrap">
+  <section class="hero">
+    <div>
+      <h1>문상국 <span style="font-weight:500;color:var(--muted);font-size:20px">Sangook Moon</span></h1>
+      <p class="sub">목원대학교 전기전자공학과 교수<br>Professor, Department of Electrical and Electronic Engineering, Mokwon University</p>
+      <div class="links">
+        <a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a>
+        <a href="https://orcid.org/0000-0002-0290-1887">ORCID</a>
+        <a href="mailto:smoon@mokwon.ac.kr">smoon@mokwon.ac.kr</a>
+      </div>
+    </div>
+    <div class="stats" id="stats" aria-label="Google Scholar 지표"></div>
+  </section>
+
+  <h2>연구 분야</h2>
+  <div class="tags"><span>Hardware Security</span><span>FPGA</span><span>Cryptographic Hardware</span><span>Industrial IoT</span><span>Computer Arithmetic</span></div>
+  <p>자원이 제한된 SoC-FPGA 위에서 동작하는 암호·보안 하드웨어와 산업 IoT용 실시간 신호처리 하드웨어를 연구합니다. 경량 암호(ASCON), 준동형 암호, 실시간 이상 탐지 엔진, 초음파 누설 감시 시스템의 하드웨어 구현이 최근 주제입니다.</p>
+
+  <h2>학력</h2>
+  <table class="cv">
+    <tr><td>2002</td><td>공학박사, 전기전자공학, 연세대학교</td></tr>
+    <tr><td>1997</td><td>공학석사, 전자공학, 연세대학교</td></tr>
+    <tr><td>1995</td><td>공학사, 전자공학, 연세대학교</td></tr>
+  </table>
+
+  <h2>경력</h2>
+  <table class="cv">
+    <tr><td>2004 – 현재</td><td>목원대학교 전기전자공학과 교수</td></tr>
+    <tr><td>2002 – 2004</td><td>SK하이닉스 선임연구원 (무선통신 칩 설계)</td></tr>
+  </table>
+
+  <h2>수업</h2>
+  <p>수업에서 쓰는 웹 시뮬레이터를 과목별로 모아 둡니다. 설치 없이 브라우저에서 바로 열립니다. <a href="teaching/">수업 · 시뮬레이터 보기 →</a></p>
+
+  <h2>연락처</h2>
+  <ul class="plain">
+    <li>35349 대전광역시 서구 도안북로 88 목원대학교 전기전자공학과</li>
+    <li>전화 042-829-7637 · 이메일 <a href="mailto:smoon@mokwon.ac.kr">smoon@mokwon.ac.kr</a></li>
+  </ul>
+</div></main>
+
+<footer><div class="wrap">© 2026 문상국 · 마지막 수정 2026-11-22</div></footer>
+<script>
+fetch('assets/publications.json').then(r=>r.json()).then(d=>{
+  const s=document.getElementById('stats');
+  [['인용',d.citations],['h-index',d.h],['논문',d.pubs.length]].forEach(([k,v])=>{
+    const e=document.createElement('div'); e.className='stat'; e.innerHTML='<b>'+v+'</b><span>'+k+'</span>'; s.appendChild(e);
+  });
+}).catch(()=>{});
+</script>
+</body>
+</html>

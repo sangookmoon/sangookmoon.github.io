@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>논문 | 문상국</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="site" href="./">문상국<span>Sangook Moon</span></a>
+  <nav class="menu"><a href="./">소개</a><a class="on" href="publications.html">논문</a><a href="teaching/">수업 · 시뮬레이터</a></nav>
+</div></header>
+
+<main><div class="wrap">
+  <h1>논문</h1>
+  <p class="sub" id="meta">Google Scholar 기준</p>
+  <div class="filter"><input id="q" type="search" placeholder="제목·저자·학술지로 찾기" aria-label="논문 찾기"><span class="note" id="cnt"></span></div>
+  <div id="list"></div>
+  <p class="note" style="margin-top:24px">전체 목록과 인용 정보는 <a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a>에서 볼 수 있습니다.</p>
+</div></main>
+
+<footer><div class="wrap">© 2026 문상국</div></footer>
+<script>
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let all=[];
+function render(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  const L=all.filter(p=>!q||(p.title+' '+p.authors+' '+p.venue).toLowerCase().includes(q));
+  document.getElementById('cnt').textContent=L.length+'편';
+  let html='',y=null;
+  for(const p of L){
+    const yr=p.year||'연도 미상';
+    if(yr!==y){html+='<div class="pubyear">'+esc(yr)+'</div>';y=yr;}
+    const a=esc(p.authors).replace(/S Moon|SG Moon|S-G Moon|SangGook Moon|Sangook Moon/g,m=>'<b>'+m+'</b>');
+    html+='<div class="pub"><div class="t">'+esc(p.title)+'</div><div class="a">'+a+'</div><div class="v">'+esc(p.venue)+(p.cites?' <span class="c">· 인용 '+p.cites+'</span>':'')+'</div></div>';
+  }
+  document.getElementById('list').innerHTML=html;
+}
+fetch('assets/publications.json').then(r=>r.json()).then(d=>{
+  all=d.pubs; document.getElementById('meta').textContent='Google Scholar 기준 · 인용 '+d.citations+' · h-index '+d.h+' · i10-index '+d.i10+' · '+d.updated+' 갱신';
+  render();
+});
+document.getElementById('q').addEventListener('input',render);
+</script>
+</body>
+</html>

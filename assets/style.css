@@ -1,0 +1,65 @@
+/* 문상국 홈페이지 공통 스타일 — 밝은/어두운 화면 모두 */
+:root{
+  --bg:#FAFAF8; --panel:#FFFFFF; --ink:#1B2333; --muted:#5B6475; --line:#DDE2EA; --soft:#EEF1F5;
+  --accent:#1F3864; --accent2:#A62B43; --link:#1F5FBF;
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F131A; --panel:#171C26; --ink:#E6E9F0; --muted:#9AA3B5; --line:#2E3646; --soft:#1E2532;
+  --accent:#8FB0E8; --accent2:#E07A8F; --link:#8FB0E8; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F131A; --panel:#171C26; --ink:#E6E9F0; --muted:#9AA3B5; --line:#2E3646; --soft:#1E2532;
+  --accent:#8FB0E8; --accent2:#E07A8F; --link:#8FB0E8; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.7;-webkit-text-size-adjust:100%}
+a{color:var(--link);text-underline-offset:3px}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px}
+header.top{border-bottom:1px solid var(--line);background:var(--panel)}
+header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 24px;padding-top:14px;padding-bottom:14px}
+.site{font-weight:700;font-size:18px;color:var(--ink);text-decoration:none}
+.site span{color:var(--muted);font-weight:500;font-size:14px;margin-left:8px}
+nav.menu{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:15px}
+nav.menu a{color:var(--muted);text-decoration:none;padding:2px 0;border-bottom:2px solid transparent}
+nav.menu a:hover{color:var(--ink)}
+nav.menu a.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+main{padding:32px 0 56px}
+h1{font-size:28px;line-height:1.3;margin:0 0 6px}
+h2{font-size:19px;margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:var(--accent)}
+h3{font-size:16px;margin:20px 0 6px}
+p{margin:8px 0}
+.sub{color:var(--muted);margin:0 0 4px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:start}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.links a{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px;text-decoration:none;color:var(--ink);background:var(--panel)}
+.links a:hover{border-color:var(--accent);color:var(--accent)}
+.stats{display:flex;gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;text-align:center;min-width:76px}
+.stat b{display:block;font-size:22px;color:var(--accent);line-height:1.2}
+.stat span{font-size:12px;color:var(--muted)}
+ul.plain{list-style:none;padding:0;margin:8px 0}
+ul.plain li{padding:3px 0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tags span{background:var(--soft);border-radius:6px;padding:2px 10px;font-size:14px}
+table.cv{border-collapse:collapse;width:100%;font-size:15px}
+table.cv td{padding:5px 8px;border-bottom:1px solid var(--soft);vertical-align:top}
+table.cv td:first-child{white-space:nowrap;color:var(--muted);width:150px}
+.pubyear{font-weight:700;color:var(--accent2);margin:22px 0 4px}
+.pub{padding:8px 0;border-bottom:1px solid var(--soft)}
+.pub .t{font-weight:500}
+.pub .a,.pub .v{font-size:14px;color:var(--muted)}
+.pub .c{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.filter{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 4px}
+.filter input{font:inherit;font-size:15px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:min(340px,100%)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:12px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;text-decoration:none;color:var(--ink)}
+a.card:hover{border-color:var(--accent)}
+.card b{display:block;font-size:16px;margin-bottom:4px}
+.card span{display:block;font-size:14px;color:var(--muted)}
+.card .go{margin-top:10px;font-size:13.5px;color:var(--link);font-weight:700}
+.note{font-size:14px;color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:18px 0 28px;font-size:13.5px;color:var(--muted)}
+@media (max-width:640px){
+  .hero{grid-template-columns:1fr}
+  h1{font-size:24px}
+  table.cv td:first-child{width:auto;white-space:nowrap}
+}
