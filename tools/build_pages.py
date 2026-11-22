@@ -13,7 +13,7 @@ SITE = 'https://sangookmoon.github.io'
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400'
-         '&family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">')
+         '&family=Noto+Sans+KR:wght@400;500;700&display=swap">')
 
 T = {
     'ko': dict(name='문상국', about='소개', pubs='논문', teach='수업', lang='English', other='en',
