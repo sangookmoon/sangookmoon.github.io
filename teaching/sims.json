@@ -21,11 +21,11 @@
       "file": "gradient-descent.html",
       "title": "경사 하강법 시뮬레이터",
       "week": "12주차",
-      "desc": "1~9장 : 집 4채의 크기와 가격으로 「가격 = w × 크기」의 w 하나를 찾습니다. 손실 그릇을 직접 찍어 보고, 한 스텝씩 업데이트하며 학습률을 바꿔 봅니다. 10 · 11장 : 물 온도 데이터로 「온도 = w × 시간 + b」의 w · b 두 개를 찾고, 손실 그릇을 3차원 · 등고선으로 봅니다.",
+      "desc": "1~9쪽 : 집 4채의 크기와 가격으로 「가격 = w × 크기」의 w 하나를 찾습니다. 손실 그릇을 직접 찍어 보고, 한 스텝씩 업데이트하며 학습률을 바꿔 봅니다. 10 · 11쪽 : 물 온도 데이터로 「온도 = w × 시간 + b」의 w · b 두 개를 찾고, 손실 그릇을 3차원 · 등고선으로 봅니다. 12쪽 : 배운 것을 정리하고, 물이 끓을 때까지 잰 데이터로 직선 · 2차 곡선 · 꺾인 직선을 비교합니다.",
       "added": "2026-11-22",
       "title_en": "Gradient Descent Simulator",
       "week_en": "Week 12",
-      "desc_en": "Chapters 1–9: find the single weight w in \"price = w × size\" from four houses. Probe the loss bowl, step through updates, and vary the learning rate. Chapters 10–11: fit w and b in \"temperature = w × time + b\" and view the loss surface in 3D and as contours."
+      "desc_en": "Pages 1–9: find the single weight w in \"price = w × size\" from four houses. Probe the loss bowl, step through updates, and vary the learning rate. Pages 10–11: fit w and b in \"temperature = w × time + b\" and view the loss surface in 3D and as contours. Page 12: a recap, then a straight line, a quadratic and a line capped at 100 °C compared on data measured until the water boils."
     },
     {
       "course": "fpga",
