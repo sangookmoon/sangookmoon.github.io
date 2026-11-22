@@ -94,7 +94,7 @@ html[lang="en"] .pub .v{font-style:italic}
 /* 꼬리말 */
 footer{border-top:1px solid var(--line);padding:22px 0 34px;font-size:14px;color:var(--muted);font-family:var(--f-sans)}
 footer .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
-footer img{height:24px;width:auto;display:block;opacity:.85}
+footer img{height:24px;width:auto;display:block;opacity:.85;position:relative;top:4px}  /* 머리글과 같은 이유로 로고를 내려 「목원대학교」와 글자 줄을 맞춘다 */
 footer .lg-d{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) footer .lg-l{display:none}:root:not([data-theme="light"]) footer .lg-d{display:block}}
 footer .lic{flex-basis:100%;font-size:13.5px}
