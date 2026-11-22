@@ -12,18 +12,18 @@ TODAY = datetime.date.today().isoformat()
 # 스타일 파일을 고치면 브라우저가 옛 파일을 기억해 바뀐 모습이 안 보인다 → 만든 시각을 붙여 새로 받게 한다
 VER = datetime.datetime.now().strftime('%Y%m%d%H%M')
 SITE = 'https://sangookmoon.github.io'
-DEPT = 'https://www.mokwon.ac.kr/electronics/'   # 로고를 누르면 학과 홈페이지로(2026-11-23)
+DEPT = 'https://www.mokwon.ac.kr/electronics/'   # 머리글 : 학교 로고 → 학교, 「전기전자공학과」 → 학과 (2026-11-23)
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400'
          '&family=Noto+Sans+KR:wght@400;500;700&display=swap">')
 
 T = {
-    'ko': dict(name='문상국', dept='목원대학교 전기전자공학과 홈페이지', about='소개', pubs='논문', teach='수업', lang='English', other='en',
+    'ko': dict(name='문상국', dept='목원대학교 전기전자공학과 홈페이지', dept_short='전기전자공학과', univ='목원대학교 홈페이지', univ_url='https://www.mokwon.ac.kr/kr/', about='소개', pubs='논문', teach='수업', lang='English', other='en',
                updated='마지막 수정', copy='© 2026 문상국',
                lic='시뮬레이터 © 2026 문상국. 수업·학습에 그대로 쓰는 것은 자유이며, 고치거나 다른 곳에 다시 올리려면 먼저 허락을 받아 주세요. '
                    '(<a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.ko" rel="license">CC BY-NC-ND 4.0</a>)'),
-    'en': dict(name='Sangook Moon', dept='Department of Electrical and Electronic Engineering, Mokwon University', about='About', pubs='Publications', teach='Teaching', lang='한국어', other='ko',
+    'en': dict(name='Sangook Moon', dept='Department of Electrical and Electronic Engineering, Mokwon University', dept_short='Dept. of EEE', univ='Mokwon University', univ_url='https://www.mokwon.ac.kr/en/', about='About', pubs='Publications', teach='Teaching', lang='한국어', other='ko',
                updated='Last updated', copy='© 2026 Sangook Moon',
                lic='Simulators © 2026 Sangook Moon. Free to use as-is for teaching and learning; please ask for permission before modifying or re-hosting them. '
                    '(<a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" rel="license">CC BY-NC-ND 4.0</a>)'),
@@ -60,7 +60,7 @@ def page(lang, path, title, active, body, desc='', lic=False, script=''):
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="brand"><a class="dept" href="{DEPT}" title="{t['dept']}">{logos}</a><a class="nm" href="{url(lang, '/')}">{t['name']}</a></div>
+  <div class="brand"><a class="univ" href="{t['univ_url']}" title="{t['univ']}">{logos}</a><a class="nm" href="{DEPT}" title="{t['dept']}">{t['dept_short']}</a></div>
   <nav class="menu">{nav}</nav>
 </div></header>
 
@@ -68,7 +68,7 @@ def page(lang, path, title, active, body, desc='', lic=False, script=''):
 {body}
 </div></main>
 
-<footer><div class="wrap"><a class="dept" href="{DEPT}" title="{t['dept']}">{logos}</a>{foot}</div></footer>
+<footer><div class="wrap"><a class="univ" href="{t['univ_url']}" title="{t['univ']}">{logos}</a>{foot}</div></footer>
 {script}</body>
 </html>
 '''

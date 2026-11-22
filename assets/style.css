@@ -24,8 +24,9 @@ header.top{border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 24px;padding-top:14px;padding-bottom:12px}
 .brand{display:flex;align-items:center;gap:12px}
 .brand a{text-decoration:none;color:var(--ink)}
-.brand .dept,footer .dept{display:block;line-height:0}
-.brand .dept:hover img,footer .dept:hover img{opacity:.75}
+.brand .univ,footer .univ{display:block;line-height:0}
+.brand .univ:hover img,footer .univ:hover img{opacity:.75}
+.brand a.nm:hover{text-decoration:underline}
 .brand img{height:30px;width:auto;display:block}
 .brand .lg-d{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand .lg-l{display:none}:root:not([data-theme="light"]) .brand .lg-d{display:block}}
@@ -123,4 +124,6 @@ footer .lic{flex-basis:100%;font-size:13.5px}
   .pub .t{font-size:15.5px;line-height:1.5}
   table.cv td:first-child{width:92px;font-size:14px}
 }
-@media (max-width:360px){.brand img{display:none}.brand .nm{border:0;padding:0}}
+@media (max-width:360px){.brand{gap:8px}.brand img{height:22px}.brand .nm{padding-left:8px;font-size:16px}}
+
+/* 영문 머리글 학과명은 「Dept. of EEE」로 줄임(전체 이름은 마우스 올리면 보임) — 길게 쓰면 메뉴가 둘째 줄로 밀린다 */
