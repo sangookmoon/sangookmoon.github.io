@@ -9,6 +9,8 @@ import json, os, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TODAY = datetime.date.today().isoformat()
+# 스타일 파일을 고치면 브라우저가 옛 파일을 기억해 바뀐 모습이 안 보인다 → 만든 시각을 붙여 새로 받게 한다
+VER = datetime.datetime.now().strftime('%Y%m%d%H%M')
 SITE = 'https://sangookmoon.github.io'
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
@@ -53,7 +55,7 @@ def page(lang, path, title, active, body, desc='', lic=False, script=''):
 <meta name="description" content="{d}">
 <link rel="alternate" hreflang="{o}" href="{SITE}{url(o, path)}">
 {FONTS}
-<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/style.css?v={VER}">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -211,7 +213,7 @@ def main():
                                        'about', ABOUT[lang]))
         write(pre + 'publications.html', page(lang, '/publications.html', t['pubs'] + ' | ' + t['name'], 'pubs', PUBS[lang],
                                               script=PUB_JS % PUB_L10N[lang]))
-        js = '<script src="/teaching/teaching.js"></script>\n'
+        js = '<script src="/teaching/teaching.js?v=%s"></script>' % VER + '\n'
         write(pre + 'teaching/index.html', page(lang, '/teaching/', ('수업·시뮬레이터' if lang == 'ko' else 'Teaching') + ' | ' + t['name'], 'teach',
                                                 TEACH[lang], lic=True, script=js + "<script>renderTeaching(null,'%s');</script>\n" % lang))
         for c in sims['courses']:
