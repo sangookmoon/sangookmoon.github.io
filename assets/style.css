@@ -22,7 +22,10 @@ a:focus-visible{outline:2px solid var(--link);outline-offset:2px;border-radius:2
 /* 머리글 */
 header.top{border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 24px;padding-top:14px;padding-bottom:12px}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand a{text-decoration:none;color:var(--ink)}
+.brand .dept,footer .dept{display:block;line-height:0}
+.brand .dept:hover img,footer .dept:hover img{opacity:.75}
 .brand img{height:30px;width:auto;display:block}
 .brand .lg-d{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand .lg-l{display:none}:root:not([data-theme="light"]) .brand .lg-d{display:block}}
