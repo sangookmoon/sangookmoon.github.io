@@ -26,7 +26,8 @@ header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:
 .brand img{height:30px;width:auto;display:block}
 .brand .lg-d{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand .lg-l{display:none}:root:not([data-theme="light"]) .brand .lg-d{display:block}}
-.brand .nm{font-family:var(--f-head);font-weight:600;font-size:19px;padding-left:12px;border-left:1px solid var(--line);line-height:1.2}
+.brand .nm{font-family:var(--f-head);font-weight:600;font-size:19px;padding-left:12px;border-left:1px solid var(--line);line-height:1.2;position:relative;top:-5px}
+/* 로고 안 「목원대학교」 글자는 위쪽 2/3 에 있고 아래는 영문 줄이라, 이름을 로고 가운데가 아니라 「목원대학교」 글자 높이에 맞춘다 */
 nav.menu{display:flex;flex-wrap:wrap;align-items:center;gap:0 22px;font-family:var(--f-sans);font-size:15px}
 nav.menu a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;min-height:40px;border-bottom:2px solid transparent}
 nav.menu a:hover{color:var(--ink)}
@@ -102,7 +103,7 @@ footer .lic{flex-basis:100%;font-size:13.5px}
   html[lang="en"] body{font-size:17px}
   header.top .wrap{gap:2px 18px}
   .brand img{height:26px}
-  .brand .nm{font-size:17px}
+  .brand .nm{font-size:17px;top:-4px}
   nav.menu{gap:0 18px}
   nav.menu a{min-height:44px}
   main{padding:32px 0 48px}
