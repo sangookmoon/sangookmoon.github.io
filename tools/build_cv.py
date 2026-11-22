@@ -83,6 +83,9 @@ a{{color:#1F4E9A;text-decoration:none}} .sub{{color:#333}} img.logo{{height:22pt
 <tr><td class="y">2021 – present</td><td>Reviewer, <i>The Journal of Korean Institute of Information Technology</i></td></tr>
 </table>
 
+<h2>Book</h2>
+<p style="margin:0"><b>S. Moon</b>, <i>AI JetBot with Python</i> (in Korean), ICBanQ, May 2021.</p>
+
 <h2>Teaching</h2>
 <p style="margin:0">AI Robotics; FPGA Design; Digital Circuit Design; Linux Systems. Interactive course simulators: <a href="https://sangookmoon.github.io/en/teaching/">sangookmoon.github.io/en/teaching</a></p>
 
@@ -100,9 +103,77 @@ a{{color:#1F4E9A;text-decoration:none}} .sub{{color:#333}} img.logo{{height:22pt
 </body></html>
 '''
     os.makedirs(os.path.join(ROOT, 'cv'), exist_ok=True)
-    hp = os.path.join(ROOT, 'cv', 'Sangook_Moon_CV.html')
+    render(doc, 'Sangook_Moon_CV', 'Sangook Moon — CV')
+    render(ko_doc(d, J, C), 'Sangook_Moon_CV_ko', '문상국 — 이력서')
+
+
+def ko_doc(d, J, C):
+    return f'''<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>문상국 — 이력서</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+@page{{size:A4;margin:18mm}}
+body{{font-family:"Noto Sans KR","Apple SD Gothic Neo",sans-serif;font-size:9.8pt;line-height:1.55;color:#111;margin:0;word-break:keep-all}}
+header{{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.2pt solid #111;padding-bottom:6pt;margin-bottom:10pt}}
+h1{{font-size:21pt;font-weight:700;margin:0;letter-spacing:-.01em}} h1 span{{font-size:12pt;font-weight:400;color:#444;margin-left:6pt}}
+.ct{{text-align:right;font-size:9pt;line-height:1.5;white-space:nowrap;margin-left:10mm}}
+h2{{font-size:11.5pt;font-weight:700;margin:14pt 0 5pt;border-bottom:.5pt solid #999;padding-bottom:2pt}}
+table{{border-collapse:collapse;width:100%}} td{{vertical-align:top;padding:1.5pt 0}} td.y{{width:30mm;white-space:nowrap;color:#333}}
+ol{{margin:0;padding-left:7mm}} ol li{{margin:0 0 4pt;padding-left:1mm;word-break:normal;overflow-wrap:anywhere}}
+a{{color:#1F4E9A;text-decoration:none}} .sub{{color:#333}}
+.foot{{margin-top:14pt;font-size:8pt;color:#666;border-top:.5pt solid #bbb;padding-top:4pt}}
+</style></head><body>
+<header><div><h1>문상국<span>Sangook Moon</span></h1><div class="sub">목원대학교 전기전자공학과 교수</div></div>
+<div class="ct">35349 대전광역시 서구 도안북로 88 목원대학교<br>042-829-7637 · <a href="mailto:smoon@mokwon.ac.kr">smoon@mokwon.ac.kr</a><br><a href="https://sangookmoon.github.io">sangookmoon.github.io</a> · ORCID 0000-0002-0290-1887</div></header>
+
+<h2>연구 분야</h2>
+<p style="margin:0">하드웨어 보안, 자원이 제한된 SoC-FPGA 위의 암호 하드웨어(경량 암호, 준동형 암호), 산업 IoT용 실시간 신호처리 하드웨어, 컴퓨터 산술</p>
+
+<h2>학력</h2>
+<table>
+<tr><td class="y">2002. 2.</td><td>연세대학교 대학원 전기전자공학과 공학박사</td></tr>
+<tr><td class="y">1997. 2.</td><td>연세대학교 대학원 전자공학과 공학석사</td></tr>
+<tr><td class="y">1995. 2.</td><td>연세대학교 전자공학과 공학사</td></tr>
+</table>
+
+<h2>경력</h2>
+<table>
+<tr><td class="y">2004. 3. – 현재</td><td>목원대학교 전기전자공학과 교수</td></tr>
+<tr><td class="y">2002. 2. – 2004. 2.</td><td>SK하이닉스 선임연구원(무선통신 칩 설계)</td></tr>
+</table>
+
+<h2>학회 활동</h2>
+<table>
+<tr><td class="y">2027</td><td>한국정보기술학회 수석부회장(당선)</td></tr>
+<tr><td class="y">현재</td><td>한국정보기술학회 부회장 · 국내학술위원장</td></tr>
+<tr><td class="y">2021 – 현재</td><td>한국정보기술학회논문지 심사위원</td></tr>
+</table>
+
+<h2>저서</h2>
+<p style="margin:0">문상국, 「파이썬과 함께하는 AI젯봇」, 아이씨뱅큐, 2021. 5.</p>
+
+<h2>담당 과목</h2>
+<p style="margin:0">인공지능로봇, FPGA 설계, 디지털회로설계, 리눅스 시스템. 수업용 웹 시뮬레이터 : <a href="https://sangookmoon.github.io/teaching/">sangookmoon.github.io/teaching</a></p>
+
+<h2>학술지 논문</h2>
+<ol>
+{pub_items(J)}
+</ol>
+
+<h2>학술대회 논문</h2>
+<ol>
+{pub_items(C)}
+</ol>
+
+<div class="foot">{TODAY.year}년 {TODAY.month}월 기준. 구글 스칼라 인용 {d['citations']}회, h-index {d['h']}.</div>
+</body></html>
+'''
+
+
+def render(doc, name, footer):
+    hp = os.path.join(ROOT, 'cv', name + '.html')
     open(hp, 'w', encoding='utf-8').write(doc)
-    print('wrote cv/Sangook_Moon_CV.html', len(J), 'journal', len(C), 'conference')
+    print('wrote cv/%s.html' % name)
     try:
         from playwright.sync_api import sync_playwright
         import time
@@ -114,14 +185,13 @@ a{{color:#1F4E9A;text-decoration:none}} .sub{{color:#333}} img.logo{{height:22pt
         c = ctx.new_cdp_session(pg)
         r = c.send('Page.printToPDF', {'paperWidth': 8.27, 'paperHeight': 11.69, 'preferCSSPageSize': True, 'printBackground': True,
                                        'displayHeaderFooter': True, 'headerTemplate': '<span></span>',
-                                       'footerTemplate': '<div style="font-size:8px;width:100%;text-align:center;color:#888">Sangook Moon — CV — <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
+                                       'footerTemplate': '<div style="font-size:8px;width:100%;text-align:center;color:#888">' + footer + ' — <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
                                        'marginTop': 0.7, 'marginBottom': 0.7, 'marginLeft': 0.7, 'marginRight': 0.7})
-        open(os.path.join(ROOT, 'cv', 'Sangook_Moon_CV.pdf'), 'wb').write(base64.b64decode(r['data']))
+        open(os.path.join(ROOT, 'cv', name + '.pdf'), 'wb').write(base64.b64decode(r['data']))
         pg.close(); p.stop()
-        print('wrote cv/Sangook_Moon_CV.pdf')
+        print('wrote cv/%s.pdf' % name)
     except Exception as e:
         print('PDF 를 못 만들었습니다(9222 크롬 확인):', e)
-
 
 if __name__ == '__main__':
     main()

@@ -85,7 +85,7 @@ ABOUT = {
     <div>
       <h1>문상국<span class="alt">Sangook Moon</span></h1>
       <p class="sub">목원대학교 전기전자공학과 교수</p>
-      <div class="links"><a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a><a href="https://orcid.org/0000-0002-0290-1887">ORCID</a><a href="/cv/Sangook_Moon_CV.pdf">CV</a><a href="mailto:smoon@mokwon.ac.kr">이메일</a></div>
+      <div class="links"><a href="https://scholar.google.com/citations?user=AWfixSwAAAAJ">Google Scholar</a><a href="https://orcid.org/0000-0002-0290-1887">ORCID</a><a href="/cv/Sangook_Moon_CV_ko.pdf">이력서(CV)</a><a href="mailto:smoon@mokwon.ac.kr">이메일</a></div>
     </div>
   </section>
 
