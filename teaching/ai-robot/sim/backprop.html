@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>역전파 시뮬레이터 · Backpropagation Simulator</title>
+<meta name="author" content="문상국, 목원대학교 전기전자공학과">
+<meta name="description" content="세로줄 · 가로줄 그림을 고르는 3×3 필터 하나짜리 작은 CNN 으로 역전파를 한 칸씩 따라가는 대화형 교재. Interactive backpropagation tutorial (in Korean).">
+<meta property="og:type" content="website">
+<meta property="og:title" content="역전파 시뮬레이터 · 인공지능로봇">
+<meta property="og:description" content="손실에서 필터까지 기울기를 거꾸로 보내 본다. 앞으로 계산, 거꾸로 계산, 0.01 씩 바꿔 확인, 무작위 필터가 세로줄 필터로 학습되는 과정까지. 목원대학교 전기전자공학과 문상국.">
+<meta property="og:image" content="https://sangookmoon.github.io/teaching/ai-robot/sim/backprop-og.png">
+<meta property="og:url" content="https://sangookmoon.github.io/teaching/ai-robot/sim/backprop.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+
+  /* 홈페이지 · Lab 6 와 같은 바탕 · 글꼴 · 다크 모드. 과목색(와인)은 강조에만 */
+  :root { --bg:#FAFAF8; --panel:#FFFFFF; --ink:#1B2333; --muted:#5B6475; --line:#DDE2EA; --soft:#EEF1F5;
+    --acc:#A62C52; --acc-ink:#FFFFFF; --head:#44131A; --card:#F7F0F2; --tint:#FBF5F7; --blue:#2E75B6; --link:#1F5FBF;
+    --f-body:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+    --f-mono:"JetBrains Mono",Consolas,"D2Coding",ui-monospace,monospace;
+    --f-math:"Cambria Math","STIX Two Math","Times New Roman",serif;
+    --g-axis:#8A93A3; --g-tick:#4F5869; --g-pt:#44131A; --g-grid:#E1E5EC; --g-faint:#8DB4DD; --g-trail:#D98BA3; --g-orange:#D9600A; --g-yellow:#FFD966; --g-halo:#FFFFFF; --g-ct0:#44131A; --g-ct1:#E2C3CA; --g-surf0:#44131A; --g-surf1:#F4DDE2; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) { --bg:#0F131A; --panel:#171C26; --ink:#E6E9F0; --muted:#9AA3B5; --line:#2E3646; --soft:#1E2532;
+    --acc:#E07A8F; --acc-ink:#0F131A; --head:#F2C4CF; --card:#1F1A23; --tint:#261C25; --blue:#6FA8E0; --link:#8FB0E8;
+    --g-axis:#6B7486; --g-tick:#AEB6C6; --g-pt:#F2D7DE; --g-grid:#273040; --g-faint:#47698F; --g-trail:#9A5068; --g-orange:#F08A4B; --g-halo:#171C26; --g-ct0:#F2D7DE; --g-ct1:#4A2C36; --g-surf0:#5A1A2C; --g-surf1:#F4DDE2; color-scheme:dark; } }
+  :root[data-theme="dark"] { --bg:#0F131A; --panel:#171C26; --ink:#E6E9F0; --muted:#9AA3B5; --line:#2E3646; --soft:#1E2532;
+    --acc:#E07A8F; --acc-ink:#0F131A; --head:#F2C4CF; --card:#1F1A23; --tint:#261C25; --blue:#6FA8E0; --link:#8FB0E8;
+    --g-axis:#6B7486; --g-tick:#AEB6C6; --g-pt:#F2D7DE; --g-grid:#273040; --g-faint:#47698F; --g-trail:#9A5068; --g-orange:#F08A4B; --g-halo:#171C26; --g-ct0:#F2D7DE; --g-ct1:#4A2C36; --g-surf0:#5A1A2C; --g-surf1:#F4DDE2; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  html { overflow-y:scroll; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-body); word-break:keep-all; overflow-wrap:anywhere; -webkit-text-size-adjust:100%; }
+  a { color:var(--link); text-underline-offset:3px; }
+  /* 로고 띠 · 제목 */
+  .brandwrap, .headwrap { padding:0 16px; }
+  .brand { display:flex; align-items:center; gap:14px; max-width:1288px; margin:12px auto 0; padding:10px 16px; background:var(--panel); border:1px solid var(--line); border-radius:12px; }
+  .brand img { height:30px; width:auto; flex:none; }
+  .brand .lg-d { display:none; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .brand .lg-l { display:none; } :root:not([data-theme="light"]) .brand .lg-d { display:block; } }
+  :root[data-theme="dark"] .brand .lg-l { display:none; } :root[data-theme="dark"] .brand .lg-d { display:block; }
+  .brand .bt { display:flex; flex-direction:column; line-height:1.35; min-width:0; }
+  .brand .bt b { font-size:17px; color:var(--head); }
+  .brand .bt span { font-size:13.5px; color:var(--muted); }
+  .brand .home { margin-left:auto; font-size:14px; font-weight:500; text-decoration:none; white-space:nowrap; padding:8px 4px; }
+  .brand .home:hover { text-decoration:underline; }
+  .brand .home .hs { display:none; }
+  .brand .copy { margin-left:12px; padding-left:14px; border-left:1px solid var(--line); font-size:12.5px; color:var(--muted); white-space:nowrap; }
+  header { max-width:1288px; margin:14px auto 0; padding:0 0 0 12px; border-left:4px solid var(--acc); }
+  header h1 { margin:0; font-size:22px; font-weight:700; line-height:1.35; color:var(--ink); }
+  header p { margin:2px 0 0; font-size:14px; color:var(--muted); }
+  header p.en { font-size:13px; }
+  .wrap { max-width:1320px; margin:0 auto; padding:12px 16px 24px; }
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start; }
+  .col { display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; min-width:0; }
+  .panel h3 { margin:2px 0 6px; font-size:16px; color:var(--ink); }
+  .panel h3 span { font-weight:normal; color:var(--muted); }
+  .en { font-size:11.5px; font-weight:500; opacity:.75; margin-left:3px; }
+  small .en, .nums small .en { font-size:11px; }
+  /* 이야기 */
+  .story { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .story .chap { color:var(--acc); font-weight:700; font-size:14px; }
+  .story h2 { margin:2px 0 8px; font-size:21px; color:var(--head); }
+  .story p { margin:5px 0; font-size:16px; line-height:1.65; }
+  .nav { display:flex; gap:6px; margin-top:10px; align-items:center; }
+  .navb { display:none; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+  .dots { display:flex; gap:4px; margin-left:8px; }
+  .dots .dot { position:relative; width:12px; height:12px; min-height:0; padding:0; border:none; border-radius:50%; background:var(--line); }
+  .dots .dot::after { content:""; position:absolute; inset:-6px -2px; }
+  .dots .dot.on { background:var(--acc); }
+  .dots .dot:hover { outline:2px solid var(--acc); outline-offset:1px; }
+  /* 식 정리 */
+  .frow { display:grid; grid-template-columns:72px minmax(0,1fr); align-items:center; column-gap:10px; padding:7px 0; border-bottom:1px dashed var(--line); }
+  .flab { font-weight:700; color:var(--acc); font-size:16px; }
+  .fexp { font-family:var(--f-math); font-size:23px; word-spacing:0.3em; min-width:0; }
+  .fexp i, .fexp .w { padding-right:3px; }
+  .fexp i { font-style:italic; }
+  .fexp .w { color:var(--acc); font-weight:bold; font-style:italic; }
+  .fexp .k { font-family:var(--f-body); font-size:18px; word-spacing:normal; }
+  .fnote { grid-column:2; font-size:14px; color:var(--muted); margin-top:2px; line-height:1.55; }
+  .frac { display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 4px; }
+  .frac > span:first-child { border-bottom:1.5px solid var(--ink); padding:0 6px 2px; }
+  .frac > span:last-child { padding-top:2px; }
+  .sig { display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; line-height:1; margin:0 2px; }
+  .sig > span:first-child, .sig > span:last-child { font-size:13px; }
+  .sig > span:nth-child(2) { font-size:30px; }
+  .fsub { font-size:19px; color:var(--muted); margin-top:4px; }
+  .fsub i { font-style:italic; }
+  .fn2 { font-family:var(--f-body); font-size:14px; color:var(--muted); word-spacing:normal; white-space:nowrap; margin-left:6px; }
+  .calcwrap { overflow-x:auto; margin-top:10px; }
+  .calc { width:100%; border-collapse:collapse; font-family:var(--f-mono); font-size:15px; font-variant-numeric:tabular-nums; }
+  .calc th, .calc td { border-bottom:1px solid var(--line); padding:4px 6px; text-align:right; white-space:nowrap; }
+  .calc th { font-family:var(--f-math); font-style:italic; color:var(--head); font-size:17px; }
+  .calc tr.sum td { border-top:2px solid var(--head); font-weight:bold; color:var(--acc); }
+  .calc td.lab { text-align:left; font-family:var(--f-body); white-space:normal; }
+  /* 숫자 · 문구 */
+  .nums { display:grid; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:6px; text-align:center; }
+  .nums > div { background:var(--soft); border-radius:6px; padding:6px 2px; }
+  .nums small { display:block; color:var(--muted); font-size:13px; }
+  .nums b { font-size:20px; font-family:var(--f-mono); font-variant-numeric:tabular-nums; }
+  .nums .wide { grid-column:span 2; }
+  .msg { margin-top:8px; padding:9px 12px; border-left:4px solid var(--acc); background:var(--tint); font-size:16px; line-height:1.55; }
+  .pred { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; font-size:16px; }
+  .pred input { width:96px; font:inherit; font-size:16px; padding:4px 6px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); }
+  .pred b { color:var(--acc); }
+  svg { width:100%; height:auto; display:block; font-family:var(--f-body); }
+  button { font:inherit; font-size:15px; border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:8px; padding:7px 12px; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  button.main { background:var(--acc); border-color:var(--acc); color:var(--acc-ink); font-weight:700; }
+  button:disabled { opacity:.4; cursor:default; }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+  .rule { font-family:var(--f-body); color:var(--acc); font-size:17px; font-weight:500; margin:2px 0 6px; }
+  .rule i { font-family:var(--f-math); font-size:21px; font-weight:bold; padding-right:2px; }
+  .lrrow, .exrow { display:flex; align-items:center; gap:10px; }
+  .lrval { font-size:24px; font-weight:bold; color:var(--acc); min-width:64px; font-family:var(--f-mono); }
+  input[type=range] { flex:1; min-width:0; accent-color:var(--acc); }
+  .presets, .btns { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .scroll { max-height:200px; overflow:auto; margin-top:8px; border-top:1px solid var(--line); }
+  .log { width:100%; border-collapse:collapse; font-family:var(--f-mono); font-size:14px; font-variant-numeric:tabular-nums; }
+  .log th, .log td { border-bottom:1px solid var(--line); padding:3px 5px; text-align:right; }
+  .log thead th { position:sticky; top:0; background:var(--panel); color:var(--head); font-family:var(--f-body); font-size:13.5px; z-index:1; }
+  .q { margin-top:10px; padding:10px 12px; background:var(--tint); border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line)); border-radius:8px; font-size:15.5px; line-height:1.6; }
+  .q b.t { display:inline-block; color:var(--acc-ink); background:var(--acc); border-radius:4px; padding:0 6px; margin-right:6px; font-size:13.5px; }
+  #absBtn.on { background:var(--acc); border-color:var(--acc); color:var(--acc-ink); }
+  /* 3차원 · 등고선 : 붙은 선택 단추 (주 단추처럼 채우지 않는다) */
+  #viewTog { gap:0 !important; }
+  #viewTog .tog { border-radius:0; padding:5px 12px; font-size:14px; color:var(--muted); }
+  #viewTog .tog:first-child { border-radius:8px 0 0 8px; } #viewTog .tog:last-child { border-radius:0 8px 8px 0; margin-left:-1px; }
+  #mTog { display:flex; flex-wrap:wrap; margin:2px 0 6px; }
+  #mTog .tog { border-radius:0; padding:5px 12px; font-size:14px; color:var(--muted); }
+  #mTog .tog:first-child { border-radius:8px 0 0 8px; } #mTog .tog:last-child { border-radius:0 8px 8px 0; } #mTog .tog + .tog { margin-left:-1px; }
+  #mTog .tog.on { background:var(--tint); color:var(--acc); font-weight:700; border-color:var(--acc); position:relative; z-index:1; }
+  .p12 { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; font-size:15px; }
+  .p12 input { width:80px; font:inherit; font-size:15px; padding:3px 6px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); }
+  .p12 b { color:var(--acc); }
+  ol.sum { margin:6px 0 10px; padding-left:22px; } ol.sum li { margin:2px 0; }
+  #viewTog .tog.on { background:var(--tint); color:var(--acc); font-weight:700; border-color:var(--acc); position:relative; z-index:1; }
+  .foot { max-width:1288px; margin:8px auto 24px; padding:12px 0 0; border-top:1px solid var(--line); color:var(--muted); font-size:13px; line-height:1.6; }
+  .gcol { position:sticky; top:8px; }
+  .gcap { margin-top:4px; font-size:13.5px; color:var(--muted); }
+  .gcap i { display:inline-block; width:10px; height:10px; border-radius:50%; vertical-align:-1px; margin:0 3px 0 2px; }
+  .ex10 button { padding:4px 9px; }
+  .ex10 .lab { font-family:var(--f-math); font-style:italic; font-weight:bold; color:var(--acc); font-size:19px; }
+  .ex10 b { font-family:var(--f-mono); font-size:16px; color:var(--acc); min-width:48px; text-align:right; }
+  .ex10 .t { font-size:15px; font-weight:bold; color:var(--head); margin-bottom:4px; }
+  .ex10 .t span { font-weight:normal; font-size:13.5px; color:var(--muted); }
+  #bw.drag { cursor:grab; touch-action:none; }
+  /* 좁은 화면 : 이야기 → 그래프 → 숫자 · 조작 → 식 정리 */
+  @media (max-width:900px){
+    .cols { display:flex; flex-direction:column; align-items:stretch; }
+    .col { display:contents; }
+    .o0{order:0} .o1{order:1} .o2{order:2} .o3{order:3} .o4{order:4} .o5{order:5} .o6{order:6} .o7{order:7}
+    .gcol { position:static; }
+    .navb { display:flex; }
+  }
+  @media (max-width:560px){
+    .brand { gap:10px; padding:6px 10px; } .brand img { height:23px; } .brand .bt b { font-size:14px; } .brand .bt span { font-size:12px; }
+    .brand .copy { display:none; } .brand .home { font-size:13px; } .brand .home .hl { display:none; } .brand .home .hs { display:inline; }
+    header { margin-top:10px; } header h1 { font-size:18px; } header p { font-size:12.5px; } #headSub { display:none; }
+    .wrap { padding:10px 12px 20px; }
+    .story { padding:12px 14px; } .story h2 { font-size:19px; } .story p { font-size:15.5px; }
+    .dots, .en { display:none; }
+    .nav button, .chap { white-space:nowrap; }
+    button { min-height:44px; }
+    .dots .dot { min-height:0; }
+    input[type=range] { min-height:32px; }
+    .frow { grid-template-columns:minmax(0,1fr); }
+    .fnote { grid-column:1; }
+    .fexp { font-size:20px; overflow-x:auto; white-space:nowrap; padding-bottom:2px; }
+    .fsub { font-size:17px; }
+    .exrow { flex-wrap:wrap; row-gap:6px; } .exrow button { white-space:nowrap; } #ew, #w10, #b10 { order:9; flex:1 1 100%; }
+    .nums b { font-size:18px; }
+  }
+  .nw { white-space:nowrap; }
+  button.ib { display:inline; min-height:0; padding:0 7px; margin:0 1px; font:inherit; font-weight:700; line-height:1.45; color:var(--acc); background:var(--tint); border:1px solid color-mix(in srgb,var(--acc) 45%,var(--line)); border-radius:6px; vertical-align:baseline; }
+  button.ib:hover, button.ib.on { border-color:var(--acc); }
+  button.ib.on { background:var(--acc); color:var(--acc-ink); }
+  @media (max-width:560px){ .story button.ib { min-height:0; padding:2px 8px; } }
+  .ohl { display:inline; min-height:0; padding:0; border:none; background:none; color:var(--link); font:inherit; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .ohb { padding:0 14px 6px; font-size:15px; line-height:1.65; } .ohb p { margin:6px 0; color:var(--ink); font-size:15px; } .ohb ul { margin:4px 0; padding-left:20px; } .ohb li { margin:3px 0; }
+  .ohb code { white-space:nowrap; font-family:var(--f-mono); font-size:.92em; background:var(--soft); padding:1px 5px; border-radius:4px; }
+  .story ul.sg { margin:4px 0 6px; padding-left:20px; font-size:16px; line-height:1.65; } .story ul.sg li { margin:3px 0; }
+  table.pt { border-collapse:collapse; margin:6px 0 8px; font-size:14.5px; font-variant-numeric:tabular-nums; }
+  table.pt th { font-weight:600; font-size:13px; color:var(--muted); padding:3px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  table.pt td { font-family:var(--f-mono); padding:3px 8px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.pt th:first-child, table.pt td:first-child { text-align:center; font-family:var(--f-body); }
+  table.pt tr.sum td { font-weight:700; color:var(--acc); border-top:2px solid var(--head); }
+  table.pt td:nth-child(5), table.pt th:nth-child(5) { background:var(--tint); }
+  .ptw { overflow-x:auto; }
+  .ptw.sl { max-height:230px; overflow-y:auto; }
+  @media (max-width:560px){ table.pt { font-size:13px; } table.pt th, table.pt td { padding:3px 4px; } table.pt th { font-size:12px; } }
+  .story details.oct { border-color:color-mix(in srgb,var(--acc) 22%,var(--line)); }
+  .story details.oct pre, .story .ohb code { background:color-mix(in srgb,var(--acc) 6%,var(--panel)); border-top-color:color-mix(in srgb,var(--acc) 18%,var(--line)); }
+  .story table.pt th, .story table.pt td { border-bottom-color:color-mix(in srgb,var(--acc) 18%,var(--line)); }
+  details.oct { margin-top:10px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+  details.oct summary { cursor:pointer; padding:8px 12px; font-size:15px; font-weight:700; color:var(--acc); }
+  details.oct p { margin:0 12px 8px; font-size:14.5px; color:var(--muted); }
+  details.oct pre { margin:0; padding:10px 12px; border-top:1px solid var(--line); background:var(--soft); font-family:var(--f-mono); font-size:13.5px; line-height:1.5; overflow-x:auto; white-space:pre; }
+  details.oct .cpy { margin:8px 12px 10px; font-size:14px; padding:5px 12px; }
+  .lrrow.dim .lrval { color:var(--muted); opacity:.55; }
+  .lrnote { font-size:13.5px; color:var(--muted); margin-top:2px; }
+  /* 옆으로 밀리는 상자 : 오른쪽 끝을 흐리게 해서 더 있다는 것을 보인다 */
+  .sx { -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent); }
+  .story.short .navb { display:none; }
+  /* 프로젝터 (1280×720 등 낮은 화면) : 머리 부분을 줄여 그래프를 한 화면에 */
+  @media (min-width:901px) and (max-height:760px){
+    .brand { margin-top:6px; padding:5px 14px; } .brand img { height:28px; }
+    header { margin-top:8px; } header h1 { font-size:19px; } header p { font-size:13px; } header p.en { display:none; }
+    .wrap { padding-top:8px; }
+  }
+  /* 휴대폰 : 아래 조작 줄 (조작 칸이 화면 밖에 있을 때만) */
+  .dock { display:none; }
+  @media (max-width:560px){
+    .nums { grid-template-columns:1fr 1fr; grid-auto-flow:dense; }
+    .dock { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; gap:6px; padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px)); background:var(--panel); border-top:1px solid var(--line); box-shadow:0 -2px 10px rgba(0,0,0,.08); transform:translateY(110%); transition:transform .2s; }
+    .dock.show { transform:none; }
+    .dock .rd { flex:1; min-width:0; font-family:var(--f-mono); font-size:12.5px; line-height:1.3; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .dock .rd b { color:var(--acc); font-weight:700; }
+    .dock button { padding:6px 10px; white-space:nowrap; }
+    body.docked { padding-bottom:76px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .dock { transition:none; } }
+  /* 원문자 : 웹 글꼴의 <span class="cn">1</span>은 가늘어서 동그라미를 직접 그린다 */
+  .cn { display:inline-flex; align-items:center; justify-content:center; width:1.45em; height:1.45em; border-radius:50%; background:var(--acc); color:var(--acc-ink); font-family:var(--f-body); font-size:.78em; font-weight:700; line-height:1; vertical-align:.12em; margin-right:.35em; }
+  .hide, .off { display:none !important; }
+
+  details.oct pre code { font-family:inherit; }
+  .ltab { display:flex; gap:0; margin:4px 12px 0; } .ltab .lt { border-radius:0; margin-left:-1px; padding:4px 12px; font-size:14px; color:var(--muted); } .ltab .lt:first-child { border-radius:8px 0 0 8px; margin-left:0; } .ltab .lt:last-child { border-radius:0 8px 8px 0; } .ltab .lt.on { background:var(--tint); color:var(--acc); font-weight:700; border-color:var(--acc); position:relative; z-index:1; }
+  .story table.st.lang { margin:6px 12px 4px; font-size:14px; } .story table.st.lang code { font-family:var(--f-mono); } .story table.st.lang td, .story table.st.lang th { text-align:left; }
+  .story details.oct pre.out { color:var(--muted); border-top:none; padding-top:0; }
+  .story details.oct pre.out code::before { content:"실행 결과"; display:block; font-family:var(--f-body); font-size:12.5px; color:var(--muted); margin-bottom:2px; }
+
+  /* ---------- 역전파 시뮬레이터 */
+  :root { --g-red:#C0392B; --g-bluec:#2E75B6; --g-lit:#FFE08A; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) { --g-red:#E8796E; --g-bluec:#6FA8E0; --g-lit:#7A6420; } }
+  :root[data-theme="dark"] { --g-red:#E8796E; --g-bluec:#6FA8E0; --g-lit:#7A6420; }
+  .flow { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px 10px; margin-top:4px; }
+  .fb { position:relative; background:var(--soft); border:1px solid var(--line); border-radius:8px; padding:7px 6px; text-align:center; min-height:66px; opacity:.38; transition:opacity .2s; }
+  .fb.on { opacity:1; background:var(--card); border-color:color-mix(in srgb,var(--acc) 40%,var(--line)); }
+  .fb b { display:block; font-size:14px; color:var(--head); }
+  .fb span { display:block; font-family:var(--f-mono); font-size:15px; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .fb small { display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+  .fb:not(:last-child)::after { content:"→"; position:absolute; right:-11px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px; }
+  .bk { text-align:center; font-size:13px; line-height:1.45; color:var(--acc); font-weight:700; min-height:38px; visibility:hidden; }
+  .bk.on { visibility:visible; }
+  .bk span { display:block; font-family:var(--f-mono); font-weight:600; }
+  .bkrow { margin-top:2px; }
+  .bklab { font-size:13px; color:var(--acc); font-weight:700; margin:6px 0 0; }
+  .ctl .row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0; }
+  .ctl .lab { font-size:14px; color:var(--muted); margin-right:2px; }
+  .imgsel { font-size:15px; font-variant-numeric:tabular-nums; min-width:150px; }
+  @media (max-width:560px){ .imgsel { min-width:0; font-size:14px; } }
+  .msg { margin-top:8px; padding:8px 10px; background:var(--soft); border-left:3px solid var(--acc); border-radius:4px; font-size:15px; line-height:1.6; min-height:2.6em; }
+  .msg:empty { display:none; }
+  table.st { border-collapse:collapse; font-size:14.5px; margin-top:6px; font-variant-numeric:tabular-nums; }
+  table.st th, table.st td { border-bottom:1px solid var(--line); padding:4px 10px; text-align:right; white-space:nowrap; }
+  table.st th { color:var(--head); font-weight:700; }
+  table.st td:first-child, table.st th:first-child { text-align:left; }
+  .seg { display:inline-flex; }
+  .seg button { border-radius:0; margin-left:-1px; padding:5px 11px; font-size:14px; }
+  .seg button:first-child { border-radius:8px 0 0 8px; margin-left:0; }
+  .seg button:last-child { border-radius:0 8px 8px 0; }
+  .seg button.on { background:var(--tint); color:var(--acc); font-weight:700; border-color:var(--acc); position:relative; z-index:1; }
+  .story .cn { display:inline-flex; align-items:center; justify-content:center; width:21px; height:21px; border-radius:50%; background:var(--acc); color:var(--acc-ink); font-size:13px; font-weight:700; margin-right:6px; vertical-align:1px; }
+  @media (max-width:560px){ .flow { grid-template-columns:repeat(3,minmax(0,1fr)); } .fb:nth-child(3)::after { display:none; } .bkrow { display:none; } .bklab { display:block; } }
+  .bklist { display:none; font-size:13.5px; color:var(--acc); font-weight:700; margin-top:6px; line-height:1.6; }
+  @media (max-width:560px){ .bklist { display:block; } }
+</style>
+</head>
+<body>
+<div class="brandwrap"><div class="brand"><img class="lg-l" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzAiIGhlaWdodD0iMzMiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0yMS41IDI3LjNINi42QTIuNiAyLjYgMCAwMTQgMjQuN1Y2aDIwdjE4LjdjMCAxLjQtMS4xIDIuNi0yLjUgMi42Ii8+PHBhdGggZD0iTTQxLjggMTEuMkgzMnYuOGwyLjMuOGgxOC4zdi0xLjZoLTcuOFY5LjRoNS40VjcuN2gtLjhzMS00LjYgMS02aC0xNnYuOGwyLjMuN3Y2LjloMy4ydi0uOGgxLjl2MS45em0tMi0zLjRWMy40aDcuNWwtLjIgNC40aC03LjJ6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNNDEuOCAxMS4ySDMydi44bDIuMy44aDE4LjN2LTEuNmgtNy44VjkuNGg1LjRWNy43aC0uOHMxLTQuNiAxLTZoLTE2di44bDIuMy43djYuOWgzLjJ2LS44aDEuOXYxLjl6bS0yLTMuNFYzLjRoNy41bC0uMiA0LjRoLTcuMnoiLz48cGF0aCBkPSJNMzUgMTQuMmgxNS4ydjcuMkg0N3YtNS42SDM2LjdsLTEuNi0uOHoiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik0zNSAxNC4yaDE1LjJ2Ny4ySDQ3di01LjZIMzYuN2wtMS42LS44eiIvPjxwYXRoIGQ9Ik02Mi40IDIuNWMwLS4zLS40LS41LS40LS41TDU4IDEuNFYycy43LjIuOS40YzAgMCAuNC4yIDAgLjUtMi40LjQtNC4yIDEuOS00LjIgMy42IDAgMi4xIDIuNSAzLjggNS42IDMuOCAzLjEgMCA1LjYtMS43IDUuNi0zLjggMC0xLjctMS43LTMuMi00LTMuNiAwIDAgLjMgMCAuNC0uNG0tMiA2LjJhMi4yIDIuMiAwIDExMC00LjQgMi4yIDIuMiAwIDAxMCA0LjQiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik02Mi40IDIuNWMwLS4zLS40LS41LS40LS41TDU4IDEuNFYycy43LjIuOS40YzAgMCAuNC4yIDAgLjUtMi40LjQtNC4yIDEuOS00LjIgMy42IDAgMi4xIDIuNSAzLjggNS42IDMuOCAzLjEgMCA1LjYtMS43IDUuNi0zLjggMC0xLjctMS43LTMuMi00LTMuNiAwIDAgLjMgMCAuNC0uNHptLTIgNi4yYTIuMiAyLjIgMCAxMTAtNC40IDIuMiAyLjIgMCAwMTAgNC40eiIvPjxwYXRoIGQ9Ik02NiAuOHYxbDEuNy42djExSDYydi45bDIuMS43aDMuNHYyLjRoMy4zVjEuOHoiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik02NiAuOHYxbDEuNy42djExSDYydi45bDIuMS43aDMuNHYyLjRoMy4zVjEuOHoiLz48cGF0aCBkPSJNNjYuOSAxMGMtNS4yIDEuOC0xMy40IDEuMi0xMy40IDEuMnYuOGwxLjUuNmgzdjMuMmgzLjJ2LTMuM2MzLjQtLjMgNS43LTEgNS43LTFWMTB6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNNjYuOSAxMGMtNS4yIDEuOC0xMy40IDEuMi0xMy40IDEuMnYuOGwxLjUuNmgzdjMuMmgzLjJ2LTMuM2MzLjQtLjMgNS43LTEgNS43LTFWMTB6Ii8+PHBhdGggZD0iTTU2LjQgMTUuOXYuNmwxLjYgMXYyczAgMS41IDEuMiAxLjdoMTJ2LTEuNmgtMTB2LTNsLTQuOC0uN3oiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik01Ni40IDE1Ljl2LjZsMS42IDF2MnMwIDEuNSAxLjIgMS43aDEydi0xLjZoLTEwdi0zbC00LjgtLjd6Ii8+PHBhdGggZD0iTTcxLjMgMy44djFsMi4xLjZ2OS45cy4yIDEuOSAxLjggMS44YzAgMCAxLjguNCA3LTEuNWguMXY0aDIuOXYtMTBoMS4zdjExLjhoM1YxLjhsLTQuMy0xdjEuM2wxLjMuNFY4aC0xLjNWMi41bC00LjgtMXYuOWwxLjguOHYxMXMtNSAxLjMtNS41LjlWNS4zaDVWMy44SDcxLjN6Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNNzEuMyAzLjh2MWwyLjEuNnY5LjlzLjIgMS45IDEuOCAxLjhjMCAwIDEuOC40IDctMS41aC4xdjRoMi45di0xMGgxLjN2MTEuOGgzVjEuOGwtNC4zLTF2MS4zbDEuMy40VjhoLTEuM1YyLjVsLTQuOC0xdi45bDEuOC44djExcy01IDEuMy01LjUuOVY1LjNoNVYzLjhINzEuM3oiLz48cGF0aCBkPSJNOTQuNSAyaDYuOXYxLjRoLTQuOGwtMi0uNnoiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik05NC41IDJoNi45djEuNGgtNC44bC0yLS42eiIvPjxwYXRoIGQ9Ik05OCA2Yy0zLjIgMC01LjcgMS42LTUuNyAzLjdzMi41IDMuOCA1LjYgMy44YzMuMiAwIDUuNy0xLjcgNS43LTMuOCAwLTItMi41LTMuOC01LjctMy44bTAgNmEyLjMgMi4zIDAgMTEwLTQuNCAyLjMgMi4zIDAgMDEwIDQuNSIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuMSIgZD0iTTk4IDZjLTMuMiAwLTUuNyAxLjYtNS43IDMuN3MyLjUgMy44IDUuNiAzLjhjMy4yIDAgNS43LTEuNyA1LjctMy44IDAtMi0yLjUtMy44LTUuNy0zLjh6bTAgNmEyLjMgMi4zIDAgMTEwLTQuNSAyLjMgMi4zIDAgMDEwIDQuNXoiLz48cGF0aCBkPSJNOTkuNCA1LjVoNVY0SDkxdjFsMiAuNWgzLjVzMSAuMyAwIC44aDIuOXMuOS0uNCAwLS44Ii8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9Ii4xIiBkPSJNOTkuNCA1LjVoNVY0SDkxdjFsMiAuNWgzLjVzMSAuMyAwIC44aDIuOXMuOS0uNCAwLS44eiIvPjxwYXRoIGQ9Ik0xMDMuNi44djFsMS42LjZ2MTEuMmgzLjFWOS43aDNWOGgtMi44VjEuN3oiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik0xMDMuNi44djFsMS42LjZ2MTEuMmgzLjFWOS43aDNWOGgtMi44VjEuN3oiLz48cGF0aCBkPSJNOTIuNiAxNC4ydjFsMiAuNUgxMDV2NS43aDMuMXYtNy4yeiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuMSIgZD0iTTkyLjYgMTQuMnYxbDIgLjVIMTA1djUuN2gzLjF2LTcuMnoiLz48cGF0aCBkPSJNMTExLjMgMy43di44bDEuNi42aDEyLjJWOXMtLjMgNC45LTEuMiA3LjNoMi4yczEuOC0zLjYgMi4yLTlWMy42aC0xN3oiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iLjEiIGQ9Ik0xMTEuMyAzLjd2LjhsMS42LjZoMTIuMlY5cy0uMyA0LjktMS4yIDcuM2gyLjJzMS44LTMuNiAyLjItOVYzLjZoLTE3eiIvPjxwYXRoIGQ9Ik0xMTQgOC40djEuMmwxLjUuNFYxOGgtNS45di44bDIuNC44aDE4VjE4aC02LjdWOC43bC00LjctMXYxbDEuNS43VjE4aC0xLjZWOS4yeiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIuMSIgZD0iTTExNCA4LjR2MS4ybDEuNS40VjE4aC01Ljl2LjhsMi40LjhoMThWMThoLTYuN1Y4LjdsLTQuNy0xdjFsMS41LjdWMThoLTEuNlY5LjJ6Ii8+PHBhdGggZD0iTTMyLjYgMjQuMnMtLjUuMiAwIC4zYzAgMCAuOC4yLjggMS4ydjMuN3MwIDEuMi0uOCAxLjJjMCAwLS4zLjMuMS4zSDM1cy4yLS4yIDAtLjJjMCAwLTEuMyAwLTEuMy0xLjN2LTQuMWwuMi0uMSAyLjcgNS45IDIuNy01LjhzLjItLjMuMi4ydjRzMCAxLjEtMS4xIDEuMWMwIDAtLjUuMi0uMi4zSDQxcy4yLS4yLS4xLS4zYzAgMC0uOCAwLS44LTEuMnYtNC4yczAtLjguOC0uOGMwIDAgLjMtLjIgMC0uMmgtMS42cy0uOCAyLjYtMi41IDUuNWMwIDAtMS0xLjgtMi41LTUuNWgtMS42eiIvPjxwYXRoIGQ9Ik00MC44IDI2LjRzLjctMi41IDMuOS0yLjNjMCAwIDMgMCAzIDMuMyAwIDAgLjQgMy41LTMuMyAzLjkgMCAwLTMuMi4zLTMuNy0zLjEgMCAwLS4xLS45LjEtMS44bS43IDFjLS4xIDEuOC44IDIuNC44IDIuNC43IDEgMi4xLjkgMi4xLjkgMSAuMiAxLjktLjcgMS45LS43IDEtMS40LjUtMy40LjUtMy40LS40LTEuNS0xLjgtMS45LTEuOC0xLjktMS42LS40LTIuNi40LTIuNi40LTEgLjctMSAyLjQtMSAyLjRNNjIuOCAyNi4zcy43LTIuNSAzLjktMi4zYzAgMCAzIDAgMy4xIDMuMyAwIDAgLjMgMy41LTMuNCAzLjggMCAwLTMuMi4zLTMuNy0zbC4xLTEuOG0uNyAxYzAgMS43LjggMi40LjggMi40LjcgMSAyLjEuOCAyLjEuOCAxIC4yIDEuOS0uNiAxLjktLjYgMS0xLjQuNS0zLjQuNS0zLjQtLjQtMS41LTEuOC0yLTEuOC0yLTEuNi0uMy0yLjYuNC0yLjYuNC0xIC44LS45IDIuNS0uOSAyLjUiLz48cGF0aCBkPSJNNDcuNiAyNC4ycy0uMyAwIDAgLjNjMCAwIC43IDAgLjguN3Y0LjVzMCAuOC0uOCAxYzAgMC0uNC4yLjIuMmgyLjRzLjMtLjItLjEtLjNjMCAwLTEuMiAwLTEuMi0xLjJ2LTJzLjYtLjIgMiAxLjdsMS4yIDEuN0g1My4zcy4zLS4xLS4zLS4zYzAgMC0uMyAwLS42LS41bC0xLjYtMnMtLjctLjgtMS4yLTFsMi0ycy4zLS41LjktLjZjMCAwIC40IDAgMC0uMmgtMS44cy0uMi4xIDAgLjNjMCAwIC43LjEuMy43bC0xLjcgMS43cy0uMi0uMS0uNCAwdi0xLjdzMC0uOCAxLS44YzAgMCAuMi0uMi0uMS0uMmgtMi4yek02MC4yIDMwLjlsLTEuNi01LjJjMC0uMy0uMyAwLS4zIDBzLTEuNiA0LjItMS42IDVsLS4xLjJINTZsLS4xLS4xLS45LTMuMmMtLjgtMy0xLjUtMy4xLTEuNS0zLjEtLjYtLjIgMC0uMyAwLS4zaDIuN2MuMy4xIDAgLjMgMCAuM2gtMWMtLjIuMi0uNC41LS4zLjdsLjYgMi4yLjggMi41IDEuOS01LjVjMC0uMy4zLS4zLjMtLjNzLjIgMCAuNSAxLjJjMCAwIC43IDIuOCAxLjQgNC4zbC4xLjMgMS4yLTRjLjMtLjkgMC0xLjIgMC0xLjItLjMtLjItMS4xLS4zLTEuMS0uMy0uNCAwIDAtLjIgMC0uMmgyYy4zIDAgLjEuMy4xLjNzLTEuNSAzLjktMS44IDUuN2MwIDAtLjEuNi0uMy43aC0uNXpNNzUgMjkuNXYtMy44YzAtLjgtLjUtMS0uNS0xLS4zLS4yLS45LS4yLS45LS4yLS4zLS4xIDAtLjMgMC0uM2gyLjVjLjUuMSAwIC4zIDAgLjNsLS40LjJjLS4zLjEtLjMuNi0uMy42djUuNGMwIC4zLS4yLjItLjIuMi0uNCAwLS42LS41LS42LS41LTItMy0zLjctNC44LTMuNy00Ljh2NGMwIC40LjIuNS4yLjUuMi42IDEuMi41IDEuMi41LjIuMSAwIC4zIDAgLjNoLTIuNmMtLjMtLjIgMC0uMyAwLS4zLjggMCAuOC0xIC44LTF2LTQuMWMwLS41LS4yLS43LS4yLS43LS4zLS4zLS43LS4zLS43LS4zLS4yLS4yIDAtLjMgMC0uM2gxLjJzLjMuMS40LjVjMCAwIC45IDEuNCAzLjMgNC40IDAgMCAuNC42LjUuNE03OC4yIDI0LjJzLS40LjEgMCAuM2MwIDAgLjUgMCAuNS40djMuOXMwIDIuMyAyLjQgMi4zYzAgMCAyLjMgMCAyLjMtMi4zVjI1czAtLjYuNi0uNmMwIDAgLjMtLjIgMC0uM0g4MnMtLjMgMCAwIC4yYzAgMCAuOSAwIC45Ljd2NC4ycy0uMiAxLjUtMiAxLjVjMCAwLTEuNi0uMS0xLjYtMS42di00czAtLjYuNS0uNmMwIDAgLjQtLjIuOC0uMSAwIDAgLjQtLjMgMC0uM2gtMi41ek05MS41IDI0LjJzLS4zLjIgMCAuM2MwIDAgLjUgMCAuNS42djQuN3MwIC44LS43LjhjMCAwLS40LjMgMCAuM2gyLjFzLjMtLjEgMC0uM2MwIDAtLjcgMC0uNy0uOHYtNC41czAtLjguNy0uOGMwIDAgLjQtLjIgMC0uM2gtMS45ek05Ny43IDMwLjdjLS4yLjYtMSAuMy0xIC4zbC0xLjMtMy42LTEtMi40Yy0uMi0uNS0uNS0uNS0uNS0uNS0uMy0uMSAwLS4zIDAtLjNoMi42Yy40LjEgMCAuMyAwIC4zSDk2Yy0uOC4yLS4zIDEuMy0uMyAxLjNsMS43IDQuNyAxLjgtNWMuMi0uNC0uMS0uNy0uMS0uNy0uNC0uNC0xLS4zLTEtLjMtLjItLjEgMC0uMyAwLS4zaDJzLjMgMCAwIC40YzAgMC0xLjIgMi43LTIuMyA2LjFNMTAwLjYgMjQuNXMuNi4xLjYuOFYzMHMwIC43LS43LjdjMCAwLS40LjEgMCAuM2g0LjZ2LTEuN3MtLjMtLjMtLjMgMGMwIDAgLjEgMS4zLS44IDEuM2gtMi4xdi0zaDFzMSAwIDEgLjljMCAwIC4xLjUuMiAwdi0xLjlzLS4xLS40LS4yIDBjMCAwIDAgLjgtLjguOEgxMDJ2LTIuMXMwLS42LjYtLjZoMS41cy43IDAgLjcgMWMwIDAgLjEuMi4zIDB2LTEuNGgtNC40cy0uMy4xIDAgLjNNMTA4LjQgMjcuNGMuOC4yIDEuMyAxLjUgMS4zIDEuNWwuNiAxLjNjLjIuMy42LjQuNi40LjMuMSAwIC4zIDAgLjNoLTFjLS4yIDAtMS4yLTIuNC0xLjItMi40LS4zLS43LS44LTEtLjgtMS0uMi0uMS0uOCAwLS44IDB2Mi4yYzAgMSAuOSAxIC45IDEgLjUgMCAuMi4yLjIuMmgtMi42Yy0uMy0uMiAwLS4zIDAtLjMgMSAwIC44LS44LjgtLjh2LTQuOWMwLS40LS43LS4zLS43LS4zLS40LS4zIDAtLjQgMC0uNGgyLjhjMS42IDAgMS42IDEuNiAxLjYgMS42IDAgMS41LTEuNyAxLjYtMS43IDEuNm0xLTEuNXMuMS0xLjMtMS40LTEuM2MwIDAtLjktLjEtLjkuNHYyLjFoMS4yczEuMS0uMiAxLjEtMS4yTTExMy41IDI0LjJzLTIuMiAwLTIuMiAxLjdjMCAwIDAgLjkgMSAxLjRsMS45LjlzLjYuMi42IDEuMWMwIDAgLjEgMS40LTEuNCAxLjMgMCAwLTEuNy4yLTEuNy0uOHYtLjZzLS4yLS40LS4zIDB2MS42bC4zLjFoMi4yczEuNiAwIDEuNy0xLjVjMCAwIC4xLTEuMS0xLjEtMS44bC0yLTFzLS40LS4yLS40LS44YzAgMC0uMi0xLjIgMS40LTEuMiAwIDAgMS40LS4yIDEuNSAxLjIgMCAwIC4xLjMuMiAwdi0xLjVsLS4yLS4xaC0xLjV6TTExOC43IDI0LjJoNS40bC4xLjJ2MS4zcy0uMS4zLS4yIDBjMCAwLS4zLTEuMi0xLjItMS4yaC0xdjVzMCAxLjEgMSAxLjFjMCAwIC40LjMuMS4zSDEyMHMtLjMtLjIuMS0uM2MwIDAgMSAuMSAxLTEuMXYtNWgtMXMtMSAwLTEuMSAxLjFjMCAwLS4yLjMtLjMgMHYtMS40ek0xMjQuOSAyNC4ycy0uNCAwIDAgLjNjMCAwIC4zLS4xIDIuMiAzdjIuMnMwIC45LTEgLjljMCAwLS4zLjEgMCAuMmgyLjdzLjMgMCAwLS4yYzAgMC0xIDAtMS0xdi0yLjJsMi4xLTMuMnMuMi0uMiAwLS4yaC0uN2wtMS42IDMuMy0xLjMtMnMtLjUtLjkuNC0uOWguNXMuNC0uMSAwLS4ySDEyNXpNODkuNyAyOS41di0zLjhjMC0uOC0uNS0xLS41LTEtLjMtLjItLjktLjItLjktLjItLjMtLjEgMC0uMyAwLS4zaDIuNWMuNS4xIDAgLjMgMCAuM2wtLjQuMmMtLjMuMS0uMy42LS4zLjZ2NS40YzAgLjMtLjIuMi0uMi4yLS41LS4yLS42LS42LS42LS42LTIuMS0zLTMuNy00LjgtMy43LTQuOHY0LjJjMCAuMy4yLjQuMi40LjIuNiAxLjIuNSAxLjIuNS4yLjEgMCAuMyAwIC4zaC0yLjZjLS4zLS4yIDAtLjMgMC0uMy44IDAgLjgtMSAuOC0xdi00YzAtLjYtLjItLjgtLjItLjgtLjMtLjMtLjYtLjMtLjYtLjMtLjMtLjIgMC0uMyAwLS4zaDEuMXMuMy4xLjQuNWEzOS4yIDM5LjIgMCAwMDMuOCA0LjhNMTE2LjMgMjQuMnMtLjMuMiAwIC4zYzAgMCAuNSAwIC41LjZ2NC43czAgLjgtLjcuOGMwIDAtLjQuMiAwIC4zaDIuMXMuMy0uMiAwLS4zYzAgMC0uNyAwLS43LS44di00LjZzMC0uNy43LS43YzAgMCAuNC0uMi0uMS0uM2gtMS44eiIvPjxwYXRoIGZpbGw9IiNBNjJCNDMiIGQ9Ik0xNC40IDI5LjN2LTFsLS43IDF6TTYuNSAyNC45YS42LjYgMCAwMC0uNi0uMmMtLjIgMC0uNCAwLS42LjMtLjMuMi0uNC40LS40LjZ2LjZjLjIuMi40LjIuNi4yLjMgMCAuNS0uMS43LS4zLjItLjIuNC0uNC40LS43VjI1TTExLjQgMjcuNkgxMWwtLjIuNXYuNGMwIC4xIDAgLjIuMi4zbC4zLS4xLjItLjR2LS41bC0uMi0uMk0xMy41IDMyaC0uMS0uMi4zek0zLjIgMTguNmwuNy0uMmEuNi42IDAgMDAwLTFjLS4yLS4yLS40LS4zLS43LS4zLS4zIDAtLjYgMC0uNy4yYS42LjYgMCAwMDAgMWMuMS4yLjQuMy43LjMiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjYuOCAxLjdoLTEuNmwtMiAyLjFWLjdoLTJsLTIuNCAyLjdWLS4xaC0zLjJsLTIuMiAyLjhMMTEtLjFIOHYzLjZMNS41LjdIMy41djMuMkwxLjMgMS43SDB2MTYuOEMwIDI2LjIgNiAzMiAxMy40IDMyYzcuNiAwIDEzLjQtNiAxMy40LTEzLjN2LTE3em0tNCAxMi41bC4yLjIuMi0uMS42LS40LS42LS40SDIyLjlWMTN2LjJsLjMuMi43LjRIMjQuOHYtLjMuN0gyMy45bC0uNy40LS4zLjN2LS43em0yIDMuNkgyMy4yIDIzdi4yaC0uMXYtLjhsLjEuMkgyNC44di0uMmguMXYuOC0uMnptLjEtMS4ydi0uM0gyM3YuNWwuMy4yaC0uNVYxNnYtLjdoLjVsLS4zLjJ2LjVoMS44di0uMmguMXYuOXpNMTkgNmwyLjQtMi43djIuNmwtMi41IDIuN1Y2em0tMi41LTMuNXYzLjNsLTEuMiAxLjQtMS40LTEuNiAyLjYtMy4xem0tNi4yIDBsMi43IDMtMS40IDEuNy0xLjMtMS42VjIuNHptLTQuNyAxTDguMSA2djIuN0w1LjUgNlYzLjR6bTAgMTVWOGwyLjYgMi42djYuNnMwIDMuMy44IDMuOGwuMS01LjR2LTMuMmguNHYzLjFjMCAzLjUuMyA1LjguNCA2LjdsLjQuNHMuMi0zLjcuMi03LjV2LTRoLjRWMTVjMCAzLjEuMyA3LjYuNSA4LjRsLjMuMnMuMy0xLjkuMi04LjZWOS45aC40djVjLjEgNS41LjQgOC42LjUgOC45aC40bC4xLThWOWguNHY1LjdjMCA0IC4zIDggLjUgOS4ybC40LS4xLjEtNy44VjkuOWguNHY1Yy4xIDQgLjMgNyAuNSA4LjZsLjUtLjJzLjItMy42LjEtOFYxMWguNHY0YzAgMy4xLjMgNi40LjUgNy42bC4zLS40LjItNi4ydi0zLjZoLjR2M2MwIDIuNy4yIDUuNS4zIDUuNyAwIDAgLjYtLjguNi0zLjJ2LTcuMkwyMS4zIDh2MTAuOWMtLjEgNC41LTQuNCA3LjYtNy42IDcuNmgtLjJjLTQuNSAwLTgtNC04LTcuOXYtLjF6TTMuOCAxNGguM3YtLjIuNWwtMS40LjggMS41Ljh2LjVINHYtLjJIMi4xdi4yLS43LjNoMS42bC0xLjUtLjggMS43LS45SDIuMnYuMy0uOC4yaDEuNnpNMS40IDMuOEwzLjUgNnYyLjNsLTItMlYzLjh6bTEgMTMuM2MuMi0uMi41LS4zLjgtLjMuMyAwIC42IDAgLjguMy4yLjIuMy40LjMuNyAwIC4zIDAgLjUtLjIuN2ExLjIgMS4yIDAgMDEtLjkuNGMtLjMgMC0uNi0uMS0uOC0uM2ExIDEgMCAwMS0uMy0uOGMwLS4zIDAtLjUuMy0uN20wIDMuOHYuMmgtLjF2LS40bDEtMS4xaC0xdi4zbC0uMS0uOC4xLjJINGwuMi0uMVYxOWguMXYuOC0uMkgzLjJsLjcuNi4yLjJ2LS4yaC4xdi42bC0uMy0uNC0uNi0uNi0uOC45LS4yLjJ6bTEuMiAzLjR2LS4xTDQuNyAyMyAzIDIzbDEuMy0xLjMuMi0uMnYtLjJsLjMuNWgtLjFsLS4yLS4xaC0uMWwtMSAxIDEuOC0uMUw0IDI0bDEuNC0uMmguMlYyMy40bC40LjZoLS41bC0xLjguMnptMiAyLjNhMSAxIDAgMDEtLjctLjMgMSAxIDAgMDEtLjItLjhjMC0uMy4xLS41LjMtLjhsLjgtLjNjLjMgMCAuNi4yLjguNC4yLjIuMy41LjIuOCAwIC4zLS4xLjUtLjQuN2ExLjIgMS4yIDAgMDEtLjguM005IDI3aC0uNGwtMSAxLjUtLjItMi4yLS43IDEtLjEuMy4xLjF2LjFsLS42LS40SDYuNWwuMS0uMS45LTEuMi0uMS0uM3YtLjFsLjMuMi4yIDIgLjctMSAuMS0uMS0uMS0uMi42LjN2LjFIOXptMS4xIDIuNWwtMS0uNFYyOWguNWwuNS0xLjUtLjQtLjF2LS4xaC44TDkuOCAyOXYuMmwuMy4yem0xLjctLjdjMCAuNC0uMi42LS41LjgtLjIuMi0uNS4zLS44LjJoLS4xdi0uMmguN2wuMy0uNC4yLS40di0uMmwtLjMuM0gxMWEuNS41IDAgMDEtLjMtLjN2LS41YzAtLjIuMi0uNC40LS41LjEtLjEuMy0uMi41LS4xLjIgMCAuMy4yLjQuNHYuOW0xIDFjLS40LjMtLjkuMy0uOS4zVjMwYzEtLjIuOS0uNi45LS42IDAtLjItLjEtLjQtLjMtLjUtLjEtLjItLjEtLjItLjMtLjJsLjEtLjloMXYuMmgtLjl2LjVsLjUuMi4yLjZjMCAuMS0uMS40LS4zLjVtMi4xLS40aC0uM3YuNmgtLjN2LS42aC0xVjI5bDEtMS4yaC4zdjEuM2guNHYuMnptMi44LS4zYy0uMS4xLS4zLjMtLjUuM2gtLjZsLS4yLS4xLS4yLS41LS4zLS44LS4xLS4yaC0uMnYtLjFsLjctLjItLjEuMXYuM2wuMy45YzAgLjIuMS40LjMuNWguNWwuMy0uMnYtLjZsLS4zLTEtLjEtLjJIMTdsLjYtLjItLjIuMnYuMmwuMy44di44em0xLjQtMWwuMS4yaC4ybC0uNS40di0uMWwuMS0uMnYtLjJsLS45LTEuMmgtLjNsLjMtLjMgMiAuNi0uNy0xLS4yLS4yLS4yLjEuNS0uNHYuNGwxIDEuNS0yLjEtLjYuNyAxem0yLTFsLjEtLjItLjEtLjItMS0xLS4xLS4xaC0uMmwuNS0uNXYuNGwxIDEgLjIuMWguMmwtLjYuNXptMS43LTEuN2wtMi0uNGgtLjNsLjMtLjZoLjF2LjJsLjIuMSAxLjQuMy0uNy0xLjN2LS4xaC0uM2wuMy0uNHYuMmwuMS4yIDEgMS43aC0uMXptMS0xLjZWMjMuNGwtLjItLjEtMS4zLS41SDIyLjF2LjFIMjJsLjItLjV2LS4zbC4yLS4zLjEtLjQuNS4yaC0uM2wtLjIuMi0uMS41LjEuMi43LjMuMS0uNHYtLjRsLjUuMXYuMUgyMy40bC0uMS4zLS4xLjMuNy4zLjEtLjMuMi0uNC0uMi0uMi40LjEtLjYgMS40em0xLTMuNmwtMS4yLjV2LjNoLjhsLjEtLjFoLjFsLS4xLjhoLS4xdi0uM2gtLjJsLTEuNC0uM2gtLjJ2LjJoLS4ybC4yLS44YzAtLjMgMC0uNS4yLS42aC4zbC40LjEuMS41LjItLjIuMy0uMS4yLS4xYy4yIDAgLjMtLjEuMy0uMmguMXYtLjFoLjF2LjR6bTAtLjZoLS40Yy4zLS4xLjQtLjMuNC0uNnYtLjNsLS4zLS4xYy0uMiAwLS4zIDAtLjQuM2wtLjMuM2MwIC4yLS4yLjMtLjMuNGgtLjNjLS4xIDAtLjMgMC0uNC0uMmExIDEgMCAwMS0uMS0uNnYtLjVoLjZsLS40LjItLjEuNHYuM2wuNC4yYy4xIDAgLjMtLjEuNC0uNGwuMi0uMi4zLS40aC4zbC40LjF2MS4xbS4zLTEzLjVsLTIgMi4xVjZsMi0yLjFWNnoiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjMuMiAyMC4ySDIzbC0uMi41IDEgLjJ2LS4zYzAtLjEgMC0uMi0uMi0uM2wtLjMtLjEiLz48L3N2Zz4=" alt="목원대학교"><img class="lg-d" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzAiIGhlaWdodD0iMzMiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0yMS41IDI3LjRINi42QTIuNiAyLjYgMCAwMTQgMjQuOFY2aDIwdjE4LjdjMCAxLjQtMS4xIDIuNi0yLjUgMi42TTQxLjggMTEuMkgzMnYuOWwyLjIuN2gxOC40di0xLjZoLTcuOFY5LjRoNS40VjcuN2gtLjhzMS00LjUgMS02aC0xNnYuOWwyLjIuN1YxMGgzLjJ2LS44aDJ2MnptLTItMy40VjMuNWg3LjVMNDcgNy44aC03LjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQxLjggMTEuMkgzMnYuOWwyLjIuN2gxOC40di0xLjZoLTcuOFY5LjRoNS40VjcuN2gtLjhzMS00LjUgMS02aC0xNnYuOWwyLjIuN1YxMGgzLjJ2LS44aDJ2MnptLTItMy40VjMuNWg3LjVMNDcgNy44aC03LjJ6TTM1IDE0LjNoMTUuMnY3LjFINDd2LTUuNkgzNi43bC0xLjctLjd6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTM1IDE0LjNoMTUuMnY3LjFINDd2LTUuNkgzNi43bC0xLjctLjd6TTYyLjMgMi41YzAtLjItLjQtLjQtLjQtLjRsLTMuOC0uNnYuNnMuNy4yLjguNGMwIDAgLjQuMiAwIC40LTIuMy41LTQuMSAyLTQuMSAzLjcgMCAyIDIuNSAzLjggNS42IDMuOCAzIDAgNS42LTEuNyA1LjYtMy44IDAtMS43LTEuNy0zLjItNC4xLTMuNiAwIDAgLjQgMCAuNC0uNW0tMiA2LjNhMi4yIDIuMiAwIDExMC00LjQgMi4yIDIuMiAwIDAxMCA0LjQiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNjIuMyAyLjVjMC0uMi0uNC0uNC0uNC0uNGwtMy44LS42di42cy43LjIuOC40YzAgMCAuNC4yIDAgLjQtMi4zLjUtNC4xIDItNC4xIDMuNyAwIDIgMi41IDMuOCA1LjYgMy44IDMgMCA1LjYtMS43IDUuNi0zLjggMC0xLjctMS43LTMuMi00LjEtMy42IDAgMCAuNCAwIC40LS41em0tMiA2LjNhMi4yIDIuMiAwIDExMC00LjQgMi4yIDIuMiAwIDAxMCA0LjR6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2IC45di45bDEuNi43djExSDYydi44bDIuMi43aDMuNHYyLjRoMy4zVjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2IC45di45bDEuNi43djExSDYydi44bDIuMi43aDMuNHYyLjRoMy4zVjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2LjggMTBjLTUuMSAxLjktMTMuNCAxLjMtMTMuNCAxLjN2LjhsMS41LjZoM1YxNmgzLjN2LTMuM2MzLjQtLjQgNS42LTEgNS42LTFWMTB6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTY2LjggMTBjLTUuMSAxLjktMTMuNCAxLjMtMTMuNCAxLjN2LjhsMS41LjZoM1YxNmgzLjN2LTMuM2MzLjQtLjQgNS42LTEgNS42LTFWMTB6TTU2LjMgMTZ2LjZsMS42Ljl2Mi4xczAgMS41IDEuMiAxLjZoMTIuMXYtMS42aC0xMHYtMi45bC00LjktLjh6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTU2LjMgMTZ2LjZsMS42Ljl2Mi4xczAgMS41IDEuMiAxLjZoMTIuMXYtMS42aC0xMHYtMi45bC00LjktLjh6TTcxLjIgMy45djFsMi4yLjZ2OS44cy4yIDIgMS43IDEuOGMwIDAgMS45LjQgNy0xLjVoLjF2NGgzVjkuN2gxLjJ2MTEuOGgzVjEuOUw4NSAxdjEuM2wxLjQuM3Y1LjZoLTEuM1YyLjVsLTQuOS0xdjFsMS45Ljh2MTFzLTUuMSAxLjItNS42LjhWNS40aDVWNEg3MS4yeiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03MS4yIDMuOXYxbDIuMi42djkuOHMuMiAyIDEuNyAxLjhjMCAwIDEuOS40IDctMS41aC4xdjRoM1Y5LjdoMS4ydjExLjhoM1YxLjlMODUgMXYxLjNsMS40LjN2NS42aC0xLjNWMi41bC00LjktMXYxbDEuOS44djExcy01LjEgMS4yLTUuNi44VjUuNGg1VjRINzEuMnpNOTQuNCAyaDd2MS41aC00LjlsLTItLjZ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTk0LjQgMmg3djEuNWgtNC45bC0yLS42ek05Ny44IDZjLTMgMC01LjYgMS43LTUuNiAzLjggMCAyIDIuNSAzLjggNS42IDMuOCAzLjIgMCA1LjctMS43IDUuNy0zLjggMC0yLjEtMi41LTMuOC01LjctMy44bTAgNmEyLjMgMi4zIDAgMTEwLTQuNSAyLjMgMi4zIDAgMDEwIDQuNSIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik05Ny44IDZjLTMgMC01LjYgMS43LTUuNiAzLjggMCAyIDIuNSAzLjggNS42IDMuOCAzLjIgMCA1LjctMS43IDUuNy0zLjggMC0yLjEtMi41LTMuOC01LjctMy44em0wIDZhMi4zIDIuMyAwIDExMC00LjUgMi4zIDIuMyAwIDAxMCA0LjV6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTk5LjMgNS42aDVWNEg5MXYxbDEuOS41aDMuNXMxIC4zLjEuN2gyLjhzMS0uNCAwLS43Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTk5LjMgNS42aDVWNEg5MXYxbDEuOS41aDMuNXMxIC4zLjEuN2gyLjhzMS0uNCAwLS43eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMDMuNSAxdi44bDEuNi43djExLjJoMy4xdi00aDNWOC4yaC0yLjhWMS44eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0xMDMuNSAxdi44bDEuNi43djExLjJoMy4xdi00aDNWOC4yaC0yLjhWMS44ek05Mi42IDE0LjN2MWwxLjkuNUgxMDV2NS42aDMuMXYtNy4xeiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik05Mi42IDE0LjN2MWwxLjkuNUgxMDV2NS42aDMuMXYtNy4xek0xMTEuMiAzLjd2LjlsMS42LjZIMTI1djMuN3MtLjMgNS0xLjMgNy40aDIuM3MxLjctMy43IDIuMi05LjFWMy43aC0xN3oiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTExLjIgMy43di45bDEuNi42SDEyNXYzLjdzLS4zIDUtMS4zIDcuNGgyLjNzMS43LTMuNyAyLjItOS4xVjMuN2gtMTd6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTExMy45IDguNHYxLjJsMS40LjV2Ny44aC01Ljh2LjlsMi40LjdoMThWMThIMTIzVjguOGwtNC42LTEuMXYxLjFsMS40LjdWMThoLTEuNlY5LjJ6Ii8+PHBhdGggZmlsbD0iI0ZGRiIgZD0iTTExMy45IDguNHYxLjJsMS40LjV2Ny44aC01Ljh2LjlsMi40LjdoMThWMThIMTIzVjguOGwtNC42LTEuMXYxLjFsMS40LjdWMThoLTEuNlY5LjJ6TTMyLjYgMjQuMnMtLjUuMiAwIC40YzAgMCAuOC4xLjggMS4ydjMuN3MwIDEuMi0uOCAxLjJjMCAwLS4zLjIuMS4ySDM1cy4zLS4xIDAtLjJjMCAwLTEuMi4xLTEuMi0xLjN2LTRsLjItLjIgMi43IDUuOSAyLjctNS43cy4yLS40LjIuMXY0czAgMS4yLTEuMiAxLjJjMCAwLS41LjEgMCAuMmgyLjZzLjItLjEtLjItLjJjMCAwLS43LS4xLS43LTEuM3YtNC4yczAtLjguOC0uOGMwIDAgLjMtLjIgMC0uMmgtMS42cy0uOCAyLjYtMi41IDUuNmMwIDAtMS0xLjktMi42LTUuNmgtMS41eiIvPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik00MC44IDI2LjVzLjctMi42IDMuOC0yLjNjMCAwIDMgMCAzLjIgMy4yIDAgMCAuMyAzLjUtMy41IDMuOSAwIDAtMy4yLjMtMy42LTMuMXYtMS43bS44IDFjLS4xIDEuNy44IDIuNC44IDIuNC43IDEgMiAuOCAyIC44IDEuMS4yIDItLjYgMi0uNiAxLTEuNC41LTMuNC41LTMuNC0uNC0xLjUtMS44LTItMS44LTItMS42LS4zLTIuNi40LTIuNi40LTEgLjgtMSAyLjQtMSAyLjRNNjIuOCAyNi4zcy43LTIuNSAzLjgtMi4yYzAgMCAzIDAgMy4xIDMuMiAwIDAgLjQgMy41LTMuNCAzLjkgMCAwLTMuMi4zLTMuNi0zLjF2LTEuOG0uOCAxYy0uMSAxLjguNyAyLjQuNyAyLjQuOCAxIDIuMi45IDIuMi45IDEgLjIgMS44LS43IDEuOC0uNyAxLTEuNC42LTMuMy42LTMuMy0uNC0xLjYtMS44LTItMS44LTItMS42LS40LTIuNi40LTIuNi40LTEgLjgtMSAyLjQtMSAyLjQiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNNDcuNiAyNC4ycy0uNC4xIDAgLjNjMCAwIC43IDAgLjcuN3Y0LjVzMCAuOC0uOCAxYzAgMC0uMy4yLjIuMmgyLjRzLjMtLjEgMC0uMmMwIDAtMS4yIDAtMS4yLTEuMnYtMi4xcy42LS4yIDEuOSAxLjdsMS4yIDEuNy4yLjFoMXMuMy0uMi0uMy0uM2wtLjUtLjUtMS42LTJzLS43LS44LTEuMi0xbDItMnMuMy0uNS45LS42YzAgMCAuMy0uMSAwLS4zaC0xLjhzLS4yLjIgMCAuM2MwIDAgLjcuMi4zLjdMNDkuMyAyN2gtLjR2LTEuN3MwLS43LjktLjdjMCAwIC4zLS4yIDAtLjJoLTIuMnpNNjAuMSAzMWwtMS42LTUuMmMwLS40LS4yIDAtLjIgMHMtMS42IDQuMS0xLjcgNC45di4ySDU2bC0xLTMuMmMtLjgtMy0xLjUtMy4yLTEuNS0zLjItLjUtLjIgMC0uMiAwLS4yaDIuOGMuMiAwIDAgLjIgMCAuMmwtMSAuMWMtLjMuMS0uNC40LS4zLjZsLjYgMi4yLjggMi41IDEuOC01LjVjMC0uMi40LS4yLjQtLjJzLjIgMCAuNSAxLjFjMCAwIC43IDIuOCAxLjMgNC4zbC4yLjMgMS4yLTMuOWMuMi0xLS4xLTEuMi0uMS0xLjItLjMtLjMtMS0uMy0xLS4zLS40LS4xLS4xLS4zLS4xLS4zaDJjLjQgMCAuMi40LjIuNHMtMS41IDMuOC0xLjkgNS43YzAgMCAwIC42LS4zLjZoLS41ek03NSAyOS41di0zLjhjLS4xLS44LS41LTEtLjUtMWwtMS0uMmMtLjMgMCAwLS4zIDAtLjNINzZjLjUuMiAwIC40IDAgLjQtLjMgMC0uNC4yLS40LjItLjIgMC0uMy41LS4zLjV2NS40YzAgLjMtLjIuMi0uMi4yLS40IDAtLjYtLjUtLjYtLjUtMi0yLjktMy42LTQuOC0zLjYtNC44djQuMWwuMS40Yy4yLjYgMS4yLjUgMS4yLjUuMy4xIDAgLjMgMCAuM2gtMi42Yy0uMi0uMiAwLS4zIDAtLjMuOCAwIC44LTEgLjgtMXYtNGMwLS41LS4yLS43LS4yLS43LS4zLS40LS42LS4zLS42LS4zLS4zLS4zIDAtLjQgMC0uNGgxLjFsLjUuNWEzOS42IDM5LjYgMCAwMDMuNyA0LjhNNzguMSAyNC4zcy0uMyAwIDAgLjJjMCAwIC42IDAgLjYuNXYzLjhzLS4xIDIuNCAyLjQgMi40YzAgMCAyLjIgMCAyLjItMi40di0zLjZzMC0uNy42LS43YzAgMCAuMy0uMiAwLS4yaC0xLjhzLS40IDAgMCAuMWMwIDAgLjggMCAuOC43djQuMnMtLjIgMS41LTIgMS41YzAgMC0xLjUgMC0xLjUtMS42di00czAtLjYuNS0uNmguN3MuNC0uMyAwLS4zSDc4ek05MS40IDI0LjNzLS4zLjEgMCAuMmMwIDAgLjUgMCAuNS42djQuOHMwIC44LS43LjhjMCAwLS40LjIgMCAuMmgyLjJzLjMgMC0uMS0uMmMwIDAtLjcgMC0uNy0uOHYtNC42czAtLjguNy0uOGMwIDAgLjQtLjIgMC0uMmgtMS45ek05Ny42IDMwLjdjLS4yLjYtMSAuNC0xIC40bC0xLjItMy43LTEtMi40Yy0uMi0uNC0uNi0uNC0uNi0uNC0uMi0uMiAwLS4zIDAtLjNoMi42Yy40IDAgMCAuMyAwIC4zSDk2Yy0uOC4xLS4zIDEuMy0uMyAxLjNsMS42IDQuNiAxLjgtNC45Yy4yLS41LS4xLS44LS4xLS44LS4zLS4zLTEtLjItMS0uMi0uMi0uMiAwLS4zIDAtLjNoMnMuMyAwIDAgLjNjMCAwLTEuMiAyLjgtMi4zIDYuMU0xMDAuNSAyNC41cy42LjIuNi45VjMwczAgLjctLjcuN2MwIDAtLjQgMCAwIC4yaDQuNnYtMS43cy0uMi0uMy0uMyAwYzAgMCAuMSAxLjQtLjggMS40aC0ydi0zaC45czEgMCAxIC44YzAgMCAuMS41LjIgMHYtMS44cy0uMS0uNC0uMiAwYzAgMCAwIC43LS44LjdoLTEuMnYtMnMwLS43LjYtLjdoMS41cy43IDAgLjcgMWMwIDAgLjEuMi4zIDB2LTEuNGgtNC40cy0uMy4yIDAgLjNNMTA4LjMgMjcuNWMuOC4xIDEuMyAxLjQgMS4zIDEuNGwuNiAxLjNjLjIuMy42LjUuNi41LjMgMCAwIC4yIDAgLjJoLTFjLS4yIDAtMS4yLTIuMy0xLjItMi4zLS4zLS44LS44LTEtLjgtMS0uMi0uMi0uOC0uMS0uOC0uMXYyLjNjMCAuOS45LjkuOS45LjUgMCAuMi4zLjIuM2gtMi42Yy0uMy0uMiAwLS4zIDAtLjMgMSAwIC44LTEgLjgtMVYyNWMwLS40LS43LS40LS43LS40LS40LS4yIDAtLjQgMC0uNGgyLjhjMS42IDAgMS42IDEuNyAxLjYgMS43IDAgMS41LTEuNyAxLjYtMS43IDEuNm0xLTEuNnMuMS0xLjMtMS40LTEuM2MwIDAtLjkgMC0uOS41djJoMS4yczEuMS0uMiAxLjEtMS4yTTExMy40IDI0LjJzLTIuMiAwLTIuMiAxLjdjMCAwIDAgMSAxIDEuNGwxLjkgMXMuNi4yLjYgMWMwIDAgLjEgMS40LTEuNCAxLjQgMCAwLTEuNyAwLTEuNy0uOXYtLjZzLS4yLS40LS4zIDB2MS42bC4zLjFoMi4yczEuNiAwIDEuNy0xLjVjMCAwIDAtMS0xLjEtMS43bC0yLTFzLS40LS4yLS40LS45YzAgMC0uMi0xLjIgMS40LTEuMiAwIDAgMS40LS4xIDEuNSAxLjIgMCAwIC4xLjQuMiAwdi0xLjRzMC0uMi0uMi0uMmgtMS41ek0xMTguNiAyNC4yaDUuNGwuMS4ydjEuNHMtLjEuMi0uMyAwYzAgMC0uMi0xLjMtMS4yLTEuM2gtLjl2NS4xczAgMSAxIDFjMCAwIC40LjMuMS4zaC0yLjlzLS4zLS4xIDAtLjJjMCAwIDEuMSAwIDEuMS0xLjJ2LTVoLTFzLTEuMSAwLTEuMSAxLjFjMCAwLS4yLjQtLjMgMHYtMS40ek0xMjQuOCAyNC4ycy0uNCAwIDAgLjRjMCAwIC4zLS4yIDIuMSAzdjIuMnMuMS44LS44LjhjMCAwLS40LjIgMCAuM2gyLjZzLjItLjEgMC0uM2MwIDAtMSAwLTEtMXYtMi4xbDIuMS0zLjNzLjItLjEgMC0uMWgtLjdsLTEuNiAzLjItMS40LTJzLS40LS45LjUtLjhoLjVzLjQtLjIgMC0uM2gtMi4zek04OS42IDI5LjV2LTMuOGMwLS44LS40LTEtLjQtMWwtMS0uMmMtLjMgMCAwLS4yIDAtLjJoMi41Yy41IDAgMCAuMyAwIC4zLS4zIDAtLjQuMi0uNC4yLS4yIDAtLjMuNS0uMy41djUuNWMwIC4yLS4yLjEtLjIuMS0uNC0uMi0uNi0uNi0uNi0uNmE0NyA0NyAwIDAwLTMuNy00Ljh2NC4yYzAgLjMuMi41LjIuNS4yLjUgMS4yLjQgMS4yLjQuMy4yIDAgLjMgMCAuM2gtMi42Yy0uMi0uMiAwLS4zIDAtLjMuOC4xLjgtMSAuOC0xdi00YzAtLjUtLjItLjctLjItLjctLjMtLjQtLjYtLjMtLjYtLjMtLjMtLjIgMC0uMyAwLS4zaDEuMXMuMyAwIC41LjRhMzkgMzkgMCAwMDMuNyA0LjhNMTE2LjIgMjQuM3MtLjMgMCAwIC4yYzAgMCAuNSAwIC41LjZ2NC43czAgLjgtLjcuOGMwIDAtLjQuMyAwIC4zaDIuMXMuMy0uMSAwLS4zYzAgMC0uNyAwLS43LS44di00LjVzMC0uOC43LS44YzAgMCAuNC0uMi0uMS0uMmgtMS44eiIvPjxwYXRoIGZpbGw9IiNBNjJCNDMiIGQ9Ik0xNC40IDI5LjN2LTFsLS42IDF6TTYuNSAyNC45YS42LjYgMCAwMC0uNS0uMmMtLjMgMC0uNS4xLS43LjMtLjIuMi0uNC40LS40LjdsLjEuNWMuMS4yLjMuMy42LjIuMiAwIC40IDAgLjYtLjMuMy0uMi40LS40LjUtLjYgMC0uMyAwLS40LS4yLS42TTExLjQgMjcuNmwtLjMuMS0uMi40di41czAgLjIuMi4yaC4zbC4yLS41VjI4YzAtLjIgMC0uMi0uMi0uM00xMy41IDMyaC0uMS0uMi4zek0zLjIgMTguNmMuMyAwIC41IDAgLjctLjIuMi0uMS4zLS4zLjMtLjVzMC0uNC0uMy0uNWMtLjItLjItLjQtLjItLjctLjItLjMgMC0uNSAwLS43LjJhLjYuNiAwIDAwMCAxbC43LjIiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjYuOCAxLjhoLTEuNmwtMiAyLjFWLjdoLTJsLTIuNCAyLjdWMGgtMy4ybC0yLjIgMi44TDExIDBIOC4xdjMuNkw1LjQuOEgzLjVWNEwxLjQgMS44SDB2MTYuOEMwIDI2LjIgNiAzMiAxMy40IDMyYzcuNiAwIDEzLjQtNS45IDEzLjQtMTMuM1YxLjh6bS00IDEyLjVsLjIuMWguMmwuNi0uNS0uNy0uMy0uMS0uMS0uMS4xaC0uMXYtLjVsLjEuMi4zLjIuNy40aC44bC4xLS4zVjE0LjJIMjMuOGwtLjcuNC0uMy40aC0uMXYtLjd6bTIgMy42SDIzLjIgMjN2LjJoLS4xdi0uOGwuMS4ySDI0Ljh2LS4yaC4xdi44LS4yem0uMS0xLjNsLS4xLS4zSDIzVjE2LjlsLjMuMXYuMWgtLjVWMTZ2LS44aC41bC0uMy4yVjE2aDEuOHYtLjNoLjF2MXpNMTkgNmwyLjQtMi42djIuNWwtMi41IDIuOFY2em0tMi41LTMuNXYzLjNsLTEuMiAxLjUtMS40LTEuNyAyLjYtM3ptLTYuMiAwTDEzIDUuNmwtMS40IDEuNy0xLjMtMS42VjIuNXptLTQuNiAxTDggNi4xdjIuNkw1LjYgNi4yVjMuNXptMCAxNVY4LjJMOCAxMC44djYuNnMwIDMuMi44IDMuN2wuMS01LjN2LTMuMmguNHYzLjFjMCAzLjQuMyA1LjguNCA2LjZsLjQuNS4yLTcuNnYtMy45aC40djMuOGMwIDMgLjMgNy41LjUgOC40bC40LjFzLjItMS44LjEtOC42di01aC40djVjLjIgNS40LjQgOC41LjUgOC44aC40bC4xLThWOWguNHY1LjhjMCA0IC4zIDggLjUgOS4xaC40bC4xLTcuOVYxMGguNXY1YzAgNC4xLjIgNyAuNCA4LjdsLjUtLjNzLjItMy42LjEtOHYtNC4xaC40djRjMCAzLjEuNCA2LjMuNSA3LjZsLjMtLjUuMi02LjF2LTMuN2guNHYzYzAgMi44LjIgNS42LjMgNS43IDAgMCAuNi0uNy42LTMuMnYtNy4yTDIxLjMgOFYxOWMtLjEgNC42LTQuNCA3LjYtNy42IDcuNmgtLjJjLTQuNSAwLTgtNC04LTcuOHYtLjJ6bS0xLjctNC4zSDRWMTRoLjF2LjVsLTEuNS43IDEuNS44di42bC0uMS0uM0gyLjN2LjJIMlYxNmguMXYuMkg0bC0xLjYtLjggMS43LS44SDIuM3YuMkgyVjE0aC4xdi4zSDR6TTEuNSAzLjlsMiAyLjF2Mi4zbC0yLTJWNHptMSAxMy4yYy4xLS4yLjQtLjMuNy0uM3MuNi4xLjguM2MuMi4yLjMuNS4zLjhhMSAxIDAgMDEtLjYgMWgtLjVjLS4zIDAtLjYgMC0uOC0uM2ExIDEgMCAwMS0uMy0uN2MwLS4zLjEtLjYuMy0uOG0wIDMuOXYuMWgtLjF2LS40bDEtMUgyLjR2LjJoLS4ydi0uOGwuMS4yaDEuOFYxOWguMnYuN2wtLjEtLjJIMy4zbC43LjcuMi4xdi0uMWguMXYuNWwtLjMtLjQtLjYtLjUtLjguOC0uMi4zem0xLjIgMy4zTDQuOCAyM2wtMS44LjEgMS40LTEuMy4xLS4ydi0uMWwuMy40aC0uNGwtMSAxIDEuOC0uMkw0IDI0bDEuMy0uMmguMlYyMy41bC40LjZoLS41bC0xLjguMnptMiAyLjRhMSAxIDAgMDEtLjctLjQgMSAxIDAgMDEtLjItLjhjMC0uMy4xLS41LjQtLjcuMi0uMi41LS4zLjgtLjMuMiAwIC41LjEuNy4zLjIuMy4zLjUuMy44IDAgLjMtLjIuNS0uNC44YTEuMiAxLjIgMCAwMS0xIC4zTTkgMjdoLS4ybC0uMS4xLTEgMS41LS4zLTIuMi0uNyAxdi40bC0uNi0uNEg2LjRsLjItLjEuOC0xLjItLjEtLjMuNC4yLjIgMiAuNi0xIC4xLS4yLS4xLS4xdi0uMWwuNi40em0xLjEgMi41bC0xLS40aC4zbC4yLS4xLjUtMS41aC0uNHYtLjJoLjhsLS43IDEuOHYuMmwuNC4xdi4xem0xLjgtLjdjLS4xLjQtLjMuNy0uNi45LS4yLjItLjUuMi0uNy4xaC0uMnYtLjFoLjdsLjMtLjQuMi0uNXYtLjJjMCAuMi0uMi4zLS4zLjNIMTFhLjUuNSAwIDAxLS40LS4yVjI4YzAtLjIuMi0uNC40LS41aC41Yy4yIDAgLjMuMS40LjR2LjhtMSAxYy0uNC40LS45LjMtLjkuMyAxLS4zLjktLjcuOS0uNyAwLS4yIDAtLjQtLjMtLjVsLS4yLS4xdi0xaDF2LjNoLS44bC0uMS40LjUuM2MuMi4xLjIuMy4yLjVzMCAuNC0uMy42bTIuMi0uNGgtLjR2LjVoLS4zdi0uNmgtMXYtLjJsMS0xLjNoLjN2MS4zaC40di4zem0yLjctLjRjMCAuMi0uMy4zLS41LjRhMSAxIDAgMDEtLjYgMGwtLjItLjItLjItLjQtLjMtMXYtLjFoLS4zbC43LS4zLS4xLjJ2LjJsLjMuOWMwIC4zLjIuNC4zLjVoLjVjLjEgMCAuMiAwIC4zLS4ydi0uNmwtLjMtMS0uMS0uMUgxN2wuNi0uM3YuMWwtLjIuMXYuMmwuMy45LjEuNHYuM3ptMS40LTFsLjEuMmguMmwtLjUuNC4xLS4ydi0uMmwtLjktMS4yaC0uM1YyN2wuMy0uMiAyIC41LS43LTEtLjItLjFoLS4ybC41LS40aC4xdi4xbC0uMi4xLjEuMyAxIDEuNC0yLjEtLjYuNyAxem0yLTFsLjEtLjItLjEtLjItMS0xSDIwbC41LS42di41bDEgMWguNGwtLjYuNnptMS43LTEuN2wtMi0uNGgtLjNsLjMtLjVoLjF2LjFsLjIuMSAxLjQuNC0uNy0xLjN2LS4yaC0uM3YuMWwuMy0uNXYuMmwuMS4zIDEgMS43aC0uMXptMS0xLjZ2LS4zaC0uMmwtMS4zLS42aC0uMmwtLjEuMUgyMmwuMi0uNXYtLjJsLjItLjMuMS0uNC41LjF2LjFIMjIuNmwtLjIuMi0uMS40LjEuMi43LjMuMS0uM1YyMmwuNS4ySDIzLjRsLS4xLjMtLjIuMy44LjMuMS0uMi4yLS40LS4yLS4ydi0uMWwuNC4xLS42IDEuNHptMS0zLjVsLTEuMi40di4zbC42LjFoLjJsLjEtLjJoLjFsLS4xLjhoLS4xdi0uMmwtLjItLjEtMS40LS4yaC0uMnYuMmgtLjF2LS45bC4zLS41LjMtLjFjLjIgMCAuMyAwIC40LjJsLjEuNC4yLS4xLjMtLjJoLjJsLjMtLjIuMS0uMWguMXYuNHptMC0uNmgtLjR2LS4xYy4zIDAgLjQtLjMuNC0uNXYtLjNsLS4zLS4yYy0uMiAwLS4zLjEtLjQuM2wtLjMuMy0uMy40aC0uM2wtLjQtLjFhMSAxIDAgMDEtLjEtLjZ2LS42aC42di4xbC0uNC4yLS4xLjN2LjRsLjQuMS40LS4zLjItLjIuMy0uNC4zLS4xYy4xIDAgLjMgMCAuNC4ydjEuMW0uMy0xMy41bC0yIDIuMVY2bDItMi4ydjIuNHoiLz48cGF0aCBmaWxsPSIjQTYyQjQzIiBkPSJNMjMuMiAyMC4ySDIzbC0uMi41di4xbDEgLjJ2LS4zYS41LjUgMCAwMC0uNS0uNSIvPjwvc3ZnPg==" alt="목원대학교"><div class="bt"><b>전기전자공학과</b><span>인공지능로봇 수업 자료 · 문상국</span></div><a class="home" href="https://sangookmoon.github.io/teaching/"><span class="hl">← 수업 · 시뮬레이터</span><span class="hs">← 목록</span></a><span class="copy">버전 1.0 (2026-11-23)</span></div></div>
+<div class="headwrap"><header>
+  <h1 id="h1">역전파 시뮬레이터 : 손실에서 필터까지 거꾸로</h1>
+  <p id="headSub">인공지능로봇 12주차 · 세로줄 · 가로줄 그림 40장 · 3×3 필터 하나짜리 작은 CNN 으로 역전파를 한 칸씩 따라간다</p>
+  <p class="en" lang="en">Backpropagation Simulator — send the gradient from the loss back to a 3×3 filter, one layer at a time (Korean · 한국어)</p>
+</header>
+<div class="wrap">
+  <div class="cols">
+  <div class="col">
+    <div class="story o0" id="story">
+      <div class="nav"><span class="chap" id="chap">1 / 9</span><span class="dots" id="dots"></span><span style="margin-left:auto"></span><button id="prev">◀ 앞</button><button id="next">다음 ▶</button></div>
+      <h2 id="sTitle"></h2>
+      <div id="sBody"></div>
+      <div class="nav navb"><button id="prev2">◀ 앞</button><span style="margin-left:auto"></span><button id="next2">다음 ▶</button></div>
+    </div>
+    <div class="panel ctl o3" id="ctl">
+      <div class="row" id="rowImg"><span class="lab">그림 고르기</span><button id="imP" aria-label="앞 그림">◀</button><span class="imgsel" id="imLab"></span><button id="imN" aria-label="다음 그림">▶</button></div>
+      <div class="row" id="rowF"><button id="bF" class="main">앞으로 한 칸</button><button id="bF0">처음부터</button></div>
+      <div class="row" id="rowS"><button id="bS" class="main">점수 +0.01</button></div>
+      <div class="row" id="rowB"><button id="bB" class="main">거꾸로 한 칸</button><button id="bO">다른 칸 +0.01</button><button id="bM">가장 큰 칸 +0.01</button></div>
+      <div class="row" id="rowC"><button id="bChk" class="main">9칸 모두 +0.01</button></div>
+      <div class="row" id="rowT"><button id="bStep" class="main">한 스텝</button><span class="seg" id="mile"><button id="bM1">처음</button><button id="bM5">5번째</button><button id="bM20">20번째</button><button id="bM200">200번째</button></span></div>
+      <div class="row" id="rowSeed"><span class="lab">시작 숫자 seed</span><span class="seg"><button id="sd0">0</button><button id="sd5">5</button><button id="sd4">4</button><button id="sd8">8</button></span></div>
+      <div id="stTab"></div>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </div>
+    <div class="panel o7 hide" id="pyHelpPanel"><details class="oct" id="pyHelp" style="margin-top:0"><summary>파이썬 · Octave 실행하는 법</summary><div class="ohb">
+      <p>상자 위의 「파이썬 · Octave」 단추로 언어를 고른다. 한 번 고르면 모든 상자가 같은 언어로 바뀐다.</p>
+      <p><b>파이썬</b>은 무료 프로그래밍 언어이고, <b>numpy</b> 는 숫자 배열 계산을 빠르게 해 주는 파이썬 도구다. 이 페이지의 파이썬 코드는 파이썬 3 과 numpy 만 있으면 돌아간다.</p>
+      <p><b>설치 없이 해 보기</b> : 웹 브라우저로 <a href="https://colab.research.google.com/" target="_blank" rel="noopener">Google Colab</a> 에 들어가 「새 노트」를 만든다. 코드 셀에 붙여 넣고 ▶ 단추를 누른다. numpy 는 이미 들어 있다. 구글 계정이 필요하다.</p>
+      <p><b>내 컴퓨터에 설치</b> : <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> 에서 파이썬 3 을 내려받아 설치한다. 터미널에서 <code>pip install numpy</code> 를 한 번 실행한다. 코드를 <code>bp.py</code> 같은 파일로 저장하고 <code>python bp.py</code> 로 실행한다. 윈도우에서 <code>python</code> 이 안 되면 <code>py bp.py</code> 를 쓴다.</p>
+      <p><b>노트북으로</b> : <code>pip install jupyterlab</code> 뒤 <code>jupyter lab</code> 을 실행하면 브라우저에 노트북이 열린다. 셀 하나에 한 상자씩 붙여 넣는다.</p>
+      <p><b>GNU Octave</b> 는 무료 공개 소프트웨어로, 숫자 · 행렬 계산을 짧은 코드로 할 수 있다. 문법이 MATLAB 과 거의 같아서 이 페이지의 Octave 코드는 MATLAB 에서도 돌아간다.</p>
+      <p><b>Octave 를 설치 없이</b> : 웹 브라우저로 무료 웹 서비스 <a href="https://octave-online.net" target="_blank" rel="noopener">Octave Online</a> 에 들어가 코드를 붙여 넣고 Enter.</p>
+      <p><b>Octave 설치</b> : 공식 다운로드는 <a href="https://octave.org/download" target="_blank" rel="noopener">octave.org/download</a>. 윈도우는 「Windows-64 (recommended)」의 installer.exe 를 받아 실행한다. 맥은 Homebrew 가 있으면 터미널에서 <code>brew install octave</code>, 우분투는 <code>sudo apt install octave</code>.</p>
+      <p><b>Octave 로 실행</b> : Octave 를 열고 상자의 「코드 복사」를 누른 뒤 명령 창에 붙여 넣고 Enter. 저장해 두려면 편집기에 붙여 넣어 <code>.m</code> 파일로 저장하고 실행한다.</p>
+      <p><b>이어서 실행</b> : 「1쪽 코드에 이어서」라고 적힌 상자는 같은 노트북에서 1쪽 상자를 먼저 실행한 뒤 실행한다. 파일로 할 때는 앞 상자 코드 아래에 붙여 쓴다.</p>
+      <p><b>결과 읽는 법</b> : 상자 아래 회색 줄의 값이 같게 나오면 이 페이지의 계산과 같은 것이다.</p>
+    </div></details></div>
+  </div>
+  <div class="col gcol" id="gcol">
+    <div class="panel o1" id="mainPanel">
+      <h3><span id="mHead">그림 · 필터 · 결과</span> <span id="mSub"></span></h3>
+      <svg id="mainSvg" viewBox="0 0 560 330" role="img" aria-label="그림, 필터, 필터를 민 결과"></svg>
+      <div class="gcap" id="mCap"></div>
+    </div>
+    <div class="panel o2" id="flowPanel">
+      <h3>앞으로 · 거꾸로 <span>그림 한 장</span></h3>
+      <div class="flow" id="flow">
+        <div class="fb" id="fb1"><b>조각 · 필터</b><span id="fv1">6×6</span><small>밀며 곱해 더하기</small></div>
+        <div class="fb" id="fb2"><b>가장 큰 값 m</b><span id="fv2"></span><small id="fs2"></small></div>
+        <div class="fb" id="fb3"><b>점수</b><span id="fv3"></span><small id="fs3">a × m + c</small></div>
+        <div class="fb" id="fb4"><b>확률 p</b><span id="fv4"></span><small>세로줄일 확률</small></div>
+        <div class="fb" id="fb5"><b>손실</b><span id="fv5"></span><small id="fs5"></small></div>
+      </div>
+      <div class="flow bkrow">
+        <div class="bk" id="bk1">× 조각<span id="bv1"></span></div>
+        <div class="bk" id="bk2">× a<span id="bv2"></span></div>
+        <div class="bk" id="bk3">g = p − 정답<span id="bv3"></span></div>
+        <div class="bk" id="bk4"></div>
+        <div class="bk" id="bk5"></div>
+      </div>
+      <div class="bklist" id="bklist"></div>
+    </div>
+    <div class="panel o2" id="learnPanel">
+      <h3><span id="lHead">필터 학습</span> <span id="lSub"></span></h3>
+      <svg id="learnSvg" viewBox="0 0 560 330" role="img" aria-label="필터, 손실과 정답률 곡선, 40장 맞힘"></svg>
+      <div class="gcap" id="lCap"></div>
+    </div>
+  </div>
+  </div>
+</div>
+<div class="brandwrap"><footer class="foot">© 2026 문상국 (목원대학교 전기전자공학과) · <span class="nw">버전 1.0 (2026-11-23)</span> · <a href="https://sangookmoon.github.io/teaching/">수업 · 시뮬레이터 목록</a>. 인공지능로봇 수업 자료입니다. 수업과 개인 공부에는 자유롭게 쓸 수 있고, 고치거나 다른 곳에 다시 올리려면 먼저 허락을 받으세요.</footer></div>
+<script>
+(function(){
+  var $=function(id){ return document.getElementById(id); };
+  var NS='http://www.w3.org/2000/svg';
+  var SEEDS={"0": {"K": [5, 6, 1, 4, 4, 4, 2, 4, 6, 3, 5, 1, 1, 5, 3, 2, 1, 2, 6, 2, 6, 1, 2, 5, 4, 1, 4, 6, 1, 3, 4, 1, 2, 4, 6, 4, 4, 1, 2, 2], "w0": [0.47836816049743547, 0.06913025100558962, -0.019473102826023186, -0.29069407537024555, 0.17737284188527785, -0.23483265128004358, -0.133269848085862, -0.10355584750070986, -0.26454016480001064]}, "5": {"K": [4, 6, 1, 2, 1, 5, 4, 1, 1, 5, 2, 6, 1, 4, 5, 6, 4, 2, 5, 6, 3, 2, 2, 3, 2, 2, 2, 3, 1, 6, 3, 1, 1, 5, 5, 2, 4, 4, 3, 5], "w0": [-0.0022877059159107285, 0.05021075815098128, 0.26331982430017403, 0.1418038815483004, 0.330758412996856, 0.6078616955047873, 0.4326181699622652, -0.29872242898966356, -0.32114307289106175]}, "4": {"K": [3, 6, 2, 1, 1, 3, 2, 3, 5, 6, 2, 1, 5, 3, 5, 3, 5, 4, 1, 6, 6, 2, 6, 1, 3, 6, 1, 2, 3, 3, 1, 1, 4, 3, 6, 2, 1, 6, 5, 4], "w0": [-0.1820661849292206, 0.4640937987047181, 0.21700248262435737, 0.013840670169049442, -0.29489749602555965, 0.016329821659547303, 0.04796788052178841, -0.3626844477386762, 0.6670080650733505]}, "8": {"K": [4, 5, 2, 2, 6, 3, 1, 4, 1, 1, 6, 6, 5, 2, 4, 3, 4, 5, 6, 2, 6, 6, 3, 4, 3, 6, 1, 2, 4, 5, 6, 6, 4, 3, 2, 3, 3, 2, 6, 6], "w0": [-0.15049203585961943, -0.062387723220357835, -0.1570721742704032, -0.406439613976181, -0.08776650157133585, 0.22498138904395226, -0.3692471859417938, -0.46005109829877133, -0.20555862407268063]}};
+  var CODE={};
+  // ---------- 데이터 · 계산 (파이썬 numpy 와 같은 순서로 더한다)
+  var X=[], Y=[], H=[], seed=0;
+  function makeData(sd){ var S=SEEDS[sd]; X=[]; Y=[];
+    for(var n=0;n<40;n++){ var im=[], k=S.K[n]; for(var t=0;t<64;t++) im.push(0);
+      if(n%2===0){ for(var r=0;r<8;r++) im[r*8+k]=1; Y.push(1); } else { for(var q=0;q<8;q++) im[k*8+q]=1; Y.push(0); }
+      X.push(im); }
+    return S.w0.slice(); }
+  function fwd(im,w,a,c){ var o=[], best=-Infinity, bi=0;
+    for(var r=0;r<6;r++) for(var q=0;q<6;q++){ var s=0; for(var i=0;i<3;i++) for(var j=0;j<3;j++) s+=w[i*3+j]*im[(r+i)*8+q+j]; o.push(s); if(s>best){ best=s; bi=r*6+q; } }
+    var sc=a*best+c, p=1/(1+Math.exp(-sc)); return {o:o, bi:bi, i:Math.floor(bi/6), j:bi%6, m:best, sc:sc, p:p}; }
+  function patch(im,i,j){ var P=[]; for(var u=0;u<3;u++) for(var v=0;v<3;v++) P.push(im[(i+u)*8+j+v]); return P; }
+  function lossOf(p,y){ return -Math.log(y===1?p:1-p); }
+  function train(sd){ var w=makeData(sd), a=1, c=0, lr=0.5; H=[];
+    for(var s=1;s<=201;s++){ var gw=[0,0,0,0,0,0,0,0,0], ga=0, gc=0, L=0, acc=0, ok=[];
+      for(var n=0;n<40;n++){ var f=fwd(X[n],w,a,c), g=f.p-Y[n], P=patch(X[n],f.i,f.j);
+        for(var t=0;t<9;t++) gw[t]+=g*a*P[t]; ga+=g*f.m; gc+=g;
+        L+=lossOf(f.p,Y[n]); var hit=((f.p>0.5)?1:0)===Y[n]; acc+=hit?1:0; ok.push(hit); }
+      H.push({w:w.slice(), a:a, c:c, L:L/40, acc:Math.floor(acc/40*100), ok:ok, gw:gw.map(function(v){ return v/40; }), ga:ga/40, gc:gc/40});
+      w=w.map(function(v,t){ return v-lr*gw[t]/40; }); a-=lr*ga/40; c-=lr*gc/40; } }
+  // ---------- 화면 상태
+  var C=1, img=0, fs=0, bs=0, nudge='', chk=false, st=1, prevC=1;
+  var CH=[{"t": "문제와 데이터 : 세로줄일까 가로줄일까", "b": "<p>8×8 칸짜리 흑백 그림이 40장 있다. 반은 세로줄, 반은 가로줄이다. 컴퓨터에게 그림은 0 과 1 로 된 숫자 64개다. 할 일은 그림을 보고 세로줄이면 1, 가로줄이면 0 을 맞히는 것이다. 이 1 과 0 을 정답 이름표라고 한다.</p><p>「◀」 「▶」로 그림을 넘겨 보자. 줄의 자리는 그림마다 다르다.</p><p>쓰는 것은 아주 작은 CNN 이다. 3×3 필터 하나를 그림 위로 한 칸씩 밀며 곱해 더하고, 그 결과에서 가장 큰 값 하나로 점수와 확률을 만든다. 필터의 숫자 9개는 처음에 무작위로 정한다. 오른쪽 필터에서 빨강은 +, 파랑은 − 다.</p><p>이 시뮬레이터에서 볼 것은 하나다. 정답 이름표만 주었을 때, 손실을 줄이려면 필터 숫자 9개를 각각 어느 쪽으로 얼마나 바꿔야 하는지를 어떻게 알아낼까. 그 방법이 <b>역전파</b>다.</p><p>쪽마다 접힌 상자에 같은 계산을 하는 코드가 있다. 경사 하강법 시뮬레이터는 Octave, 이 단원 실습은 젯봇의 파이썬이라 두 가지를 함께 둔다. 계산은 같다.</p><details class=\"oct\"><summary>코드로 데이터 만들기</summary><p>아래 코드를 파이썬이나 Octave 에 붙여 넣고 실행한다. 처음이면 <button type=\"button\" class=\"ohl\">실행 안내</button>. 그림 40장과 처음 필터를 만들고, 그림 1 과 필터를 찍는다. 파이썬은 시작 숫자 seed 로 무작위 숫자를 만들고, Octave 는 그 숫자를 그대로 옮겨 적어 같은 데이터가 된다. 코드 아래 회색 줄이 실행 결과다. 두 언어의 다른 점은 아래 표와 같다.</p><table class=\"st lang\"><tr><th></th><th>파이썬</th><th>Octave</th></tr><tr><td>첫 칸 번호</td><td>0</td><td>1</td></tr><tr><td>주석</td><td><code>#</code></td><td><code>%</code></td></tr><tr><td><code>%</code> 의 뜻</td><td>나머지</td><td>주석. 나머지는 <code>mod</code></td></tr><tr><td>줄 끝 <code>;</code></td><td>두 문장을 한 줄에</td><td>결과를 화면에 안 보임</td></tr><tr><td>행렬 곱</td><td><code>@</code></td><td><code>*</code></td></tr><tr><td>칸끼리 곱</td><td><code>*</code></td><td><code>.*</code></td></tr><tr><td>전치</td><td><code>.T</code></td><td><code>'</code></td></tr></table><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>import numpy as np\nnp.random.seed(0)                       # 시작 숫자 seed\nX, Y = [], []\nfor i in range(40):                     # 8×8 그림 40장\n    im = np.zeros((8, 8)); k = np.random.randint(1, 7)\n    if i % 2 == 0: im[:, k] = 1; Y.append(1)   # 세로줄 = 1\n    else:          im[k, :] = 1; Y.append(0)   # 가로줄 = 0\n    X.append(im)\nw = np.random.randn(3, 3) * 0.3         # 처음 필터 = 무작위\na, c, lr = 1.0, 0.0, 0.5\nprint(X[0].astype(int))                 # 그림 1\nprint(w.round(2))</code></pre><pre class=\"out\"><code>[[0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]\n [0 0 0 0 0 1 0 0]]\n[[ 0.48  0.07 -0.02]\n [-0.29  0.18 -0.23]\n [-0.13 -0.1  -0.26]]\n</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>K = [5 6 1 4 4 4 2 4 6 3 5 1 1 5 3 2 1 2 6 2 6 1 2 5 4 1 4 6 1 3 4 1 2 4 6 4 4 1 2 2];   % 줄의 자리 k : 파이썬과 같은 0부터 센 번호\nX = zeros(8, 8, 40); Y = zeros(1, 40);\nfor n = 1:40                            % 8×8 그림 40장\n  k = K(n) + 1;                         % Octave 는 1부터 센다\n  if mod(n, 2) == 1, X(:, k, n) = 1; Y(n) = 1;   % 세로줄 = 1\n  else,              X(k, :, n) = 1; Y(n) = 0;   % 가로줄 = 0\n  end\nend\nw = [0.47836816049743547 0.069130251005589616 -0.019473102826023186; -0.29069407537024555 0.17737284188527785 -0.23483265128004358; -0.13326984808586201 -0.10355584750070986 -0.26454016480001064];   % 처음 필터 : 파이썬 seed 0 의 무작위 숫자 그대로\na = 1; c = 0; lr = 0.5;\ndisp(X(:, :, 1))                        % 그림 1\nfprintf(&#x27;%6.2f %6.2f %6.2f\\n&#x27;, w&#x27;);     % 처음 필터</code></pre><pre class=\"out\"><code>   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n   0   0   0   0   0   1   0   0\n  0.48   0.07  -0.02\n -0.29   0.18  -0.23\n -0.13  -0.10  -0.26\n</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "앞으로 : 그림 하나가 손실이 되기까지", "b": "<p>먼저 그림 한 장이 손실이 되기까지를 차례로 따라가 보자. 「앞으로 한 칸」을 누를 때마다 오른쪽 흐름이 한 칸씩 켜진다.</p><p><span class=\"cn\">1</span><b>필터 밀기</b> : 필터를 그림의 3×3 조각에 겹쳐 칸끼리 곱해 더한다. 가로 6자리, 세로 6자리라서 결과는 6×6, 숫자 36개다.</p><p><span class=\"cn\">2</span><b>가장 큰 값 m</b> : 36개 가운데 가장 큰 값 하나만 남긴다. 그 자리에 필터 무늬와 가장 닮은 조각이 있다.</p><p><span class=\"cn\">3</span><b>점수</b> = a × m + c. a 와 c 는 마지막 층의 숫자다. 처음에는 a = 1, c = 0 이다.</p><p><span class=\"cn\">4</span><b>확률 p</b> : 점수를 0 과 1 사이로 바꾼 값이다. 점수가 0 이면 0.5, 클수록 1 에 가깝다. 세로줄일 확률로 읽는다.</p><p><span class=\"cn\">5</span><b>손실</b> : 정답 쪽 확률의 −log 다. 정답 쪽 확률이 1 이면 0, 작을수록 커진다.</p><p>그림 1 은 세로줄이라 정답이 1 이다. 처음 필터로는 m 0.14, 확률 0.54, 손실 0.62 가 나온다. 그림을 바꿔 다른 값도 보자.</p><details class=\"oct\"><summary>코드로 앞으로 계산하기</summary><p>1쪽 코드에 이어서 실행한다. 6×6 결과, 가장 큰 칸의 자리, m, 점수, 확률, 손실을 찍는다. 칸의 자리는 파이썬이 0, Octave 가 1 부터 센다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>def forward(im, w, a, c):\n    o = np.zeros((6, 6))                # 필터를 밀며 곱해 더하기\n    for r in range(6):\n        for q in range(6):\n            o[r, q] = (w * im[r:r+3, q:q+3]).sum()\n    i, j = np.unravel_index(o.argmax(), o.shape)   # 가장 큰 칸\n    m = o[i, j]\n    s = a * m + c                       # 점수\n    p = 1 / (1 + np.exp(-s))            # 확률\n    return o, i, j, m, s, p\nim, y = X[0], Y[0]                      # 그림 1, 정답 1\no, i, j, m, s, p = forward(im, w, a, c)\nloss = -np.log(p if y == 1 else 1 - p)\nprint(o.round(2))\nprint(i, j, round(m, 2), round(s, 2), round(p, 2), round(loss, 2))</code></pre><pre class=\"out\"><code>[[ 0.    0.    0.   -0.52  0.14  0.05]\n [ 0.    0.    0.   -0.52  0.14  0.05]\n [ 0.    0.    0.   -0.52  0.14  0.05]\n [ 0.    0.    0.   -0.52  0.14  0.05]\n [ 0.    0.    0.   -0.52  0.14  0.05]\n [ 0.    0.    0.   -0.52  0.14  0.05]]\n0 4 0.14 0.14 0.54 0.62</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>im = X(:, :, 1); y = Y(1);              % 그림 1, 정답 1\no = zeros(6, 6); best = -Inf;\nfor r = 1:6                             % 필터를 밀며 곱해 더하기\n  for q = 1:6\n    o(r, q) = sum(sum(w .* im(r:r+2, q:q+2)));\n    if o(r, q) &gt; best, best = o(r, q); i = r; j = q; end   % 가장 큰 칸 : 맨 앞 칸\n  end\nend\nm = o(i, j);\ns = a * m + c;                          % 점수\np = 1 / (1 + exp(-s));                  % 확률\nif y == 1, loss = -log(p); else, loss = -log(1 - p); end\nfprintf(&#x27;%6.2f %6.2f %6.2f %6.2f %6.2f %6.2f\\n&#x27;, o&#x27;);\nfprintf(&#x27;%d %d %.2f %.2f %.2f %.2f\\n&#x27;, i, j, m, s, p, loss);   % 자리는 1부터 센 번호</code></pre><pre class=\"out\"><code>  0.00   0.00   0.00  -0.52   0.14   0.05\n  0.00   0.00   0.00  -0.52   0.14   0.05\n  0.00   0.00   0.00  -0.52   0.14   0.05\n  0.00   0.00   0.00  -0.52   0.14   0.05\n  0.00   0.00   0.00  -0.52   0.14   0.05\n  0.00   0.00   0.00  -0.52   0.14   0.05\n1 5 0.14 0.14 0.54 0.62</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "거꾸로 출발 : 점수의 기울기 = p − 정답", "b": "<p>이제 거꾸로 간다. 손실을 줄이려면 점수를 올려야 할까, 내려야 할까? 그것을 알려 주는 수가 <b>점수의 기울기</b>다.</p><p>점수의 기울기 g = p − 정답. 그림 1 이면 0.54 − 1 = −0.46 이다. 음수이므로 점수를 올리면 손실이 준다.</p><p>정말 그런지 「점수 +0.01」을 눌러 보자. 손실이 약 g × 0.01 = −0.0046 만큼 바뀐다. 기울기는 조금 바꿨을 때 손실이 바뀌는 비율이기 때문이다.</p><p>왜 하필 p − 정답일까. 확률과 −log 손실을 짝으로 쓰면, 점수를 조금 바꿀 때 손실이 바뀌는 비율이 정확히 p − 정답 이 되도록 맞물린다. 그래서 확률 칸과 점수 칸 사이에는 따로 곱할 수가 없고, 손실에서 바로 점수의 기울기로 출발한다.</p><div class=\"q\"><b class=\"t\">생각해보기</b> 가로줄 그림이면 점수의 기울기는 어떻게 될까? 「▶」로 그림 2 를 골라 보자.<br>→ 정답이 0 이라 g = p − 0 = p, 양수다. 점수를 내리면 손실이 준다. 가로줄일수록 점수가 낮아야 맞기 때문이다.</div><details class=\"oct\"><summary>코드로 점수의 기울기 확인하기</summary><p>1 · 2쪽 코드에 이어서 실행한다. 첫 줄이 g = p − 정답, 둘째 줄이 점수를 0.01 올렸을 때 손실이 바뀐 비율이다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>g = p - y                               # 점수의 기울기\nL = lambda s: -np.log(1 / (1 + np.exp(-s))) if y == 1 else -np.log(1 - 1 / (1 + np.exp(-s)))\nprint(round(g, 4))\nprint(round((L(s + 0.01) - L(s)) / 0.01, 4))   # 점수를 0.01 올렸을 때 바뀐 비율</code></pre><pre class=\"out\"><code>-0.4643\n-0.4631</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>g = p - y;                              % 점수의 기울기\nif y == 1, L = @(s) -log(1 ./ (1 + exp(-s))); else, L = @(s) -log(1 - 1 ./ (1 + exp(-s))); end\nfprintf(&#x27;%.4f\\n%.4f\\n&#x27;, g, (L(s + 0.01) - L(s)) / 0.01);   % 둘째 줄 : 점수를 0.01 올렸을 때 바뀐 비율</code></pre><pre class=\"out\"><code>-0.4643\n-0.4631</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "거꾸로 : 층을 지날 때마다 곱했던 수를 곱한다", "b": "<p>점수 = a × m + c 였다. m 을 0.01 올리면 점수는 a × 0.01 오른다. 그래서 <b>m 의 기울기 = 점수의 기울기 × a</b> 다. 처음에는 a 가 1 이라 그대로 −0.46 이다. 「거꾸로 한 칸」을 눌러 보자.</p><p>그다음은 6×6 결과 36칸 가운데 어디로 보낼까. <b>가장 큰 값을 낸 한 칸뿐</b>이다. 다른 칸은 조금 바꿔도 가장 큰 값이 그대로라 손실이 바뀌지 않는다. 「다른 칸 +0.01」과 「가장 큰 칸 +0.01」을 눌러 비교해 보자.</p><p>그림 1 은 같은 값 0.14 가 세로로 여섯 칸이다. 코드는 맨 앞 칸 하나를 고르고, 여섯 칸의 조각이 모두 같아서 어느 칸을 골라도 기울기는 같다.</p><p>마지막은 필터다. 가장 큰 칸의 값은 필터 9칸 × 그 조각 9칸을 곱해 더한 것이었다. 필터 한 칸을 0.01 올리면 그 값은 겹친 조각 값 × 0.01 만큼 오른다. 그래서 <b>필터의 기울기 = m 의 기울기 × 조각</b> 이다. 그림 1 의 조각은 가운데 세로 열만 1 이라, 필터도 가운데 세로 열만 −0.46 이고 나머지는 0 이다.</p><p>정리하면, 손실에서 필터까지 거꾸로 오면서 지나는 층마다 앞으로 갈 때 그 층에서 곱했던 수를 곱했다. × a, 그리고 × 조각. 이것이 <b>역전파</b>다.</p><details class=\"oct\"><summary>코드로 거꾸로 계산하기</summary><p>1 · 2쪽 코드에 이어서 실행한다. 점수의 기울기에 a 를 곱하고, 다시 조각을 곱한다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>g = p - y                               # 점수의 기울기\ngm = g * a                              # 가장 큰 값 m 의 기울기 : × a\ngw = gm * im[i:i+3, j:j+3]              # 필터의 기울기 : × 조각\nprint(round(g, 2), round(gm, 2))\nprint(gw.round(2) + 0)          # + 0 : -0. 을 0. 으로</code></pre><pre class=\"out\"><code>-0.46 -0.46\n[[ 0.   -0.46  0.  ]\n [ 0.   -0.46  0.  ]\n [ 0.   -0.46  0.  ]]</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>g = p - y;                              % 점수의 기울기\ngm = g * a;                             % 가장 큰 값 m 의 기울기 : × a\ngw = gm * im(i:i+2, j:j+2);             % 필터의 기울기 : × 조각\nfprintf(&#x27;%.2f %.2f\\n&#x27;, g, gm);\nfprintf(&#x27;%6.2f %6.2f %6.2f\\n&#x27;, gw&#x27; + 0);   % + 0 : -0.00 을 0.00 으로</code></pre><pre class=\"out\"><code>-0.46 -0.46\n  0.00  -0.46   0.00\n  0.00  -0.46   0.00\n  0.00  -0.46   0.00</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "확인 : 필터 칸을 정말 0.01 씩 바꿔 보면", "b": "<p>역전파로 구한 필터의 기울기가 맞는지 직접 확인해 보자. 「9칸 모두 +0.01」을 누르면 필터 칸을 하나씩 0.01 올려 앞으로 계산을 다시 하고, 손실이 실제로 바뀐 양 ÷ 0.01 을 오른쪽 아래에 적는다.</p><p>왼쪽 아래 「필터의 기울기」와 오른쪽 아래 값이 같으면 역전파가 맞게 계산한 것이다. 그림을 바꿔 다시 해 보자.</p><div class=\"q\"><b class=\"t\">생각해보기</b> 이렇게 0.01 씩 바꿔 보기만 해도 기울기를 구할 수 있는데, 왜 역전파를 쓸까?<br>→ 이 방법은 숫자 하나마다 앞으로 계산을 한 번씩 다시 해야 한다. 필터 9칸이면 9번이지만, 실제 CNN 은 숫자가 수백만 개라 수백만 번이 된다. 역전파는 앞으로 한 번, 거꾸로 한 번만 지나가면 모든 숫자의 기울기를 한꺼번에 얻는다.</div><details class=\"oct\"><summary>코드로 0.01 씩 바꿔 확인하기</summary><p>1 · 2쪽 코드에 이어서 실행한다. 필터 칸마다 0.01 올려 손실이 바뀐 양 ÷ 0.01 을 찍는다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>def loss_of(w):\n    o, i, j, m, s, p = forward(im, w, a, c)\n    return -np.log(p if y == 1 else 1 - p)\nbase = loss_of(w)\nfor r in range(3):                      # 필터 9칸을 하나씩 0.01 올려 본다\n    row = []\n    for q in range(3):\n        w2 = w.copy(); w2[r, q] += 0.01\n        row.append(round(float((loss_of(w2) - base) / 0.01), 2))\n    print(row)</code></pre><pre class=\"out\"><code>[0.0, -0.46, 0.0]\n[0.0, -0.46, 0.0]\n[0.0, -0.46, 0.0]</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>base = loss;\nfor r = 1:3                             % 필터 9칸을 하나씩 0.01 올려 본다\n  for q = 1:3\n    w2 = w; w2(r, q) = w2(r, q) + 0.01; best = -Inf;\n    for rr = 1:6\n      for qq = 1:6\n        best = max(best, sum(sum(w2 .* im(rr:rr+2, qq:qq+2))));\n      end\n    end\n    p2 = 1 / (1 + exp(-(a * best + c)));\n    if y == 1, L2 = -log(p2); else, L2 = -log(1 - p2); end\n    fprintf(&#x27;%6.2f &#x27;, (L2 - base) / 0.01 + 0);\n  end\n  fprintf(&#x27;\\n&#x27;);\nend</code></pre><pre class=\"out\"><code>  0.00  -0.46   0.00 \n  0.00  -0.46   0.00 \n  0.00  -0.46   0.00 </code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "한 스텝 : 40장 기울기의 평균으로 업데이트", "b": "<p>그림 한 장의 기울기만 따르면 그 그림에만 맞는다. 그래서 40장 모두 같은 계산을 하고 기울기를 평균 낸다. a 와 c 의 기울기도 같은 방법으로 구한다. a 의 기울기는 점수의 기울기 × m, c 의 기울기는 점수의 기울기 그대로다.</p><p>그다음 경사 하강법 규칙대로 업데이트한다. <b>숫자 ← 숫자 − 학습률 × 기울기 평균</b>. 학습률은 0.5 다.</p><p>「한 스텝」을 눌러 보자. 손실이 0.79 에서 0.66 으로 준다. 필터는 가운데 세로 열의 아래 두 칸이 커지고, 위 줄 양 끝은 작아진다. 한 번 더 누르면 손실 0.58, 정답률 100% 가 된다.</p><details class=\"oct\"><summary>코드로 한 스텝 해 보기</summary><p>1 · 2쪽 코드에 이어서 실행한다. 40장 기울기의 평균으로 한 번 업데이트한 필터와 a, c 를 찍는다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>gw = np.zeros((3, 3)); ga = gc = 0\nfor im, y in zip(X, Y):                 # 40장 모두 같은 계산\n    o, i, j, m, s, p = forward(im, w, a, c)\n    g = p - y\n    gw += g * a * im[i:i+3, j:j+3]; ga += g * m; gc += g\nw -= lr * gw / 40; a -= lr * ga / 40; c -= lr * gc / 40   # 평균으로 업데이트\nprint(w.round(2))\nprint(round(a, 3), round(c, 3))</code></pre><pre class=\"out\"><code>[[ 0.34  0.04 -0.16]\n [-0.29  0.29 -0.23]\n [-0.13  0.01 -0.26]]\n0.942 -0.038</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>gw = zeros(3); ga = 0; gc = 0;\nfor n = 1:40                            % 40장 모두 같은 계산\n  im = X(:, :, n); best = -Inf;\n  for r = 1:6\n    for q = 1:6\n      v = sum(sum(w .* im(r:r+2, q:q+2)));\n      if v &gt; best, best = v; i = r; j = q; end\n    end\n  end\n  p = 1 / (1 + exp(-(a * best + c))); g = p - Y(n);\n  gw = gw + g * a * im(i:i+2, j:j+2); ga = ga + g * best; gc = gc + g;\nend\nw = w - lr * gw / 40; a = a - lr * ga / 40; c = c - lr * gc / 40;   % 평균으로 업데이트\nfprintf(&#x27;%6.2f %6.2f %6.2f\\n&#x27;, w&#x27;);\nfprintf(&#x27;%.3f %.3f\\n&#x27;, a, c);</code></pre><pre class=\"out\"><code>  0.34   0.04  -0.16\n -0.29   0.29  -0.23\n -0.13   0.01  -0.26\n0.942 -0.038</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "반복 : 무작위 필터가 세로줄 필터로", "b": "<p>한 스텝을 계속 되풀이한다. 「5번째」 「20번째」 「200번째」를 눌러 보자. 숫자는 그 반복을 시작할 때 잰 손실과 정답률이다.</p><table class=\"st\"><tr><th>반복</th><th>손실</th><th>정답률</th></tr><tr><td>처음</td><td>0.79</td><td>55%</td></tr><tr><td>5번째</td><td>0.50</td><td>100%</td></tr><tr><td>20번째</td><td>0.18</td><td>100%</td></tr><tr><td>200번째</td><td>0.01</td><td>100%</td></tr></table><p>정답 이름표만 주었는데, 필터는 가운데 세로 열이 +, 양옆이 − 인 필터가 되었다. 가는 세로줄 위에 겹치면 큰 값, 가로줄 위에서는 작은 값을 낸다. 누구도 세로선을 찾으라고 알려 주지 않았다.</p><div class=\"q\"><b class=\"t\">생각해보기</b> 정답률은 5번째에 이미 100% 인데, 왜 200번까지 반복할까?<br>→ 정답률은 확률이 0.5 를 넘었는지만 본다. 손실은 정답 쪽 확률이 1 에 얼마나 가까운지까지 본다. 반복할수록 확률이 1 과 0 쪽으로 더 또렷해져 손실이 계속 준다.</div><details class=\"oct\"><summary>코드로 200번 학습하기</summary><p>아래 코드를 파이썬이나 Octave 에 붙여 넣고 실행한다. 처음이면 <button type=\"button\" class=\"ohl\">실행 안내</button>. 이 상자 하나로 따로 돌아간다. 1 · 5 · 20 · 200번째 반복에서 seed, 반복, 손실, 정답률을 찍고 마지막 필터를 찍는다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>import numpy as np\ndef train(seed, steps=200):\n    np.random.seed(seed)\n    X, Y = [], []\n    for n in range(40):\n        im = np.zeros((8, 8)); k = np.random.randint(1, 7)\n        if n % 2 == 0: im[:, k] = 1; Y.append(1)\n        else:          im[k, :] = 1; Y.append(0)\n        X.append(im)\n    w = np.random.randn(3, 3) * 0.3; a, c, lr = 1.0, 0.0, 0.5\n    for step in range(1, steps + 1):\n        gw = np.zeros((3, 3)); ga = gc = 0; L = acc = 0\n        for im, y in zip(X, Y):\n            o = np.zeros((6, 6))\n            for r in range(6):\n                for q in range(6):\n                    o[r, q] = (w * im[r:r+3, q:q+3]).sum()\n            i, j = np.unravel_index(o.argmax(), o.shape)\n            p = 1 / (1 + np.exp(-(a * o[i, j] + c)))\n            g = p - y\n            gw += g * a * im[i:i+3, j:j+3]; ga += g * o[i, j]; gc += g\n            L += -np.log(p if y == 1 else 1 - p); acc += (p &gt; 0.5) == y\n        if step in (1, 5, 20, 200):\n            print(seed, step, round(L / 40, 2), int(acc / 40 * 100))\n        w -= lr * gw / 40; a -= lr * ga / 40; c -= lr * gc / 40\n    print(w.round(2).tolist())\ntrain(0)</code></pre><pre class=\"out\"><code>0 1 0.79 55\n0 5 0.5 100\n0 20 0.18 100\n0 200 0.01 100\n[[-0.3, 1.05, -0.8], [-0.76, 1.47, -0.71], [-0.56, 1.23, -0.69]]\n</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>K = [5 6 1 4 4 4 2 4 6 3 5 1 1 5 3 2 1 2 6 2 6 1 2 5 4 1 4 6 1 3 4 1 2 4 6 4 4 1 2 2];   % seed 0 의 줄 자리 k\nw = [0.47836816049743547 0.069130251005589616 -0.019473102826023186; -0.29069407537024555 0.17737284188527785 -0.23483265128004358; -0.13326984808586201 -0.10355584750070986 -0.26454016480001064];   % seed 0 의 처음 필터\nX = zeros(8, 8, 40); Y = zeros(1, 40);\nfor n = 1:40                            % 8×8 그림 40장\n  k = K(n) + 1;                         % Octave 는 1부터 센다\n  if mod(n, 2) == 1, X(:, k, n) = 1; Y(n) = 1;   % 세로줄 = 1\n  else,              X(k, :, n) = 1; Y(n) = 0;   % 가로줄 = 0\n  end\nend\na = 1; c = 0; lr = 0.5;\nfor step = 1:200\n  gw = zeros(3); ga = 0; gc = 0; L = 0; acc = 0;\n  for n = 1:40\n    im = X(:, :, n); best = -Inf;\n    for r = 1:6\n      for q = 1:6\n        v = sum(sum(w .* im(r:r+2, q:q+2)));\n        if v &gt; best, best = v; i = r; j = q; end\n      end\n    end\n    p = 1 / (1 + exp(-(a * best + c))); g = p - Y(n);\n    gw = gw + g * a * im(i:i+2, j:j+2); ga = ga + g * best; gc = gc + g;\n    if Y(n) == 1, L = L - log(p); else, L = L - log(1 - p); end\n    acc = acc + ((p &gt; 0.5) == Y(n));\n  end\n  if any(step == [1 5 20 200]), fprintf(&#x27;%d %d %.2f %d\\n&#x27;, 0, step, L / 40, floor(acc / 40 * 100)); end\n  w = w - lr * gw / 40; a = a - lr * ga / 40; c = c - lr * gc / 40;\nend\nfprintf(&#x27;%6.2f %6.2f %6.2f\\n&#x27;, w&#x27;);</code></pre><pre class=\"out\"><code>0 1 0.79 55\n0 5 0.50 100\n0 20 0.18 100\n0 200 0.01 100\n -0.30   1.05  -0.80\n -0.76   1.47  -0.71\n -0.56   1.23  -0.69\n</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "다른 시작 숫자 : 늘 배우는 것은 아니다", "b": "<p>처음 필터는 무작위라, 시작 숫자 seed 를 바꾸면 달라진다. 「seed 0」 「seed 5」 「seed 4」 「seed 8」을 눌러 200번째 반복의 필터와 곡선을 비교해 보자.</p><p>seed 5 는 다른 모양의 필터로도 100% 를 맞힌다. seed 4 는 87% 에서, seed 8 은 50% 에서 멈춘다. 아래 회색 칸에 이유가 나온다.</p><p>공통점은 하나다. 가장 큰 값이 줄이 없는 빈 조각에서 나오면, 조각이 모두 0 이라 × 조각 에서 필터의 기울기가 0 이 된다. 역전파는 가장 큰 값을 낸 자리로만 기울기를 보내기 때문이다.</p><details class=\"oct\"><summary>코드로 seed 바꿔 학습하기</summary><p>파이썬은 7쪽 코드에 이어서, Octave 는 이 상자 하나로 실행한다. seed 5 · 4 · 8 로 같은 학습을 한다.</p><div class=\"ltab\" role=\"group\" aria-label=\"코드 언어\"><button type=\"button\" class=\"lt on\" data-l=\"py\" aria-pressed=\"true\">파이썬</button><button type=\"button\" class=\"lt\" data-l=\"oc\" aria-pressed=\"false\">Octave</button></div><div class=\"lp\" data-l=\"py\"><pre><code>for seed in (5, 4, 8):                  # 시작 숫자만 바꿔 다시 학습\n    train(seed)</code></pre><pre class=\"out\"><code>5 1 0.91 50\n5 5 0.57 62\n5 20 0.19 100\n5 200 0.01 100\n[[1.1, -0.67, -0.45], [0.99, -0.64, -0.36], [1.69, -0.85, -0.88]]\n4 1 0.69 37\n4 5 0.52 87\n4 20 0.36 87\n4 200 0.31 87\n[[-0.84, -0.19, 0.9], [-0.37, -0.68, 0.96], [-0.54, -0.95, 1.41]]\n8 1 0.69 50\n8 5 0.69 50\n8 20 0.69 50\n8 200 0.69 50\n[[-0.15, -0.06, -0.16], [-0.41, -0.09, 0.22], [-0.37, -0.46, -0.21]]</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div><div class=\"lp hide\" data-l=\"oc\"><pre><code>SD = [5 4 8];                           % 시작 숫자만 바꿔 다시 학습\nKS = {[4 6 1 2 1 5 4 1 1 5 2 6 1 4 5 6 4 2 5 6 3 2 2 3 2 2 2 3 1 6 3 1 1 5 5 2 4 4 3 5], [3 6 2 1 1 3 2 3 5 6 2 1 5 3 5 3 5 4 1 6 6 2 6 1 3 6 1 2 3 3 1 1 4 3 6 2 1 6 5 4], [4 5 2 2 6 3 1 4 1 1 6 6 5 2 4 3 4 5 6 2 6 6 3 4 3 6 1 2 4 5 6 6 4 3 2 3 3 2 6 6]};\nWS = {[-0.0022877059159107285 0.050210758150981277 0.26331982430017403; 0.1418038815483004 0.33075841299685599 0.6078616955047873; 0.43261816996226521 -0.29872242898966356 -0.32114307289106175], ...\n      [-0.18206618492922061 0.46409379870471812 0.21700248262435737; 0.013840670169049442 -0.29489749602555965 0.016329821659547303; 0.047967880521788409 -0.3626844477386762 0.66700806507335053], ...\n      [-0.15049203585961943 -0.062387723220357835 -0.15707217427040321; -0.406439613976181 -0.08776650157133585 0.22498138904395226; -0.36924718594179379 -0.46005109829877133 -0.20555862407268063]};\nfor t = 1:3\n  K = KS{t}; w = WS{t}; X = zeros(8, 8, 40); Y = zeros(1, 40);\n  for n = 1:40\n    k = K(n) + 1;\n    if mod(n, 2) == 1, X(:, k, n) = 1; Y(n) = 1; else, X(k, :, n) = 1; Y(n) = 0; end\n  end\n  a = 1; c = 0; lr = 0.5;\n  for step = 1:200\n    gw = zeros(3); ga = 0; gc = 0; L = 0; acc = 0;\n    for n = 1:40\n      im = X(:, :, n); best = -Inf;\n      for r = 1:6\n        for q = 1:6\n          v = sum(sum(w .* im(r:r+2, q:q+2)));\n          if v &gt; best, best = v; i = r; j = q; end\n        end\n      end\n      p = 1 / (1 + exp(-(a * best + c))); g = p - Y(n);\n      gw = gw + g * a * im(i:i+2, j:j+2); ga = ga + g * best; gc = gc + g;\n      if Y(n) == 1, L = L - log(p); else, L = L - log(1 - p); end\n      acc = acc + ((p &gt; 0.5) == Y(n));\n    end\n    if any(step == [1 5 20 200]), fprintf(&#x27;%d %d %.2f %d\\n&#x27;, SD(t), step, L / 40, floor(acc / 40 * 100)); end\n    w = w - lr * gw / 40; a = a - lr * ga / 40; c = c - lr * gc / 40;\n  end\n  fprintf(&#x27;%6.2f %6.2f %6.2f\\n&#x27;, w&#x27;);\nend</code></pre><pre class=\"out\"><code>5 1 0.91 50\n5 5 0.57 62\n5 20 0.19 100\n5 200 0.01 100\n  1.10  -0.67  -0.45\n  0.99  -0.64  -0.36\n  1.69  -0.85  -0.88\n4 1 0.69 37\n4 5 0.52 87\n4 20 0.36 87\n4 200 0.31 87\n -0.84  -0.19   0.90\n -0.37  -0.68   0.96\n -0.54  -0.95   1.41\n8 1 0.69 50\n8 5 0.69 50\n8 20 0.69 50\n8 200 0.69 50\n -0.15  -0.06  -0.16\n -0.41  -0.09   0.22\n -0.37  -0.46  -0.21\n</code></pre><button class=\"cpy\" type=\"button\">코드 복사</button></div></details>"}, {"t": "정리 : 역전파", "b": "<p><b>앞으로</b> : 조각 → 필터 → 가장 큰 값 → 점수 → 확률 → 손실.</p><p><b>거꾸로</b> : 손실에서 점수의 기울기 p − 정답 으로 출발해, 지나는 층마다 앞으로 갈 때 곱했던 수를 곱해 간다. × a, 그리고 × 조각. 가장 큰 값처럼 하나만 고르는 층은 고른 자리로만 보낸다.</p><p><b>업데이트</b> : 숫자 ← 숫자 − 학습률 × 기울기. 40장의 평균으로, 여러 번 반복한다.</p><p>층이 수십 개, 필터가 수백 개인 실제 CNN 도 같은 규칙이다. 수학에서는 이렇게 곱해 가며 거꾸로 가는 계산을 <b>미분의 연쇄 법칙</b>이라고 부른다. 숫자가 아무리 많아도 거꾸로 한 번 지나가면 모든 숫자의 기울기를 얻는다.</p>"}];
+  var IB={'앞으로 한 칸':'bF','처음부터':'bF0','점수 +0.01':'bS','거꾸로 한 칸':'bB','다른 칸 +0.01':'bO','가장 큰 칸 +0.01':'bM','9칸 모두 +0.01':'bChk','한 스텝':'bStep','처음':'bM1','5번째':'bM5','20번째':'bM20','200번째':'bM200','seed 0':'sd0','seed 5':'sd5','seed 4':'sd4','seed 8':'sd8','◀':'imP','▶':'imN'};
+  function f2(v){ v=Math.abs(v)<0.005?0:v; return (v<0?'−':'')+Math.abs(v).toFixed(2); }
+  function f4(v){ v=Math.abs(v)<0.00005?0:v; return (v<0?'−':'')+Math.abs(v).toFixed(4); }
+  function K(){ var cs=getComputedStyle(document.documentElement), g=function(n){ return cs.getPropertyValue(n).trim(); };
+    return {ink:g('--ink'), muted:g('--muted'), line:g('--line'), panel:g('--panel'), soft:g('--soft'), acc:g('--acc'), head:g('--head'), red:g('--g-red'), blue:g('--g-bluec'), lit:g('--g-lit'), halo:g('--g-halo'), pt:g('--g-pt'), grid:g('--g-grid'), tick:g('--g-tick'), faint:g('--g-faint')}; }
+  function hex(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(function(x){ return x+x; }).join(''); return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]; }
+  function mix(a,b,t){ var A=hex(a), B=hex(b); return 'rgb('+A.map(function(v,i){ return Math.round(v+(B[i]-v)*t); }).join(',')+')'; }
+  function heat(k,v,vm){ var t=Math.min(1,Math.abs(v)/vm); return Math.abs(v)<0.005? k.panel : mix(k.panel, v>0?k.red:k.blue, 0.15+0.6*t); }
+  function E(svg,tag,a,txt){ var e=document.createElementNS(NS,tag); for(var k in a) e.setAttribute(k,a[k]); if(txt!==undefined) e.textContent=txt; svg.appendChild(e); return e; }
+  function grid(svg,k,x0,y0,cell,n,vals,o){ o=o||{}; for(var r=0;r<n;r++) for(var q=0;q<n;q++){ var v=vals[r*n+q], x=x0+q*cell, y=y0+r*cell;
+      var fill=o.bin? (v? k.ink : k.panel) : heat(k,v,o.vm||1.2);
+      if(o.lit && o.lit(r,q)) fill=o.litFill||k.lit;
+      E(svg,'rect',{x:x,y:y,width:cell,height:cell,fill:fill,stroke:k.line,'stroke-width':1});
+      if(!o.bin && o.text!==false){ var tx=(o.fmt||f2)(v); E(svg,'text',{x:x+cell/2,y:y+cell/2+4.5,'text-anchor':'middle','font-size':o.fz||12.5,fill:k.ink,'font-family':"'JetBrains Mono',Consolas,monospace"},tx); } }
+    if(o.frame){ var fr=o.frame; E(svg,'rect',{x:x0+fr[1]*cell-1.5,y:y0+fr[0]*cell-1.5,width:fr[2]*cell+3,height:fr[2]*cell+3,fill:'none',stroke:k.acc,'stroke-width':3,rx:2}); } }
+  function lab(svg,k,x,y,t,o){ o=o||{}; return E(svg,'text',{x:x,y:y,'text-anchor':o.anchor||'start','font-size':o.fz||14,fill:o.fill||k.ink,'font-weight':o.bold?'bold':'normal'},t); }
+  // ---------- 그리기
+  function cur(){ var h=H[0]; return fwd(X[img],h.w,h.a,h.c); }
+  function otherCell(f){ var best=-Infinity, bi=-1; for(var t=0;t<36;t++){ var v=f.o[t]; if(v<f.m-0.0101 && v>best){ best=v; bi=t; } } return bi; }
+  function drawMain(){ var svg=$('mainSvg'), k=K(); svg.innerHTML=''; var h=H[0], f=cur(), im=X[img];
+    var nar=window.innerWidth<=560, low=(C===4||C===5);
+    var L = nar ? {W:360, H:low?690:520, im:[8,34,18], fl:[176,34,46], mp:[36,236,48], gr:[8,560,46], nu:[176,560,46], leg:[176,196], tt:[8,176,36]}
+                : {W:560, H:low?372:262, im:[16,40,20], fl:[192,40,42], mp:[338,40,35], gr:[16,236,42], nu:[192,236,42], leg:[192,190], tt:[16,192,338]};
+    svg.setAttribute('viewBox','0 0 '+L.W+' '+L.H);
+    lab(svg,k,L.tt[0],L.im[1]-14,'그림 '+(img+1)+' · '+(Y[img]?'세로줄':'가로줄')+' · 정답 '+Y[img],{bold:true,fz:nar?13:14});
+    var showMap = C>=3 || (C===2 && fs>=1);
+    grid(svg,k,L.im[0],L.im[1],L.im[2],8,im,{bin:true, frame:(showMap? [f.i,f.j,3]:null)});
+    lab(svg,k,L.fl[0],L.fl[1]-14,'필터 w',{bold:true}); grid(svg,k,L.fl[0],L.fl[1],L.fl[2],3,h.w,{vm:1.0,fz:12.5});
+    var mc=L.mp[2], mw=mc*6;
+    lab(svg,k,L.mp[0],L.mp[1]-14,'필터를 민 결과 6×6',{bold:true});
+    if(showMap){ var oc = (C===4 && nudge==='o')? otherCell(f) : -1;
+      grid(svg,k,L.mp[0],L.mp[1],mc,6,f.o,{vm:1.0,fz:nar?13:11,fmt:function(v){ return (Math.abs(v)<0.005?'0':f2(v)); }, lit:function(r,q){ return (C>=2 && (C>2 || fs>=2) && r===f.i && q===f.j) || (r*6+q===oc); }, litFill:k.lit}); }
+    else { E(svg,'rect',{x:L.mp[0],y:L.mp[1],width:mw,height:mw,fill:k.soft,stroke:k.line}); lab(svg,k,L.mp[0]+mw/2,L.mp[1]+mw/2+5,'「앞으로 한 칸」',{anchor:'middle',fz:13,fill:k.muted}); }
+    var gwShow = (C===4 && bs>=3) || C===5, gc=L.gr[2], gwid=gc*3;
+    if(low){ var P=patch(im,f.i,f.j), g=f.p-Y[img], gw=P.map(function(v){ return g*h.a*v; });
+      lab(svg,k,L.gr[0],L.gr[1]-14,'필터의 기울기',{bold:true});
+      if(gwShow) grid(svg,k,L.gr[0],L.gr[1],gc,3,gw,{vm:0.6,fz:12.5}); else { E(svg,'rect',{x:L.gr[0],y:L.gr[1],width:gwid,height:gwid,fill:k.soft,stroke:k.line}); lab(svg,k,L.gr[0]+gwid/2,L.gr[1]+gwid/2+5,'?',{anchor:'middle',fill:k.muted}); }
+      if(C===5){ lab(svg,k,L.nu[0],L.nu[1]-14,'0.01 씩 바꿔 본 값',{bold:true});
+        if(chk){ var base=lossOf(f.p,Y[img]), num=[]; for(var t=0;t<9;t++){ var w2=h.w.slice(); w2[t]+=0.01; var f2_=fwd(im,w2,h.a,h.c); num.push((lossOf(f2_.p,Y[img])-base)/0.01); }
+          grid(svg,k,L.nu[0],L.nu[1],gc,3,num,{vm:0.6,fz:12.5}); }
+        else { E(svg,'rect',{x:L.nu[0],y:L.nu[1],width:gwid,height:gwid,fill:k.soft,stroke:k.line}); lab(svg,k,L.nu[0]+gwid/2,L.nu[1]+gwid/2+5,'?',{anchor:'middle',fill:k.muted}); } } }
+    else { lab(svg,k,L.leg[0],L.leg[1],'빨강 = +, 파랑 = −',{fz:13,fill:k.muted}); lab(svg,k,L.leg[0],L.leg[1]+19,'숫자가 클수록 진하다',{fz:13,fill:k.muted}); }
+    var cap='검은 칸 = 1, 흰 칸 = 0'; if(showMap) cap+=' · 분홍 테두리 : 가장 큰 값을 낸 3×3 조각 · 노란 칸 : 가장 큰 값';
+    if(C===4 && nudge==='o') cap='노란 칸 둘 : 가장 큰 칸과, 0.01 올려 본 다른 칸';
+    if(C===5) cap+=' · 오른쪽 아래 : 필터 칸을 0.01 올렸을 때 손실이 바뀐 양 ÷ 0.01';
+    $('mCap').textContent=cap; $('mSub').textContent='';
+  }
+  function drawFlow(){ var f=cur(), y=Y[img], g=f.p-y, L=lossOf(f.p,y), a=H[0].a;
+    var lit = C===2 ? fs : 5;
+    for(var t=1;t<=5;t++) $('fb'+t).classList.toggle('on', t<=lit);
+    $('fv1').textContent='6×6'; $('fv2').textContent=lit>=2?f2(f.m):''; $('fs2').textContent=lit>=2?'36칸 중 하나':'';
+    $('fv3').textContent=lit>=3?f2(f.sc):''; $('fs3').textContent='a × m + c';
+    $('fv4').textContent=lit>=4?f2(f.p):''; $('fv5').textContent=lit>=5?f2(L):''; $('fs5').textContent='정답 '+y;
+    var b = C===3? 1 : C===4? bs : C>=5? 3 : 0;
+    $('bk3').classList.toggle('on',b>=1); $('bv3').textContent='= '+f2(g);
+    $('bk2').classList.toggle('on',b>=2); $('bv2').textContent='→ '+f2(g*a);
+    $('bk1').classList.toggle('on',b>=3); $('bv1').textContent='→ 필터 9칸';
+    var L1=[]; if(b>=1) L1.push('거꾸로 1 · 점수의 기울기 g = p − 정답 = '+f2(g)); if(b>=2) L1.push('거꾸로 2 · × a → m 의 기울기 '+f2(g*a)); if(b>=3) L1.push('거꾸로 3 · × 조각 → 필터의 기울기');
+    $('bklist').innerHTML=L1.join('<br>'); }
+  function drawLearn(){ var svg=$('learnSvg'), k=K(); svg.innerHTML=''; var h=H[st-1], nar=window.innerWidth<=560;
+    var L = nar ? {W:360,H:560, fl:[8,34,48], tx:[176,70], ch:[44,350,226,366], th:[8,410,10,34,28]} : {W:560,H:330, fl:[20,36,44], tx:[20,192], ch:[208,548,36,196], th:[20,258,20,26.4,22]};
+    svg.setAttribute('viewBox','0 0 '+L.W+' '+L.H);
+    lab(svg,k,L.fl[0],L.fl[1]-14,(st===1?'처음 필터':st+'번째 반복의 필터'),{bold:true});
+    grid(svg,k,L.fl[0],L.fl[1],L.fl[2],3,h.w,{vm:1.5,fz:13});
+    lab(svg,k,L.tx[0],L.tx[1],'a = '+h.a.toFixed(2)+',  c = '+f2(h.c),{fz:13.5});
+    lab(svg,k,L.tx[0],L.tx[1]+22,'손실 '+f2(h.L)+' · 정답률 '+h.acc+'%',{fz:14,bold:true,fill:k.acc});
+    var x0=L.ch[0], x1=L.ch[1], y0=L.ch[2], y1=L.ch[3], xs=function(s){ return x0+(s-1)/199*(x1-x0); }, yl=function(v){ return y1-Math.min(v,1)/1*(y1-y0); }, ya=function(v){ return y1-v/100*(y1-y0); };
+    E(svg,'line',{x1:x0,y1:y1,x2:x1,y2:y1,stroke:k.tick}); E(svg,'line',{x1:x0,y1:y0,x2:x0,y2:y1,stroke:k.tick});
+    [0,0.5,1].forEach(function(v){ E(svg,'line',{x1:x0,y1:yl(v),x2:x1,y2:yl(v),stroke:k.grid}); lab(svg,k,x0-6,yl(v)+4,String(v),{anchor:'end',fz:12,fill:k.tick}); });
+    [1,50,100,150,200].forEach(function(s){ lab(svg,k,xs(s),y1+16,String(s),{anchor:'middle',fz:12,fill:k.tick}); });
+    lab(svg,k,x1,y1+32,'반복 →',{anchor:'end',fz:12.5,fill:k.tick});
+    var dL='', dA=''; for(var s=1;s<=200;s++){ dL+=(s>1?'L':'M')+xs(s).toFixed(1)+' '+yl(H[s-1].L).toFixed(1); dA+=(s>1?'L':'M')+xs(s).toFixed(1)+' '+ya(H[s-1].acc).toFixed(1); }
+    E(svg,'path',{d:dA,fill:'none',stroke:k.faint,'stroke-width':2,'stroke-dasharray':'5 3'}); E(svg,'path',{d:dL,fill:'none',stroke:k.acc,'stroke-width':2.5});
+    var sx=xs(Math.min(st,200)); E(svg,'line',{x1:sx,y1:y0,x2:sx,y2:y1,stroke:k.muted,'stroke-dasharray':'2 3'});
+    E(svg,'circle',{cx:sx,cy:yl(H[Math.min(st,200)-1].L),r:5,fill:k.acc,stroke:k.halo,'stroke-width':1.5});
+    lab(svg,k,x1,y0-8,'실선 : 손실 · 점선 : 정답률 0 ~ 100%',{anchor:'end',fz:12,fill:k.muted});
+    var T=L.th; lab(svg,k,T[0],T[1]-8,'40장 : 빨간 테두리 = 틀림',{fz:13,fill:k.muted});
+    for(var n=0;n<40;n++){ var gx=T[0]+(n%T[2])*T[3], gy=T[1]+Math.floor(n/T[2])*(T[4]+10), im=X[n], px=(T[4]-2)/8;
+      for(var t=0;t<64;t++) if(im[t]) E(svg,'rect',{x:gx+1+(t%8)*px,y:gy+1+Math.floor(t/8)*px,width:px,height:px,fill:k.ink});
+      E(svg,'rect',{x:gx,y:gy,width:T[4],height:T[4],fill:'none',stroke:h.ok[n]?k.line:k.red,'stroke-width':h.ok[n]?1:2.5}); }
+    $('lSub').textContent='seed '+seed; $('lCap').textContent='세로 점선 : 지금 보고 있는 반복'; }
+  function stTable(){ var t=''; if(C===6){ var A=H[st-1], B=H[st];
+      t='<table class="st"><tr><th></th><th>'+(st===1?'처음':st+'번째')+'</th><th>한 스텝 뒤</th></tr>'+
+        '<tr><td>손실</td><td>'+f2(A.L)+'</td><td>'+f2(B.L)+'</td></tr><tr><td>정답률</td><td>'+A.acc+'%</td><td>'+B.acc+'%</td></tr>'+
+        '<tr><td>a</td><td>'+A.a.toFixed(3)+'</td><td>'+B.a.toFixed(3)+'</td></tr><tr><td>c</td><td>'+f2(A.c)+'</td><td>'+f2(B.c)+'</td></tr>'+
+        '<tr><td>기울기 평균 · 필터</td><td colspan="2" style="font-family:var(--f-mono)">'+A.gw.map(f2).join(' ')+'</td></tr>'+
+        '<tr><td>기울기 평균 · a, c</td><td colspan="2" style="font-family:var(--f-mono)">'+f2(A.ga)+' , '+f2(A.gc)+'</td></tr></table>'; }
+    $('stTab').innerHTML=t; }
+  function msg(){ var f=cur(), y=Y[img], g=f.p-y, L=lossOf(f.p,y), m='';
+    if(C===1) m='그림 '+(img+1)+' : '+(y?'세로줄':'가로줄')+'. 줄은 '+(y?'왼쪽에서 ':'위에서 ')+(SEEDS[seed].K[img]+1)+'번째 칸이다.';
+    else if(C===2){ var t=['「앞으로 한 칸」을 눌러 보자.','필터를 36자리에 겹쳐 곱해 더했다. 6×6 결과.','가장 큰 값 m = '+f2(f.m)+'. 노란 칸이 그 자리, 분홍 테두리가 그때의 조각.','점수 = '+H[0].a.toFixed(0)+' × '+f2(f.m)+' + '+f2(H[0].c)+' = '+f2(f.sc)+'.','확률 p = '+f2(f.p)+'. 0.5 보다 '+(f.p>0.5?'크니 세로줄로 판단':'작으니 가로줄로 판단')+'.','손실 = '+f2(L)+'. 정답이 '+(y?'세로줄':'가로줄')+'이라 '+(y?'p':'1 − p')+' 의 −log.'][fs]; m=t; }
+    else if(C===3){ m='점수의 기울기 g = '+f2(f.p)+' − '+y+' = '+f2(g)+'. '+(g<0?'음수 : 점수를 올리면 손실이 준다.':'양수 : 점수를 내리면 손실이 준다.');
+      if(nudge==='s'){ var L2=lossOf(1/(1+Math.exp(-(f.sc+0.01))),y); m+='<br>점수 +0.01 → 손실 '+f4(L)+' → '+f4(L2)+', 바뀐 양 '+f4(L2-L)+'. 기울기 × 0.01 = '+f4(g*0.01)+'. 거의 같다.'; } }
+    else if(C===4){ var gm=g*H[0].a;
+      m=['','점수의 기울기 g = '+f2(g)+'. 「거꾸로 한 칸」을 더 눌러 보자.','× a : m 의 기울기 = '+f2(g)+' × '+H[0].a.toFixed(0)+' = '+f2(gm)+'.','× 조각 : 필터의 기울기 = '+f2(gm)+' × 조각. 조각이 1 인 칸만 '+f2(gm)+', 0 인 칸은 0.'][bs];
+      if(nudge==='o'){ var oc=otherCell(f); if(oc<0) m+='<br>가장 큰 값과 0.01 넘게 차이 나는 칸이 없다. 다른 그림을 골라 보자.'; else { var o2=f.o.slice(); o2[oc]+=0.01; var mx=Math.max.apply(null,o2); var p2=1/(1+Math.exp(-(H[0].a*mx+H[0].c))); m+='<br>다른 칸 '+f2(f.o[oc])+' → '+f2(f.o[oc]+0.01)+' : 가장 큰 값은 그대로 '+f2(mx)+', 손실도 그대로 '+f4(lossOf(p2,y))+'. 기울기 0.'; } }
+      if(nudge==='m'){ var p3=1/(1+Math.exp(-(H[0].a*(f.m+0.01)+H[0].c))), L3=lossOf(p3,y); m+='<br>가장 큰 칸 '+f2(f.m)+' → '+f2(f.m+0.01)+' : 손실 '+f4(L)+' → '+f4(L3)+', 바뀐 양 '+f4(L3-L)+' ≈ m 의 기울기 × 0.01 = '+f4(gm*0.01)+'.'; } }
+    else if(C===5) m= chk? '왼쪽 역전파 기울기와 오른쪽 실제로 바꿔 본 값이 같으면 역전파가 맞다. 그림 '+(img+1)+' : '+(Math.abs(g)<0.005?'':'0 이 아닌 칸은 조각이 1 인 칸이다.') : '「9칸 모두 +0.01」을 눌러 보자.';
+    else if(C===6) m=(st===1?'처음 필터':st+'번째 반복')+'에서 40장 기울기의 평균을 구했다. 「한 스텝」을 누르면 필터 · a · c 가 업데이트된다.';
+    else if(C===7) m=st===1?'처음 : 무작위 필터, 손실 '+f2(H[0].L)+' · 정답률 '+H[0].acc+'%.':(st+'번째 반복 : 손실 '+f2(H[st-1].L)+' · 정답률 '+H[st-1].acc+'%.');
+    else if(C===8){ var R={0:'가운데 세로 열이 +, 양옆이 − 인 필터로 100%.',5:'왼쪽 세로 열이 + 인 다른 모양의 필터로 100%. 세로줄을 찾는 필터가 한 가지만 있는 것은 아니다.',4:'87% 에서 멈춘다. 빨간 테두리 5장은 모두 세로줄이 왼쪽에서 2번째 칸에 있는 그림이다. 이 5장은 필터 결과에서 줄이 닿는 자리가 모두 0 보다 작아, 가장 큰 값 0 이 줄이 없는 빈 조각에서 나온다. 빈 조각은 모두 0 이라 필터의 기울기가 0 이다.',8:'전혀 배우지 못한다. 처음 필터로는 40장 모두 줄이 닿는 자리의 결과가 0 보다 작아, 가장 큰 값 0 이 빈 조각에서 나온다. 그러면 필터와 a 의 기울기가 0 이고, 확률은 모두 0.5 다. c 의 기울기도 세로줄 20장의 −0.5 와 가로줄 20장의 +0.5 가 지워져 0 이다. 숫자가 하나도 바뀌지 않는다.'}; m='seed '+seed+' : '+R[seed]; }
+    $('msg').innerHTML=m; }
+  // ---------- 쪽
+  function show(){ var on=function(id,b){ $(id).classList.toggle('hide',!b); };
+    on('rowImg',C>=1&&C<=5); on('rowF',C===2); on('rowS',C===3); on('rowB',C===4); on('rowC',C===5); on('rowT',C===6||C===7); on('mile',C===7); on('rowSeed',C===8);
+    on('mainPanel',C<=5); on('flowPanel',C>=2&&C<=5||C===9); on('learnPanel',C>=6&&C<=8);
+    $('imLab').textContent='그림 '+(img+1)+' / 40 · '+(Y[img]?'세로줄':'가로줄');
+    ['bM1','bM5','bM20','bM200'].forEach(function(id){ var v={bM1:1,bM5:5,bM20:20,bM200:200}[id]; $(id).classList.toggle('on',st===v); $(id).setAttribute('aria-pressed',st===v?'true':'false'); });
+    ['sd0','sd5','sd4','sd8'].forEach(function(id){ var v=+id.slice(2); $(id).classList.toggle('on',seed===v); $(id).setAttribute('aria-pressed',seed===v?'true':'false'); });
+    $('bF').disabled=fs>=5; $('bB').disabled=bs>=3; $('bStep').disabled=st>=200;
+    if(C<=5){ drawMain(); } if(C>=2&&C<=5||C===9) drawFlow(); if(C>=6&&C<=8) drawLearn(); stTable(); msg(); }
+  function setSeed(s){ if(seed!==s){ seed=s; train(seed); } }
+  function setChapter(k){ k=Math.max(1,Math.min(CH.length,k)); prevC=C; C=k; var c=CH[C-1];
+    $('chap').textContent=C+' / '+CH.length; $('sTitle').textContent=c.t;
+    $('sBody').innerHTML=c.b.replace(/「([^」]+)」/g,function(m0,l){ var id=IB[l]; return id? '<button type="button" class="ib" data-for="'+id+'">'+l+'</button>' : m0; });
+    var dots=$('dots'); dots.innerHTML=''; for(var i=0;i<CH.length;i++){ var d=document.createElement('button'); d.className='dot'+(i<C?' on':''); d.title=(i+1)+'쪽 : '+CH[i].t; d.setAttribute('aria-label',(i+1)+'쪽'); d.dataset.k=i+1; d.addEventListener('click',function(){ setChapter(+this.dataset.k); }); dots.appendChild(d); }
+    $('prev').disabled=$('prev2').disabled=C===1; $('next').disabled=$('next2').disabled=C===CH.length;
+    if(C!==8) setSeed(0);
+    fs = C===2? 0 : 5; bs = C===3? 1 : C===4? 1 : 3; nudge=''; chk=false;
+    if(C===6) st=1; if(C===7 && prevC!==7) st=1; if(C===8){ st=200; }
+    var oct1=0; for(var oi=0;oi<CH.length;oi++){ if(CH[oi].b.indexOf('class="oct"')>=0){ oct1=oi+1; break; } } $('pyHelpPanel').classList.toggle('hide', C!==oct1); $('pyHelp').open=false;
+    show(); applyLang(); navShort();
+    if(location.hash!=='#'+C){ try{ history.replaceState(null,'','#'+C); }catch(e){} } }
+  function navShort(){ var s=$('story'), nb=s.querySelector('.navb'); s.classList.remove('short'); if(window.innerWidth>900) return; s.classList.toggle('short', s.offsetHeight-nb.offsetHeight < window.innerHeight*0.5); }
+  // ---------- 코드 언어 : 파이썬 · Octave
+  var LANG='py'; try{ var sv=localStorage.getItem('bpLang'); if(sv==='py'||sv==='oc') LANG=sv; }catch(e){}
+  function applyLang(){ Array.prototype.forEach.call(document.querySelectorAll('.lp'),function(e){ e.classList.toggle('hide', e.dataset.l!==LANG); });
+    Array.prototype.forEach.call(document.querySelectorAll('.lt'),function(b){ var on=b.dataset.l===LANG; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on?'true':'false'); }); }
+  document.addEventListener('click',function(ev){ var b=ev.target.closest&&ev.target.closest('.lt'); if(!b) return; LANG=b.dataset.l; try{ localStorage.setItem('bpLang',LANG); }catch(e){} applyLang(); });
+  // ---------- 단추
+  $('prev').onclick=$('prev2').onclick=function(){ setChapter(C-1); }; $('next').onclick=$('next2').onclick=function(){ setChapter(C+1); };
+  $('imP').onclick=function(){ img=(img+39)%40; nudge=''; chk=false; show(); }; $('imN').onclick=function(){ img=(img+1)%40; nudge=''; chk=false; show(); };
+  $('bF').onclick=function(){ if(fs<5) fs++; show(); }; $('bF0').onclick=function(){ fs=0; show(); };
+  $('bS').onclick=function(){ nudge='s'; show(); };
+  $('bB').onclick=function(){ if(bs<3) bs++; nudge=''; show(); }; $('bO').onclick=function(){ nudge='o'; show(); }; $('bM').onclick=function(){ nudge='m'; show(); };
+  $('bChk').onclick=function(){ chk=true; show(); };
+  $('bStep').onclick=function(){ if(st<200) st++; show(); };
+  $('bM1').onclick=function(){ st=1; show(); }; $('bM5').onclick=function(){ st=5; show(); }; $('bM20').onclick=function(){ st=20; show(); }; $('bM200').onclick=function(){ st=200; show(); };
+  ['sd0','sd5','sd4','sd8'].forEach(function(id){ $(id).onclick=function(){ setSeed(+id.slice(2)); st=200; show(); }; });
+  document.addEventListener('click',function(ev){ var b=ev.target.closest&&ev.target.closest('button.ib'); if(!b) return; var t=$(b.dataset.for); if(t){ t.click(); if(window.innerWidth<=900){ var gp=C<=5?'mainPanel':'learnPanel'; $(gp).scrollIntoView({block:'start',behavior:'smooth'}); } } });
+  document.addEventListener('click',function(ev){ var h=ev.target.closest&&ev.target.closest('.ohl'); if(!h) return; $('pyHelpPanel').classList.remove('hide'); var d=$('pyHelp'); d.open=true; d.scrollIntoView({block:'start',behavior:'smooth'}); });
+  document.addEventListener('click',function(ev){ var b=ev.target.closest&&ev.target.closest('.cpy'); if(!b) return; var t=b.parentNode.querySelector('code').textContent; var ok=function(){ b.textContent='복사했다'; setTimeout(function(){ b.textContent='코드 복사'; },1500); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok,function(){}); else { var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); ok(); }catch(e){} document.body.removeChild(ta); } });
+  document.addEventListener('keydown',function(e){ if(e.altKey||e.ctrlKey||e.metaKey) return; var t=document.activeElement; if(t&&/INPUT|SELECT|TEXTAREA/.test(t.tagName)) return; if(e.key==='ArrowRight'){ e.preventDefault(); setChapter(C+1); } else if(e.key==='ArrowLeft'){ e.preventDefault(); setChapter(C-1); } });
+  if(window.matchMedia){ var mq=window.matchMedia('(prefers-color-scheme: dark)'); if(mq.addEventListener) mq.addEventListener('change',show); }
+  var rz=null; window.addEventListener('resize',function(){ navShort(); clearTimeout(rz); rz=setTimeout(show,120); });
+  // 검사용 : 계산 결과를 밖에서 읽는다
+  window.__bp={ train:function(s){ train(s); return H; }, fwd:fwd, X:function(){ return X; }, Y:function(){ return Y; }, setSeed:setSeed };
+  train(0);
+  var h0=parseInt((location.hash||'#1').slice(1)); setChapter(isNaN(h0)?1:h0);
+})();
+</script>
+</body></html>

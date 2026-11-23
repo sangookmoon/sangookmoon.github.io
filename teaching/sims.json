@@ -28,6 +28,17 @@
       "desc_en": "Pages 1–9: find the single weight w in \"price = w × size\" from four houses. Probe the loss bowl, step through updates, and vary the learning rate. Pages 10–11: fit w and b in \"temperature = w × time + b\" and view the loss surface in 3D and as contours. Page 12: a recap, then a straight line, a quadratic and a line capped at 100 °C compared on data measured until the water boils."
     },
     {
+      "course": "ai-robot",
+      "file": "backprop.html",
+      "title": "역전파 시뮬레이터",
+      "week": "12주차",
+      "desc": "세로줄 · 가로줄 그림 40장을 고르는 3×3 필터 하나짜리 작은 CNN 으로, 손실에서 필터까지 기울기가 거꾸로 가는 길을 한 칸씩 따라갑니다. 필터 칸을 0.01 씩 바꿔 역전파 값을 확인하고, 무작위 필터가 200번 반복으로 세로줄 필터가 되는 과정과 시작 숫자에 따라 배우지 못하는 경우까지 봅니다. 쪽마다 파이썬 · Octave 코드가 있습니다.",
+      "added": "2026-11-23",
+      "title_en": "Backpropagation Simulator",
+      "week_en": "Week 12",
+      "desc_en": "A tiny CNN with a single 3×3 filter tells vertical from horizontal stripes in 40 images. Follow the gradient backward from the loss to the filter, one layer at a time, check it by nudging each filter cell by 0.01, and watch a random filter become a vertical-stripe detector over 200 iterations, including starting seeds that never learn. Python and Octave code on every page."
+    },
+    {
       "course": "fpga",
       "file": "lab6-processor.html",
       "title": "Lab 6 프로세서 시뮬레이터",
