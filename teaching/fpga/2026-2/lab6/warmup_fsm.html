@@ -110,13 +110,13 @@ Lab 5 신호등과 같은 세 블록(상태 레지스터 / 다음 상태 결정 
 <li>Simulate &gt; Start Simulation → <code>work</code> 안의 <code>tb_fsm</code> → OK</li>
 <li>파형에 넣을 신호 고르기 : 왼쪽 <code>sim</code> 창에서<ul>
 <li><code>tb_fsm</code> ▸ <code>dut</code> 클릭 → Objects 창의 <code>tick</code> → 오른쪽 클릭 › Add Wave</li>
-<li><code>tb_fsm</code> ▸ <code>dut</code> ▸ <code>u2</code> 클릭 → <code>state Run III next_state</code> 를 모두 선택 → 오른쪽 클릭 › Add Wave</li>
+<li><code>tb_fsm</code> ▸ <code>dut</code> ▸ <code>u2</code> 클릭 → <code>state Run op next_state</code> 를 모두 선택 → 오른쪽 클릭 › Add Wave</li>
 <li><code>tick</code>, <code>state</code> 는 warm_fsm 의 바깥 포트가 아니라 안쪽 선이라, <code>tb_fsm</code> 만 클릭해서는 보이지 않는다</li>
 </ul>
 </li>
 <li>Radix 바꾸기 : Wave 창에서 신호를 고르고 오른쪽 클릭 › Radix<ul>
 <li><code>state</code>, <code>next_state</code> → <strong>Unsigned</strong> : 0 ~ 3 이 곧 T0 ~ T3</li>
-<li><code>III</code> → <strong>Binary</strong> : 00 mv, 01 add, 10 sub, 11 분기</li>
+<li><code>op</code> → <strong>Binary</strong> : 00 mv, 01 add, 10 sub, 11 분기</li>
 </ul>
 </li>
 <li>Transcript 창에 <code>run -all</code> → Wave 창을 클릭하고 <code>F</code> 키 (Zoom Full) 로 전체를 본다</li>
@@ -125,14 +125,14 @@ Lab 5 신호등과 같은 세 블록(상태 레지스터 / 다음 상태 결정 
 <pre><code>add wave /tb_fsm/dut/tick
 add wave -radix unsigned /tb_fsm/dut/u2/state
 add wave /tb_fsm/dut/u2/Run
-add wave -radix binary /tb_fsm/dut/u2/III
+add wave -radix binary /tb_fsm/dut/u2/op
 add wave -radix unsigned /tb_fsm/dut/u2/next_state
 </code></pre>
 <p>Wave 에서 <code>tick</code> 이 1 이 될 때마다 <code>state</code> 가 <code>next_state</code> 로 바뀌는지 본다.</p>
 <p><code>---</code> 줄 아래에 한 단계마다 한 줄씩 나온다. 단계(T0~T3)가 <code>---</code> 줄의 <code>expect</code> 순서와 같으면 맞다.</p>
-<pre><code>--- Run=1, III=01 add (expect T1 T2 T3 T0)
- 851 ns  Run=1 III=01  -&gt;  T1   LEDR[3:0]=0010
- 951 ns  Run=1 III=01  -&gt;  T2   LEDR[3:0]=0100
+<pre><code>--- Run=1, op=01 add (expect T1 T2 T3 T0)
+ 851 ns  Run=1 op=01  -&gt;  T1   LEDR[3:0]=0010
+ 951 ns  Run=1 op=01  -&gt;  T2   LEDR[3:0]=0100
 ...
 </code></pre>
 <h2>Quartus 로 보드에 올리기</h2>
@@ -157,7 +157,7 @@ add wave -radix unsigned /tb_fsm/dut/u2/next_state
 </tr>
 <tr>
 <td>SW[7:6]</td>
-<td>III : 00 mv, 01 add, 10 sub, 11 분기</td>
+<td>op (op코드) : 00 mv, 01 add, 10 sub, 11 분기</td>
 </tr>
 <tr>
 <td>KEY[0]</td>
@@ -177,9 +177,9 @@ add wave -radix unsigned /tb_fsm/dut/u2/next_state
 <h2>보드에서 볼 것</h2>
 <ol>
 <li>SW[9] = 0 → t0 에 머문다</li>
-<li>SW[9] = 1, III = 00 (mv) → t0 t1 t0 t1 …</li>
-<li>III = 01 (add) 또는 10 (sub) → t0 t1 t2 t3 t0 …</li>
-<li>III = 11 (분기) → t0 t1 t0 t1 …</li>
+<li>SW[9] = 1, op = 00 (mv) → t0 t1 t0 t1 …</li>
+<li>op = 01 (add) 또는 10 (sub) → t0 t1 t2 t3 t0 …</li>
+<li>op = 11 (분기) → t0 t1 t0 t1 …</li>
 <li>왜 mv 와 분기는 두 단계, add·sub 는 네 단계일까?</li>
 </ol>
   </div>
