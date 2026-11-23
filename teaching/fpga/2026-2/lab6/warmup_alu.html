@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>몸풀기 실습 ⓶ 내 계산기에 뺄셈과 Z·N 달기 | 문상국</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/assets/style.css?v=202611231207">
+<style>
+.rd h2{font-size:20px;margin:36px 0 10px}
+.rd table{border-collapse:collapse;margin:10px 0;font-size:15px}.rd th,.rd td{border:1px solid var(--line,#d0d7de);padding:6px 12px;text-align:left;vertical-align:top}
+.rd code{font-family:Consolas,"D2Coding",monospace;font-size:.92em;background:rgba(127,127,127,.12);padding:1px 5px;border-radius:4px}
+.rd pre{background:rgba(127,127,127,.10);padding:12px 14px;border-radius:6px;overflow:auto;line-height:1.5}.rd pre code{background:none;padding:0}
+.rd blockquote{margin:10px 0;padding:8px 14px;background:rgba(224,168,0,.12);border-left:4px solid #e0a800}
+.rd img{max-width:100%;height:auto;border:1px solid var(--line,#e3e3e3);border-radius:6px;background:#fff}
+.rd li{margin:3px 0}
+a.dl{display:inline-block;margin:6px 10px 6px 0;padding:9px 18px;border-radius:8px;background:var(--acc,#A62C52);color:#fff;font-weight:700;text-decoration:none}
+a.dl:hover{opacity:.9}
+.tbl-wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><a class="univ" href="https://www.mokwon.ac.kr/kr/" title="목원대학교 홈페이지"><img class="lg-l" src="/assets/logo.svg" alt="목원대학교" width="130" height="33"><img class="lg-d" src="/assets/logo-dark.svg" alt="" width="130" height="33"></a><a class="nm" href="https://www.mokwon.ac.kr/electronics/" title="목원대학교 전기전자공학과 홈페이지">전기전자공학과</a></div>
+  <nav class="menu"><a href="/">소개</a><a href="/publications.html">논문</a><a class="on" href="/teaching/">수업</a><a class="lang" href="/en/teaching/fpga/" hreflang="en" lang="en">English</a></nav>
+</div></header>
+<main><div class="wrap">
+  <p class="crumb"><a href="/teaching/">수업·시뮬레이터</a> › <a href="/teaching/fpga/">FPGA 설계</a> › <a href="./">2026-2 Lab 6</a> ›</p>
+  <h1>몸풀기 실습 ⓶ 「내 계산기에 뺄셈과 Z·N 달기」 (약 25분)</h1>
+  <p><a class="dl" href="lab6_warm_alu.zip" download>실습 파일 받기 (zip)</a> <code>.v</code> 파일 6개, 빈칸이 있는 판</p>
+  <div class="rd">
+<p>Lab 3 Part5 「두 숫자 계산기」에 뺄셈과 플래그 Z, N 을 단다.
+Lab 6 프로세서의 add / sub 와 Z, N 이 바로 이 회로다.</p>
+<h2>파일</h2>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>파일</th>
+<th>하는 일</th>
+<th>고칠 곳</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>warm_alu.v</code></td>
+<td>top (Lab 3 part5.v 에서 adder_8bit 자리에 alu_8bit)</td>
+<td>없음</td>
+</tr>
+<tr>
+<td><code>alu_8bit.v</code></td>
+<td>덧셈·뺄셈 + Z, N</td>
+<td><strong>빈칸 <code>? ? ?</code> 세 곳</strong></td>
+</tr>
+<tr>
+<td><code>register_8bit.v</code>, <code>d_ff.v</code></td>
+<td>Lab 3 의 8비트 레지스터 (A 저장)</td>
+<td>없음</td>
+</tr>
+<tr>
+<td><code>hex_dec.v</code></td>
+<td>4비트 → 7-세그먼트 숫자</td>
+<td>없음</td>
+</tr>
+<tr>
+<td><code>tb_alu.v</code></td>
+<td>ModelSim 테스트벤치</td>
+<td>없음</td>
+</tr>
+</tbody>
+</table></div>
+<p>빈칸</p>
+<ul>
+<li>빈칸 1 : 뺄셈일 때의 <code>{Cout, S}</code></li>
+<li>빈칸 2 : <code>Z</code> = 결과가 0인가</li>
+<li>빈칸 3 : <code>N</code> = 결과가 음수인가 (어느 비트를 보면 되는가)</li>
+</ul>
+<h2>블록도 (보면서 빈칸을 채운다)</h2>
+<p><img alt="계산기 블록도" src="warm_alu_block.png" /></p>
+<h2>하는 순서 (ModelSim 으로 먼저 확인하고 Quartus 로)</h2>
+<ol>
+<li>실습 파일 zip 을 받아 <code>C:\FPGA\lab6</code> 에 풀면 <code>warm_alu</code> 폴더가 생긴다 (팀즈 학습 자료 › labs › lab6 › warmup_alu 의 파일을 <code>C:\FPGA\lab6\warm_alu</code> 에 넣어도 된다)</li>
+<li>ModelSim 에서 빈칸 <code>? ? ?</code> 을 채우고 확인한다 (아래)</li>
+<li>Quartus 로 보드에 올린다 (아래)</li>
+</ol>
+<h2>ModelSim 으로 확인</h2>
+<blockquote>
+<p>한글 주석이 「ë§ì」 처럼 깨져 보이면 Transcript 창에 <code>set PrefSource(encoding) utf-8</code> 을 입력하고 파일을 닫았다가 다시 연다. (ModelSim 은 파일을 서유럽 글자로 읽는다. 코드는 그대로라 컴파일에는 영향이 없다)</p>
+</blockquote>
+<ol>
+<li>File &gt; New &gt; Project : Project Name <code>warm_alu</code>, Project Location <code>C:/FPGA/lab6/warm_alu</code>, Default Library Name <code>work</code></li>
+<li>Add Existing File : 폴더의 <code>.v</code> 파일 여섯 개 모두 <code>tb_alu.v warm_alu.v alu_8bit.v register_8bit.v d_ff.v hex_dec.v</code></li>
+<li>빈칸 채우기 : Project 창에서 <code>alu_8bit.v</code> 를 더블클릭해 열고, 위 블록도를 보며 <code>? ? ?</code> 세 곳을 고친 뒤 <code>Ctrl+S</code> 로 저장</li>
+<li>Compile &gt; Compile All (모두 초록 체크인지 본다)<ul>
+<li>빈칸을 채우지 않았으면 <code>alu_8bit.v</code> 가 오류 3개 (빈칸 세 곳)로 실패한다 → 빈칸부터 채운다</li>
+</ul>
+</li>
+<li>Simulate &gt; Start Simulation → <code>work</code> 안의 <code>tb_alu</code> → OK</li>
+<li>파형에 넣을 신호 고르기 : 왼쪽 <code>sim</code> 창에서 <code>tb_alu</code> ▸ <code>dut</code> ▸ <code>u1</code> 을 클릭하면, Objects 창에 alu_8bit 의 <code>A B AddSub S Cout Z N</code> 이 나온다 → 모두 선택 (<code>Ctrl+A</code>) → 오른쪽 클릭 › Add Wave<ul>
+<li><code>S</code> 는 warm_alu 의 바깥 포트(SW · KEY · LEDR · HEX)가 아니라 안쪽 선이라, <code>tb_alu</code> 만 클릭해서는 보이지 않는다. 안쪽 블록 <code>u1</code> 을 클릭해야 나온다</li>
+</ul>
+</li>
+<li>Radix 바꾸기 : Wave 창에서 신호를 고르고 오른쪽 클릭 › Radix<ul>
+<li><code>A</code>, <code>B</code> → <strong>Unsigned</strong> : 13, 4 처럼 보통 10진수</li>
+<li><code>S</code> → <strong>Decimal</strong> : 부호 있는 10진수라 3 − 5 의 결과 <code>FE</code> 가 <strong>−2</strong> 로 보인다 (Transcript 의 expect 와 맞춰 볼 때는 Hexadecimal)</li>
+</ul>
+</li>
+<li>Transcript 창에 <code>run -all</code> → Wave 창을 클릭하고 <code>F</code> 키 (Zoom Full) 로 전체를 본다</li>
+</ol>
+<p>6 · 7 번을 Transcript 에 붙여 넣어 한 번에 해도 된다.</p>
+<pre><code>add wave -radix unsigned /tb_alu/dut/u1/A /tb_alu/dut/u1/B
+add wave /tb_alu/dut/u1/AddSub
+add wave -radix decimal /tb_alu/dut/u1/S
+add wave /tb_alu/dut/u1/Cout /tb_alu/dut/u1/Z /tb_alu/dut/u1/N
+</code></pre>
+<p>Wave 에서 Transcript 줄이 찍히는 네 순간의 <code>S</code> 가 9, −2, 0, 19 인지, −2 일 때 <code>N</code>, 0 일 때 <code>Z</code> 가 1 인지 본다. (그 사이에는 스위치와 KEY 를 바꾸는 중이라 다른 값도 잠깐 나온다)</p>
+<p>Transcript 에 네 줄이 나온다. 각 줄의 <code>S</code>, <code>Z</code>, <code>N</code> 이 뒤 괄호의 <code>expect</code> 와 같으면 맞다.</p>
+<pre><code>13 - 4  : S = 09 ...   (expect 09, Z=0 N=0)
+3 - 5   : S = fe ...   (expect fe, Z=0 N=1)
+4 - 4   : S = 00 ...   (expect 00, Z=1 N=0)
+13 + 6  : S = 13 ...   (expect 13 = 19 decimal, Z=0 N=0)
+</code></pre>
+<h2>Quartus 로 보드에 올리기</h2>
+<ol>
+<li>새 프로젝트: 폴더 <code>C:\FPGA\lab6\warm_alu</code> (ModelSim 과 같은 폴더), 이름·top = <code>warm_alu</code>, 칩 <code>5CSEMA5F31C6</code></li>
+<li>파일 다섯 개 추가: <code>warm_alu.v alu_8bit.v register_8bit.v d_ff.v hex_dec.v</code> (<code>tb_alu.v</code> 는 넣지 않는다)</li>
+<li>Assignments &gt; Import Assignments → <code>C:\FPGA\DE1_SoC.qsf</code></li>
+<li>컴파일 → 보드에 올리기</li>
+</ol>
+<h2>스위치 · 버튼 · 불</h2>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>보드</th>
+<th>뜻</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SW[7:0]</td>
+<td>수 (B)</td>
+</tr>
+<tr>
+<td>SW[8]</td>
+<td>0 = 덧셈 A + B, 1 = 뺄셈 A − B</td>
+</tr>
+<tr>
+<td>KEY[1]</td>
+<td>눌렀다 떼면 지금 SW[7:0] 을 A 로 저장</td>
+</tr>
+<tr>
+<td>KEY[0]</td>
+<td>리셋 (A = 00)</td>
+</tr>
+<tr>
+<td>HEX5~4</td>
+<td>결과 S</td>
+</tr>
+<tr>
+<td>HEX3~2</td>
+<td>A (저장한 수)</td>
+</tr>
+<tr>
+<td>HEX1~0</td>
+<td>B (스위치 수)</td>
+</tr>
+<tr>
+<td>LEDR[2]</td>
+<td>N (결과가 음수)</td>
+</tr>
+<tr>
+<td>LEDR[1]</td>
+<td>Z (결과가 0)</td>
+</tr>
+<tr>
+<td>LEDR[0]</td>
+<td>덧셈: 올림, 뺄셈: 빌림</td>
+</tr>
+</tbody>
+</table></div>
+<h2>보드에서 볼 것</h2>
+<ol>
+<li>SW[7:0] = 0000_1101 (0D = 13) → KEY[1] → HEX3~2 = 0d</li>
+<li>SW[7:0] = 0000_0100 (04), SW[8] = 1 → HEX5~4 = 09, Z·N 불 꺼짐</li>
+<li>A = 03, B = 05 로 뺄셈 → HEX5~4 = FE, <strong>N 불 켜짐</strong> (FE = −2, LEDR[0] 빌림도 켜짐)</li>
+<li>A = 04, B = 04 로 뺄셈 → HEX5~4 = 00, <strong>Z 불 켜짐</strong></li>
+<li>SW[8] 을 0 으로 내리면 같은 A, B 의 덧셈이 바로 보인다 (0D + 06 = 13, 10진 19)</li>
+</ol>
+  </div>
+</div></main>
+<footer><div class="wrap"><a class="univ" href="https://www.mokwon.ac.kr/kr/" title="목원대학교 홈페이지"><img class="lg-l" src="/assets/logo.svg" alt="목원대학교" width="130" height="33"><img class="lg-d" src="/assets/logo-dark.svg" alt="" width="130" height="33"></a><span>© 2026 문상국</span><span>마지막 수정 2026-11-23</span></div></footer>
+</body>
+</html>
