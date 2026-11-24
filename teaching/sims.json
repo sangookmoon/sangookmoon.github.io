@@ -43,11 +43,11 @@
   {
    "course": "fpga",
    "file": "lab6-processor.html",
-   "title": "Lab 6 프로세서 시뮬레이터",
+   "title": "간단한 프로세서 시뮬레이터",
    "week": "Lab 6",
    "desc": "8비트 프로세서(R0~R3, ROM 16칸, T0~T3)를 클럭 한 번씩 따라가며 데이터 경로와 제어 신호를 봅니다. 명령어 매뉴얼 포함.",
    "added": "2026-11-18",
-   "title_en": "Lab 6 Processor Simulator",
+   "title_en": "Simple Processor Simulator",
    "week_en": "Lab 6",
    "desc_en": "Follow an 8-bit processor (R0–R3, 16-word ROM, steps T0–T3) one clock at a time and watch the datapath and control signals. Includes an instruction manual."
   }
