@@ -1,18 +1,18 @@
 {
  "courses": [
   {
-   "id": "ai-robot",
-   "name": "인공지능로봇",
-   "en": "AI Robotics",
-   "desc": "머신러닝 기초, 경사 하강법, CNN, Jetson Nano·Jetbot 실습",
-   "desc_en": "Machine learning basics, gradient descent, CNNs, and hands-on Jetson Nano / JetBot labs"
-  },
-  {
    "id": "fpga",
    "name": "FPGA 설계",
    "en": "FPGA Design",
    "desc": "래치·플립플롭·카운터·FSM부터 간단한 프로세서 설계까지, Verilog 실습",
    "desc_en": "From latches, flip-flops, counters, and FSMs to a simple processor design, with Verilog labs"
+  },
+  {
+   "id": "ai-robot",
+   "name": "인공지능로봇",
+   "en": "AI Robotics",
+   "desc": "머신러닝 기초, 경사 하강법, CNN, Jetson Nano·Jetbot 실습",
+   "desc_en": "Machine learning basics, gradient descent, CNNs, and hands-on Jetson Nano / JetBot labs"
   }
  ],
  "sims": [
