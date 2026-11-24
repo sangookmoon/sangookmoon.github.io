@@ -87,7 +87,8 @@ a{{color:#1F4E9A;text-decoration:none}} .sub{{color:#333}} img.logo{{height:22pt
 <p style="margin:0"><b>S. Moon</b>, <i>AI JetBot with Python</i> (in Korean), ICBanQ, May 2021.</p>
 
 <h2>Teaching</h2>
-<p style="margin:0">FPGA Design; AI Robotics; Digital Circuit Design; Linux Systems. Interactive course simulators: <a href="https://sangookmoon.github.io/en/teaching/">sangookmoon.github.io/en/teaching</a></p>
+<p style="margin:0">FPGA Design; AI Robotics; Digital Circuit Design; Linux Systems</p>
+<p style="margin:2pt 0 0">Course materials: <a href="https://sangookmoon.github.io/en/teaching/">sangookmoon.github.io/en/teaching</a></p>
 
 <h2>Journal Articles</h2>
 <ol>
@@ -153,7 +154,8 @@ a{{color:#1F4E9A;text-decoration:none}} .sub{{color:#333}}
 <p style="margin:0">문상국, 「파이썬과 함께하는 AI젯봇」, 아이씨뱅큐, 2021. 5.</p>
 
 <h2>담당 과목</h2>
-<p style="margin:0">FPGA 설계, 인공지능로봇, 디지털회로설계, 리눅스 시스템. 수업용 웹 시뮬레이터 : <a href="https://sangookmoon.github.io/teaching/">sangookmoon.github.io/teaching</a></p>
+<p style="margin:0">FPGA 설계, 인공지능로봇, 디지털회로설계, 리눅스 시스템</p>
+<p style="margin:2pt 0 0">수업 자료 : <a href="https://sangookmoon.github.io/teaching/">sangookmoon.github.io/teaching</a></p>
 
 <h2>학술지 논문</h2>
 <ol>
