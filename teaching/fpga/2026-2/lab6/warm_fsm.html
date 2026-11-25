@@ -109,7 +109,7 @@ Lab 5 신호등과 같은 세 블록(상태 레지스터 / 다음 상태 결정 
 </li>
 <li>Simulate &gt; Start Simulation → <code>work</code> 안의 <code>tb_fsm</code> → OK</li>
 <li>파형에 넣을 신호 고르기 : 왼쪽 <code>sim</code> 창에서<ul>
-<li><code>tb_fsm</code> ▸ <code>dut</code> 클릭 → Objects 창의 <code>tick</code> → 오른쪽 클릭 › Add Wave</li>
+<li><code>tb_fsm</code> ▸ <code>dut</code> 클릭 → Objects 창의 <code>CLOCK_50</code> 과 <code>tick</code> 을 함께 선택 (<code>Ctrl</code> + 클릭) → 오른쪽 클릭 › Add Wave</li>
 <li><code>tb_fsm</code> ▸ <code>dut</code> ▸ <code>u2</code> 클릭 → <code>state Run op next_state</code> 를 모두 선택 → 오른쪽 클릭 › Add Wave</li>
 <li><code>tick</code>, <code>state</code> 는 warm_fsm 의 바깥 포트가 아니라 안쪽 선이라, <code>tb_fsm</code> 만 클릭해서는 보이지 않는다</li>
 </ul>
@@ -122,13 +122,14 @@ Lab 5 신호등과 같은 세 블록(상태 레지스터 / 다음 상태 결정 
 <li>Transcript 창에 <code>run -all</code> → Wave 창을 클릭하고 <code>F</code> 키 (Zoom Full) 로 전체를 본다</li>
 </ol>
 <p>6 · 7 번을 Transcript 에 붙여 넣어 한 번에 해도 된다.</p>
-<pre><code>add wave /tb_fsm/dut/tick
+<pre><code>add wave /tb_fsm/dut/CLOCK_50
+add wave /tb_fsm/dut/tick
 add wave -radix unsigned /tb_fsm/dut/u2/state
 add wave /tb_fsm/dut/u2/Run
 add wave -radix binary /tb_fsm/dut/u2/op
 add wave -radix unsigned /tb_fsm/dut/u2/next_state
 </code></pre>
-<p>Wave 에서 <code>tick</code> 이 1 이 될 때마다 <code>state</code> 가 <code>next_state</code> 로 바뀌는지 본다.</p>
+<p>Wave 에서 <code>tick</code> 이 1 인 동안 클럭이 올라가는 순간 (파형에서는 <code>tick</code> 이 0 으로 떨어지는 곳)마다 <code>state</code> 가 바로 앞의 <code>next_state</code> 값으로 바뀌는지 본다. 전체 보기에서는 <code>CLOCK_50</code> 이 촘촘해서 안 보이니, <code>tick</code> 하나 근처를 확대 (Zoom In) 해서 본다.</p>
 <p><code>---</code> 줄 아래에 한 단계마다 한 줄씩 나온다. 단계(T0~T3)가 <code>---</code> 줄의 <code>expect</code> 순서와 같으면 맞다.</p>
 <pre><code>--- Run=1, op=01 add (expect T1 T2 T3 T0)
  851 ns  Run=1 op=01  -&gt;  T1   LEDR[3:0]=0010
