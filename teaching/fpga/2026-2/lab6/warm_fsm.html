@@ -138,8 +138,9 @@ add wave -radix unsigned /tb_fsm/dut/u2/next_state
 </code></pre>
 <h2>Quartus 로 보드에 올리기</h2>
 <ol>
-<li>새 프로젝트: 폴더 <code>C:\FPGA\lab6\warm_fsm</code> (ModelSim 과 같은 폴더), 이름·top = <code>warm_fsm</code>, 칩 <code>5CSEMA5F31C6</code></li>
-<li>파일 여섯 개 추가: <code>warm_fsm.v fsm_state_reg.v fsm_next_logic.v fsm_out_logic.v big_counter.v hex_dec.v</code> (<code>tb_fsm.v</code> 는 넣지 않는다)</li>
+<li>File > New Project Wizard : 폴더 <code>C:\FPGA\lab6\warm_fsm</code> (ModelSim 과 같은 폴더), 프로젝트 이름 · top = <code>warm_fsm</code></li>
+<li>파일 여섯 개 추가 (Add Files 쪽): <code>warm_fsm.v fsm_state_reg.v fsm_next_logic.v fsm_out_logic.v big_counter.v hex_dec.v</code> (<code>tb_fsm.v</code> 는 넣지 않는다)</li>
+<li>칩 이름 넣기 (Family, Device 쪽) : <code>5CSEMA5F31C6</code> → Finish</li>
 <li>Assignments &gt; Import Assignments → <code>C:\FPGA\DE1_SoC.qsf</code></li>
 <li>컴파일 → 보드에 올리기</li>
 </ol>
@@ -166,11 +167,11 @@ add wave -radix unsigned /tb_fsm/dut/u2/next_state
 </tr>
 <tr>
 <td>HEX1~0</td>
-<td>지금 단계 t0 ~ t3</td>
+<td>현재 단계 t0 ~ t3</td>
 </tr>
 <tr>
 <td>LEDR[3:0]</td>
-<td>지금 단계 (T0 = LEDR[0] … T3 = LEDR[3], 하나만 켜짐)</td>
+<td>현재 단계 (T0 = LEDR[0] … T3 = LEDR[3], 하나만 켜짐)</td>
 </tr>
 </tbody>
 </table></div>

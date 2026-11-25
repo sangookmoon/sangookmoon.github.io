@@ -124,8 +124,9 @@ add wave /tb_alu/dut/u1/Cout /tb_alu/dut/u1/Z /tb_alu/dut/u1/N
 </code></pre>
 <h2>Quartus 로 보드에 올리기</h2>
 <ol>
-<li>새 프로젝트: 폴더 <code>C:\FPGA\lab6\warm_alu</code> (ModelSim 과 같은 폴더), 이름·top = <code>warm_alu</code>, 칩 <code>5CSEMA5F31C6</code></li>
-<li>파일 다섯 개 추가: <code>warm_alu.v alu_8bit.v register_8bit.v d_ff.v hex_dec.v</code> (<code>tb_alu.v</code> 는 넣지 않는다)</li>
+<li>File > New Project Wizard : 폴더 <code>C:\FPGA\lab6\warm_alu</code> (ModelSim 과 같은 폴더), 프로젝트 이름 · top = <code>warm_alu</code></li>
+<li>파일 다섯 개 추가 (Add Files 쪽): <code>warm_alu.v alu_8bit.v register_8bit.v d_ff.v hex_dec.v</code> (<code>tb_alu.v</code> 는 넣지 않는다)</li>
+<li>칩 이름 넣기 (Family, Device 쪽) : <code>5CSEMA5F31C6</code> → Finish</li>
 <li>Assignments &gt; Import Assignments → <code>C:\FPGA\DE1_SoC.qsf</code></li>
 <li>컴파일 → 보드에 올리기</li>
 </ol>
@@ -148,7 +149,7 @@ add wave /tb_alu/dut/u1/Cout /tb_alu/dut/u1/Z /tb_alu/dut/u1/N
 </tr>
 <tr>
 <td>KEY[1]</td>
-<td>눌렀다 떼면 지금 SW[7:0] 을 A 로 저장</td>
+<td>눌렀다 떼면 현재 SW[7:0] 을 A 로 저장</td>
 </tr>
 <tr>
 <td>KEY[0]</td>
